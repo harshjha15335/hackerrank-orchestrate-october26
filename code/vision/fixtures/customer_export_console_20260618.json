@@ -1,0 +1,191 @@
+{
+ "schema_version": "m8-visual-v1",
+ "file_id": "evidence_23",
+ "file_path": "evidence/images/customer_export_console_20260618.png",
+ "image_sha256": "18b95c1bd8b8956e40216df935498a9f3c181ea2a69b5cd6d3c0841a816d5557",
+ "provenance": {
+  "method": "manual_fixture",
+  "model_call": false,
+  "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
+  "transcribed_on": "2026-10-24",
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+ },
+ "screen": {
+  "application": "Customer Download Center",
+  "title": "Data exports",
+  "subtitle": "Create and manage customer download packages",
+  "times": []
+ },
+ "records": [
+  {
+   "record_key": "all_exports[1]",
+   "panel": "table_row",
+   "scope": "customer_record",
+   "resource_id": "export_1261",
+   "fields": [
+    {
+     "label": "Filename",
+     "name": "file_name",
+     "value": "customer_export_1261.zip"
+    },
+    {
+     "label": "Owner",
+     "name": "owner_email",
+     "value": "marcus.lee@northstar.shop"
+    },
+    {
+     "label": "Status",
+     "name": "status",
+     "value": "Collecting"
+    }
+   ],
+   "times": [
+    {
+     "label": "Created",
+     "text": "20 Jun 14:18 UTC",
+     "role": "record"
+    }
+   ]
+  },
+  {
+   "record_key": "all_exports[2]+detail",
+   "panel": "table_row+detail_panel",
+   "scope": "customer_record",
+   "resource_id": "export_1260",
+   "fields": [
+    {
+     "label": "Filename",
+     "name": "file_name",
+     "value": "customer_export_1260.zip"
+    },
+    {
+     "label": "Owner",
+     "name": "owner_email",
+     "value": "ingrid.dahl@outlook.com"
+    },
+    {
+     "label": "Status",
+     "name": "status",
+     "value": "Ready"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "18.4 MB"
+    },
+    {
+     "label": "Checksum",
+     "name": "checksum",
+     "value": "SHA-256 · 41ca09..."
+    },
+    {
+     "label": "Download count",
+     "name": "download_count",
+     "value": "0"
+    },
+    {
+     "label": "Included",
+     "name": "included",
+     "value": "Profile · Orders · Saved addresses"
+    }
+   ],
+   "times": [
+    {
+     "label": "Created",
+     "text": "18 Jun 2026 06:42 UTC",
+     "role": "record"
+    },
+    {
+     "label": "Expires",
+     "text": "25 Jun 2026 06:42 UTC",
+     "role": "expiry"
+    }
+   ]
+  },
+  {
+   "record_key": "all_exports[3]",
+   "panel": "table_row",
+   "scope": "customer_record",
+   "resource_id": "export_1259",
+   "fields": [
+    {
+     "label": "Filename",
+     "name": "file_name",
+     "value": "customer_export_1259.zip"
+    },
+    {
+     "label": "Owner",
+     "name": "owner_email",
+     "value": "sara.kim@northstar.shop"
+    },
+    {
+     "label": "Status",
+     "name": "status",
+     "value": "Packaging"
+    }
+   ],
+   "times": [
+    {
+     "label": "Created",
+     "text": "17 Jun 11:03 UTC",
+     "role": "record"
+    }
+   ]
+  },
+  {
+   "record_key": "all_exports[4]",
+   "panel": "table_row",
+   "scope": "customer_record",
+   "resource_id": "export_1258",
+   "fields": [
+    {
+     "label": "Filename",
+     "name": "file_name",
+     "value": "customer_export_1258.zip"
+    },
+    {
+     "label": "Owner",
+     "name": "owner_email",
+     "value": "daniel.park@northstar.shop"
+    },
+    {
+     "label": "Status",
+     "name": "status",
+     "value": "Ready"
+    }
+   ],
+   "times": [
+    {
+     "label": "Created",
+     "text": "16 Jun 09:27 UTC",
+     "role": "record"
+    }
+   ]
+  }
+ ],
+ "context": [
+  {
+   "label": "Activity",
+   "text": "06:46 Ready for download",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "06:45 Package created",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "06:43 Collecting customer records",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "06:42 Export requested",
+   "times": []
+  }
+ ],
+ "not_visible": [
+  "deletion status"
+ ]
+}

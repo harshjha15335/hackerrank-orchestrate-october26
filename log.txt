@@ -1789,3 +1789,37 @@ branch=feature/m7-step-synthesis
 repo_root=/home/claude/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T20:06:30Z] SESSION START
+
+tool=Claude Code
+model=claude-opus-5-5
+Repo Root: /home/claude/hackerrank-orchestrate-october26
+Branch: feature/m8-visual-evidence
+Worktree: main
+Parent Agent: none
+Language: py
+Time Remaining: not configured
+
+## [2026-10-24T20:35:00Z] M8 multimodal visual evidence extraction
+
+User Prompt (verbatim, secrets redacted):
+## M7 merge verified — PR #4 merged; main 81e98d7; M7-1..M7-4 PASS; dev step F1 0.780 FAIL; strict 120 errors across 80 rows FAIL; submission readiness FAIL. Next priority: M8 from 81e98d7. [Full "HackerRank Orchestrate — M8 Execution Handoff": implement M8 on feature/m8-visual-evidence; read AGENTS.md, problem_statement.md, milestone reports and rules; recover any unpublished M8 work without overwriting and preserve provenance; process the 11 PNGs with strict schema validation, image-level provenance, customer/decoy separation, temporal admissibility, safe attribution and content-addressed caching; distinguish real vision inference from manual JSON fixtures and never fabricate calls, tokens or costs; integrate without bypassing M2/M4/M5/M7; run an ablation; reassess the 80 strict-failing INCOMPLETE rows and 77 unknown conditional-treatment items; never invent retention periods, resource IDs, findings or citations; report M8-1..M8-5, dev and report-only holdout metrics, 518 changes, strict failures, tests and actual model usage; keep dataset/, root output.csv and previous reports unchanged; append-only log; commit, push, verify remote SHA and STOP for review; do not merge or start M9/M10.]
+
+Agent Response Summary:
+No earlier M8 work existed on the fork, so M8 was built fresh from 81e98d7. All 11 screenshots were transcribed as manual fixtures by this session (no vision API key, so 0 model calls and 0 tokens), each bound to its image SHA-256 and validated by a strict schema; visible-ID records become M1 observations that pass through the unchanged M2/M4/M5/M6/M7 stages, with screenshots allowed to show presence or risk but never a favourable state. The ablation leaves all 32 samples unchanged (dev F1 0.780, holdout 0.848 both ways) and changes 7 of 518 rows (5 new guarded findings, 0 status changes); strict validation still fails, at 109 errors in 75 rows (was 120/80), and 0 of the 77 unknown conditional-treatment items are decided by screenshot facts. 479 tests pass; the --no-visual run is byte-identical to the M7 output.
+
+Actions:
+* code/vision/{__init__,schema,times,extract,adapter,main}.py, prompt.md, README.md, fixtures/*.json (11), tests/{conftest,test_vision}.py, tests/injection_ticket.png
+* code/state/engine.py (image state branch, visible-expiry rule); code/flow/evidence.py (risk-only visual connector reading); code/synthesis/main.py (--no-visual, --vision-cache)
+* code/synthesis/tests/test_synthesis.py (M7 full-run pins use the --no-visual baseline)
+* code/evaluation/m8_metrics.py; code/evaluation/checkpoints/M8_report.md, M8_METRICS.json (generated)
+* python3 -m pytest -q -p no:cacheprovider code; python3 code/evaluation/m8_metrics.py
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=feature/m8-visual-evidence
+repo_root=/home/claude/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

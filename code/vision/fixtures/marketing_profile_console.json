@@ -1,0 +1,131 @@
+{
+ "schema_version": "m8-visual-v1",
+ "file_id": "evidence_60",
+ "file_path": "evidence/images/marketing_profile_console.png",
+ "image_sha256": "51fa0e6a38f8fa3629ba1b0d0b90b4ed139715956b97bfd09a6f1a6232c15df5",
+ "provenance": {
+  "method": "manual_fixture",
+  "model_call": false,
+  "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
+  "transcribed_on": "2026-10-24",
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+ },
+ "screen": {
+  "application": "Audience Operations",
+  "title": "Soo-jin Park",
+  "subtitle": "marketing_001 · sj.park@naver.com · +82 10-5837-9451",
+  "times": []
+ },
+ "records": [
+  {
+   "record_key": "profile",
+   "panel": "header+cards+detail_panel",
+   "scope": "customer_record",
+   "resource_id": "marketing_001",
+   "fields": [
+    {
+     "label": "(header)",
+     "name": "full_name",
+     "value": "Soo-jin Park"
+    },
+    {
+     "label": "(header)",
+     "name": "email",
+     "value": "sj.park@naver.com"
+    },
+    {
+     "label": "(header)",
+     "name": "phone",
+     "value": "+82 10-5837-9451"
+    },
+    {
+     "label": "(badge)",
+     "name": "profile_status",
+     "value": "Live"
+    },
+    {
+     "label": "Market",
+     "name": "market",
+     "value": "South Korea"
+    },
+    {
+     "label": "Language",
+     "name": "language",
+     "value": "Korean"
+    },
+    {
+     "label": "Email opt-in",
+     "name": "email_opt_in",
+     "value": "Yes"
+    },
+    {
+     "label": "SMS opt-in",
+     "name": "sms_opt_in",
+     "value": "No"
+    },
+    {
+     "label": "Audience",
+     "name": "audience",
+     "value": "Returning customers — East Asia"
+    },
+    {
+     "label": "Segments",
+     "name": "segments",
+     "value": "Repeat customer · Home & lifestyle · Mobile shopper"
+    },
+    {
+     "label": "Preferred categories",
+     "name": "preferred_categories",
+     "value": "Desk accessories · Drinkware"
+    },
+    {
+     "label": "Last campaign",
+     "name": "last_campaign",
+     "value": "Autumn offers"
+    },
+    {
+     "label": "Open rate",
+     "name": "open_rate",
+     "value": "32.4%"
+    },
+    {
+     "label": "Click rate",
+     "name": "click_rate",
+     "value": "6.8%"
+    }
+   ],
+   "times": [
+    {
+     "label": "Last refreshed",
+     "text": "15 Sep 2026 23:40 UTC",
+     "role": "record"
+    }
+   ]
+  }
+ ],
+ "context": [
+  {
+   "label": "Profile",
+   "text": "23:40 Product-category update · Desk accessories · Drinkware",
+   "times": []
+  },
+  {
+   "label": "Profile",
+   "text": "23:38 Campaign eligibility check · Autumn offers · Eligible",
+   "times": []
+  },
+  {
+   "label": "Profile",
+   "text": "23:35 Profile refresh · Live profile fields updated",
+   "times": []
+  },
+  {
+   "label": "Profile",
+   "text": "23:32 Audience evaluation · Returning customers — East Asia",
+   "times": []
+  }
+ ],
+ "not_visible": [
+  "deletion status"
+ ]
+}

@@ -1,0 +1,309 @@
+{
+ "schema_version": "m8-visual-v1",
+ "file_id": "evidence_37",
+ "file_path": "evidence/images/security_audit_explorer_20260905.png",
+ "image_sha256": "ca59f693f4e7002466b3fdeaf1bb6763618770963dd811b60003772d07b4b03b",
+ "provenance": {
+  "method": "manual_fixture",
+  "model_call": false,
+  "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
+  "transcribed_on": "2026-10-24",
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+ },
+ "screen": {
+  "application": "Sentinel",
+  "title": "Account events",
+  "subtitle": "Subject filter: user_03 · 18-26 Aug 2026 UTC",
+  "times": []
+ },
+ "records": [
+  {
+   "record_key": "events[1]+raw_event",
+   "panel": "table_row+detail_panel",
+   "scope": "customer_record",
+   "resource_id": "audit_record_003",
+   "fields": [
+    {
+     "label": "Event",
+     "name": "event_name",
+     "value": "Account closure recorded"
+    },
+    {
+     "label": "Category",
+     "name": "event_category",
+     "value": "Account lifecycle"
+    },
+    {
+     "label": "Subject",
+     "name": "subject_reference",
+     "value": "user_03"
+    },
+    {
+     "label": "Actor",
+     "name": "actor",
+     "value": "Automated workflow"
+    },
+    {
+     "label": "Integrity",
+     "name": "integrity",
+     "value": "Valid"
+    },
+    {
+     "label": "event_type",
+     "name": "event_type",
+     "value": "account_closure_recorded"
+    },
+    {
+     "label": "actor",
+     "name": "actor_detail",
+     "value": "automated account workflow"
+    },
+    {
+     "label": "fingerprint",
+     "name": "fingerprint",
+     "value": "8f0c...31ad"
+    },
+    {
+     "label": "signature",
+     "name": "signature",
+     "value": "Valid"
+    },
+    {
+     "label": "journal",
+     "name": "journal",
+     "value": "2026-Q3"
+    }
+   ],
+   "times": [
+    {
+     "label": "Time (UTC)",
+     "text": "25 Aug 04:03",
+     "role": "record",
+     "tz_label": "Time (UTC)"
+    },
+    {
+     "label": "recorded_at",
+     "text": "2026-08-25T04:03:00Z",
+     "role": "record"
+    }
+   ]
+  },
+  {
+   "record_key": "events[2]",
+   "panel": "table_row",
+   "scope": "customer_record",
+   "resource_id": "audit_record_002",
+   "fields": [
+    {
+     "label": "Event",
+     "name": "event_name",
+     "value": "Session revoked"
+    },
+    {
+     "label": "Category",
+     "name": "event_category",
+     "value": "Session management"
+    },
+    {
+     "label": "Subject",
+     "name": "subject_reference",
+     "value": "user_03"
+    },
+    {
+     "label": "Actor",
+     "name": "actor",
+     "value": "Security system"
+    },
+    {
+     "label": "Integrity",
+     "name": "integrity",
+     "value": "Valid"
+    }
+   ],
+   "times": [
+    {
+     "label": "Time (UTC)",
+     "text": "25 Aug 03:21",
+     "role": "record",
+     "tz_label": "Time (UTC)"
+    }
+   ]
+  },
+  {
+   "record_key": "events[3]",
+   "panel": "table_row",
+   "scope": "customer_record",
+   "resource_id": "audit_record_001",
+   "fields": [
+    {
+     "label": "Event",
+     "name": "event_name",
+     "value": "Recovery challenge completed"
+    },
+    {
+     "label": "Category",
+     "name": "event_category",
+     "value": "Authentication"
+    },
+    {
+     "label": "Subject",
+     "name": "subject_reference",
+     "value": "user_03"
+    },
+    {
+     "label": "Actor",
+     "name": "actor",
+     "value": "User (self)"
+    },
+    {
+     "label": "Integrity",
+     "name": "integrity",
+     "value": "Valid"
+    }
+   ],
+   "times": [
+    {
+     "label": "Time (UTC)",
+     "text": "24 Aug 16:14",
+     "role": "record",
+     "tz_label": "Time (UTC)"
+    }
+   ]
+  },
+  {
+   "record_key": "events[4]",
+   "panel": "table_row",
+   "scope": "customer_record",
+   "resource_id": "audit_record_006",
+   "fields": [
+    {
+     "label": "Event",
+     "name": "event_name",
+     "value": "Email change confirmed"
+    },
+    {
+     "label": "Category",
+     "name": "event_category",
+     "value": "Profile update"
+    },
+    {
+     "label": "Subject",
+     "name": "subject_reference",
+     "value": "user_03"
+    },
+    {
+     "label": "Actor",
+     "name": "actor",
+     "value": "User (self)"
+    },
+    {
+     "label": "Integrity",
+     "name": "integrity",
+     "value": "Valid"
+    }
+   ],
+   "times": [
+    {
+     "label": "Time (UTC)",
+     "text": "22 Aug 11:27",
+     "role": "record",
+     "tz_label": "Time (UTC)"
+    }
+   ]
+  },
+  {
+   "record_key": "events[5]",
+   "panel": "table_row",
+   "scope": "customer_record",
+   "resource_id": "audit_record_005",
+   "fields": [
+    {
+     "label": "Event",
+     "name": "event_name",
+     "value": "Login from new device"
+    },
+    {
+     "label": "Category",
+     "name": "event_category",
+     "value": "Authentication"
+    },
+    {
+     "label": "Subject",
+     "name": "subject_reference",
+     "value": "user_03"
+    },
+    {
+     "label": "Actor",
+     "name": "actor",
+     "value": "User (self)"
+    },
+    {
+     "label": "Integrity",
+     "name": "integrity",
+     "value": "Valid"
+    }
+   ],
+   "times": [
+    {
+     "label": "Time (UTC)",
+     "text": "20 Aug 09:42",
+     "role": "record",
+     "tz_label": "Time (UTC)"
+    }
+   ]
+  },
+  {
+   "record_key": "events[6]",
+   "panel": "table_row",
+   "scope": "customer_record",
+   "resource_id": "audit_record_004",
+   "fields": [
+    {
+     "label": "Event",
+     "name": "event_name",
+     "value": "Password changed"
+    },
+    {
+     "label": "Category",
+     "name": "event_category",
+     "value": "Authentication"
+    },
+    {
+     "label": "Subject",
+     "name": "subject_reference",
+     "value": "user_03"
+    },
+    {
+     "label": "Actor",
+     "name": "actor",
+     "value": "User (self)"
+    },
+    {
+     "label": "Integrity",
+     "name": "integrity",
+     "value": "Valid"
+    }
+   ],
+   "times": [
+    {
+     "label": "Time (UTC)",
+     "text": "18 Aug 14:05",
+     "role": "record",
+     "tz_label": "Time (UTC)"
+    }
+   ]
+  }
+ ],
+ "context": [
+  {
+   "label": "Summary",
+   "text": "Events 6 · Categories 5 · Integrity failures 0 · Partition 2026-Q3",
+   "times": []
+  }
+ ],
+ "not_visible": [
+  "retention period",
+  "retain-until date",
+  "legal hold"
+ ]
+}

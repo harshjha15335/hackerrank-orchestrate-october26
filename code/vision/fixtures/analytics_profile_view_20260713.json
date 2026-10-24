@@ -1,0 +1,151 @@
+{
+ "schema_version": "m8-visual-v1",
+ "file_id": "evidence_19",
+ "file_path": "evidence/images/analytics_profile_view_20260713.png",
+ "image_sha256": "4e4cb259bc2010b622b0c53fe5872258f994fefc23452a83bb27473758693484",
+ "provenance": {
+  "method": "manual_fixture",
+  "model_call": false,
+  "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
+  "transcribed_on": "2026-10-24",
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+ },
+ "screen": {
+  "application": "Pulse Analytics",
+  "title": "Omar Darwish",
+  "subtitle": "user_20 · analytics_7438 · darwish.omar@icloud.com",
+  "times": []
+ },
+ "records": [
+  {
+   "record_key": "user_profile",
+   "panel": "header+cards+detail_panel",
+   "scope": "customer_record",
+   "resource_id": "analytics_7438",
+   "fields": [
+    {
+     "label": "(header)",
+     "name": "user_id",
+     "value": "user_20"
+    },
+    {
+     "label": "(header)",
+     "name": "display_name",
+     "value": "Omar Darwish"
+    },
+    {
+     "label": "(header)",
+     "name": "email",
+     "value": "darwish.omar@icloud.com"
+    },
+    {
+     "label": "Sessions",
+     "name": "sessions",
+     "value": "12"
+    },
+    {
+     "label": "Products viewed",
+     "name": "products_viewed",
+     "value": "19"
+    },
+    {
+     "label": "Completed orders",
+     "name": "completed_orders",
+     "value": "2"
+    },
+    {
+     "label": "Revenue",
+     "name": "revenue",
+     "value": "USD 167.42"
+    },
+    {
+     "label": "Mobile / Desktop",
+     "name": "device_split",
+     "value": "67% / 33%"
+    },
+    {
+     "label": "Acquisition",
+     "name": "acquisition",
+     "value": "Organic search"
+    },
+    {
+     "label": "Market",
+     "name": "market",
+     "value": "AE"
+    },
+    {
+     "label": "Audience",
+     "name": "audience",
+     "value": "Returning shopper"
+    },
+    {
+     "label": "Interest",
+     "name": "interest",
+     "value": "Coffee & dining"
+    }
+   ],
+   "times": [
+    {
+     "label": "Last activity",
+     "text": "13 Jul 2026 14:22 UTC",
+     "role": "record"
+    },
+    {
+     "label": "First seen",
+     "text": "21 Apr 2026 09:14 UTC",
+     "role": "record"
+    }
+   ]
+  }
+ ],
+ "context": [
+  {
+   "label": "Event timeline",
+   "text": "14:22 Order completed · Ceramic coffee set · USD 84.21 · Mobile",
+   "times": []
+  },
+  {
+   "label": "Event timeline",
+   "text": "14:20 Checkout started · 2 items · USD 84.21 · Mobile",
+   "times": []
+  },
+  {
+   "label": "Event timeline",
+   "text": "14:17 Product viewed · Ceramic coffee set · Mobile",
+   "times": []
+  },
+  {
+   "label": "Event timeline",
+   "text": "14:16 Added to cart · Ceramic coffee set · USD 42.00 · Mobile",
+   "times": []
+  },
+  {
+   "label": "Event timeline",
+   "text": "14:12 Product viewed · Stoneware mug · USD 18.00 · Desktop",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "13 Jul 6 events in active session",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "08 Jul Order completed · USD 83.21",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "30 Jun Product search · coffee set",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "22 Jun Campaign opened",
+   "times": []
+  }
+ ],
+ "not_visible": [
+  "deletion status"
+ ]
+}

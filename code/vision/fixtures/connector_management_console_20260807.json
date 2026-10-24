@@ -1,0 +1,200 @@
+{
+ "schema_version": "m8-visual-v1",
+ "file_id": "evidence_14",
+ "file_path": "evidence/images/connector_management_console_20260807.png",
+ "image_sha256": "e81fabc93ea1b5f4c918d934cdb2bea05d61737adfcc29f281494f5d8ec46355",
+ "provenance": {
+  "method": "manual_fixture",
+  "model_call": false,
+  "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
+  "transcribed_on": "2026-10-24",
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+ },
+ "screen": {
+  "application": "BridgeOps",
+  "title": "Connections",
+  "subtitle": "PRODUCTION · eu-west · 07 Aug 2026 08:00 UTC",
+  "times": [
+   {
+    "label": "(subtitle)",
+    "text": "07 Aug 2026 08:00 UTC",
+    "role": "page"
+   }
+  ]
+ },
+ "records": [
+  {
+   "record_key": "topology[1]+detail",
+   "panel": "table_row+detail_panel",
+   "scope": "process_record",
+   "resource_id": "data_flow_1121",
+   "fields": [
+    {
+     "label": "Destination",
+     "name": "destination",
+     "value": "customer_analytics_warehouse"
+    },
+    {
+     "label": "Selector",
+     "name": "selector_email",
+     "value": "jain.aditi@gmail.com"
+    },
+    {
+     "label": "Mode",
+     "name": "mode",
+     "value": "Continuous"
+    },
+    {
+     "label": "Events/hour",
+     "name": "events_per_hour",
+     "value": "1,284"
+    },
+    {
+     "label": "Last contact",
+     "name": "last_contact",
+     "value": "07:59:42"
+    },
+    {
+     "label": "Status",
+     "name": "status",
+     "value": "Healthy"
+    },
+    {
+     "label": "Owner",
+     "name": "owner_team",
+     "value": "Data Platform"
+    },
+    {
+     "label": "Sync mode",
+     "name": "sync_mode",
+     "value": "Continuous sync"
+    },
+    {
+     "label": "Last response",
+     "name": "last_response",
+     "value": "200 OK · 1.8 s"
+    }
+   ],
+   "times": []
+  },
+  {
+   "record_key": "topology[2]",
+   "panel": "table_row",
+   "scope": "process_record",
+   "resource_id": "data_flow_9846",
+   "fields": [
+    {
+     "label": "Destination",
+     "name": "destination",
+     "value": "customer_analytics_warehouse"
+    },
+    {
+     "label": "Selector",
+     "name": "selector_email",
+     "value": "lucia-torres@gmail.com"
+    },
+    {
+     "label": "Mode",
+     "name": "mode",
+     "value": "Continuous"
+    },
+    {
+     "label": "Events/hour",
+     "name": "events_per_hour",
+     "value": "842"
+    },
+    {
+     "label": "Last contact",
+     "name": "last_contact",
+     "value": "07:59:36"
+    }
+   ],
+   "times": [],
+   "note": "Row only; the per-connector Status is shown only in the data_flow_1121 detail panel."
+  },
+  {
+   "record_key": "topology[3]",
+   "panel": "table_row",
+   "scope": "non_customer",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "Connector",
+     "name": "connector_name",
+     "value": "Order notifications"
+    },
+    {
+     "label": "Destination",
+     "name": "destination",
+     "value": "notification_service"
+    },
+    {
+     "label": "Selector",
+     "name": "selector",
+     "value": "order events"
+    },
+    {
+     "label": "Mode",
+     "name": "mode",
+     "value": "Continuous"
+    }
+   ],
+   "times": []
+  },
+  {
+   "record_key": "topology[4]",
+   "panel": "table_row",
+   "scope": "non_customer",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "Connector",
+     "name": "connector_name",
+     "value": "Delivery tracking"
+    },
+    {
+     "label": "Destination",
+     "name": "destination",
+     "value": "logistics_warehouse"
+    },
+    {
+     "label": "Selector",
+     "name": "selector",
+     "value": "shipment events"
+    },
+    {
+     "label": "Mode",
+     "name": "mode",
+     "value": "Continuous"
+    }
+   ],
+   "times": []
+  }
+ ],
+ "context": [
+  {
+   "label": "Activity",
+   "text": "07:59:42 124 events delivered",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "07:58:10 checkpoint committed",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "07:56:44 18 events retried",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "07:55:02 destination acknowledged batch",
+   "times": []
+  }
+ ],
+ "not_visible": [
+  "explicit enabled flag",
+  "scheduler registration"
+ ]
+}
