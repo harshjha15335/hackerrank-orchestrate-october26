@@ -97,7 +97,8 @@ Adapt saai's typed enums, but **fail loudly**: no silent coercion like saai's `_
 | M2-1 | Resolve all 518 request emails (case-insensitive, current ∪ historical) | 518/518 resolved; 0 ambiguous. If ambiguous, the case is flagged, not guessed |
 | M2-2 | Historical-only emails resolve to the right `user_id` | All 95 resolved; 10 spot checks traced through `user_audit_log.csv` |
 | M2-3 | Identifier set includes every historical email, `email_hash` and phone (normalised) | Unit fixtures for each `field_name` type |
-| M2-4 | Inverted index: identifier → observations | Every sample-cited (resource, evidence) pair for dev cases is reachable from that subject's identifiers (recall = 1.0 on dev) |
+| M2-4 (original; report alongside revised gate) | Inverted index: identifier → observations | Every sample-cited (resource, evidence) pair for dev cases is reachable from that subject's identifiers (recall = 1.0 on dev). This conflates existing records with scoped evidence of absence; retain the fraction and do not claim it passed. |
+| M2-4R (revised evidence-safe gate) | Identity retrieval and negative-evidence scope accounting | 100% of citations with a source-backed identity join are retrieved; 100% of cited SQL absence snapshots expose table scope separately without assigning a missing resource to a subject; every remaining citation has source/locator and join diagnostics as unattributed; adversarial fixtures yield zero unsupported cross-record correlations. Unattributed citations do not count as identity hits or proof of an absent state. |
 | M2-5 | Decoy rejection: near-miss emails (e.g. `x.jr@` vs `x@`) and same-name different people don't link | Fixture set of ≥5 decoys: 0 false links |
 | M2-6 | Duplicate-subject cases (same email, 2 cases) are computed independently | Both cases resolve; their states differ only through `audit_at` |
 

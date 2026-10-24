@@ -779,3 +779,170 @@ branch=feature/m2-identity-graph
 repo_root=/workspace/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+
+## [2026-10-24T15:12:45.761452+00:00] M2 retrieval safety correction
+
+User Prompt (verbatim, secrets redacted):
+M2 Independent Audit — FAIL, but recoverable. Do not merge M2 yet. Keep Codex on M2 for one targeted correction pass; do not start M3. The branch at d467cbf resolves 518 identities but reaches only 31/38 cited pairs. Three missing SQL citations may prove absence, while JSON array-position and whole-PDF correlations can falsely link unrelated people. Fix unsafe joins, investigate all seven misses, distinguish identity retrieval from negative evidence, revise the gate only if justified, rerun tests, commit and push the M2 branch.
+
+Attached pasted text (line endings normalized):
+# HackerRank Orchestrate October 2026 — M2 Retrieval Correction
+
+You are continuing M2, not starting a new milestone.
+
+Repository:
+https://github.com/harshjha15335/hackerrank-orchestrate-october26
+
+Branch:
+`feature/m2-identity-graph`
+
+Verified starting commit:
+`d467cbf058ba85d9b247d5a36db3e92e909462e5`
+
+## Mission
+
+Correct unsafe cross-record correlations, investigate the seven missed development-sample citations, and distinguish genuine identity-retrieval failures from evidence that proves a record is absent.
+
+Do not manufacture identity links to pass the checkpoint.
+
+## 1. Audit the current implementation
+
+Review:
+
+- `code/identity/graph.py`
+- `code/identity/retrieval.py`
+- `code/ingest/evidence.py`
+- `code/evaluation/tests/test_m2_recall.py`
+- `code/evaluation/checkpoints/M2_report.md`
+- Official problem statement and development checkpoints
+
+Preserve all completed M0/M1/M2 functionality.
+
+## 2. Fix unsafe correlations
+
+Current `EvidenceIndex` grouping uses JSON export array positions across multiple service collections.
+
+An array index is not a stable cross-service identity key.
+
+Remove this implicit join unless a real shared key establishes the relationship.
+
+For each correlation method, require a defensible source-level relationship, such as:
+
+- An explicitly shared trace or correlation identifier
+- An exact matching subject identifier
+- A documented parent-child or resource-reference relationship
+- A demonstrably single-subject document or section
+
+Review the document-wide PDF grouping as well.
+
+Never promote multiple unrelated customer records into the same identity simply because they share a file, array position, or broad document context.
+
+Tests must cover unrelated service records occupying the same index, mixed-subject documents, and genuine same-trace correlations.
+
+## 3. Investigate all seven missed citations
+
+For every missing `(case_id, evidence_id, resource_id)` pair, produce a forensic diagnostic containing:
+
+- Source file and locator
+- Expected resource
+- Available identifier fields
+- Relevant identity and audit history
+- Possible joins through activity, resource or trace references
+- Whether the resource actually exists in the cited evidence
+- Whether the evidence represents a negative state assertion
+- Whether the citation is attributable without speculative linking
+
+Use official sample answers only inside evaluation/audit tooling, never production inference.
+
+Pay particular attention to SQL `evidence_54`, which supports some absence verifications for resources not present as rows.
+
+Inspect all seven individually. Do not assume all are irrecoverable.
+
+## 4. Separate identity retrieval from negative-evidence verification
+
+Design separate concepts for:
+
+A. Positive observations directly or defensibly attributable to the subject.
+
+B. Authoritative snapshot or query evidence capable of proving a known resource is absent, subject to verified scope and time.
+
+C. Unattributed evidence requiring later investigation.
+
+Do not automatically return every missing row from a database as a customer-specific result.
+
+Do not assign a nonexistent resource to a user without a source-backed resource relationship.
+
+Leave final PRESENT/ABSENT decisions to M4.
+
+## 5. Correct the evaluation gate if necessary
+
+Keep reporting the original 31/38 metric so progress remains transparent.
+
+Additionally report:
+
+- Recall on evidence pairs for which an identity association is actually supported
+- Coverage of negative-evidence citations through source scope, without pretending an absent row is an identity-linked record
+- Unresolved pairs and their exact reasons
+- False-positive correlations on adversarial fixtures
+
+If the original M2-4 gate is demonstrably impossible to satisfy without speculative joins, propose a precise revised acceptance criterion.
+
+Document the change in the milestone checkpoint and comparison report. Clearly distinguish the original FAIL from the revised gate result.
+
+Do not lower the target just because the implementation misses cases.
+
+## 6. Testing and benchmark comparison
+
+Add regression tests for:
+
+- Cross-service array-position collisions
+- Multi-person PDF/document contexts
+- Valid and invalid trace joins
+- Null-identifier records
+- Absence evidence from SQL snapshots
+- Missing resource references
+- Audit-time boundaries
+- Historical identity decoys
+- Repeated deterministic execution
+
+Rerun every M0, M1 and M2 test.
+
+Compare the corrected strategy with Saai's exact grep retrieval and citation guard. Document why October requires stronger provenance rules than May's support-document retrieval.
+
+Replace the current characterization test that simply asserts `reached == 31` with transparent measurement and justified acceptance tests. Do not encode a known failure as the final success criterion.
+
+## 7. Deliverables
+
+Update:
+
+- Retrieval implementation and tests
+- `code/evaluation/checkpoints/M2_report.md`
+- Relevant development checkpoint criteria, only when justified
+- An M2 seven-miss forensic diagnostic report
+- Append-only development log
+
+For each reported improvement, provide source evidence and test results.
+
+Commit and push the corrected M2 branch to my fork. Do not overwrite `main`, force-push, or begin M3.
+
+Return the new commit SHA, test count, retrieval metrics, remaining exceptions and PASS/FAIL recommendation.
+
+Stop for independent review.
+
+Agent Response Summary:
+Removed cross-service array-position joins and broad PDF grouping; only explicit same-trace joins without conflicting customer identities propagate. Added separate SQL snapshot scopes for later absence checks, a seven-miss forensic report, adversarial tests and a revised evidence-safe M2 gate. The original 31/38 recall remains a FAIL; under the revised classification gate 31/31 source-backed identity links and 3/3 SQL scopes are accounted for, with four records explicitly unattributed. All 115 M0–M2 tests passed; M3 and main were left untouched.
+
+Actions:
+* Reviewed identity/retrieval/ingest code, public sample citations and participant evidence.
+* Updated source correlation logic and added SnapshotIndex.
+* Generated code/evaluation/checkpoints/M2_FORENSICS.md and updated M2_report.md and DEVELOPMENT_CHECKPOINTS.md.
+* Ran combined suite and deterministic forensic report checks; committed and pushed M2 branch.
+
+Context:
+tool=Codex
+model=unavailable: exact runtime model identifier is not exposed
+branch=feature/m2-identity-graph
+repo_root=/workspace/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

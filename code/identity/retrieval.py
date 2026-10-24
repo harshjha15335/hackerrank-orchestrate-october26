@@ -40,17 +40,11 @@ class EvidenceIndex:
     def __init__(self, observations: list[Observation]):
         self.observations = observations
         self.postings = {}
-        self.groups = defaultdict(set)
+        self.trace_groups = defaultdict(set)
         for position, observation in enumerate(observations):
             raw = observation.raw_fields
             if observation.source_type == 'log' and raw.get('trace_id'):
-                self.groups[('trace', observation.evidence_id, raw['trace_id'])].add(position)
-            if observation.source_type == 'json':
-                match = re.match(r'(\$\.service_exports)\.[^.]+\.[^[]+\[(\d+)\]', observation.locator)
-                if match:
-                    self.groups[('export_row', observation.evidence_id, match.group(2))].add(position)
-            if observation.source_type == 'pdf':
-                self.groups[('document', observation.evidence_id)].add(position)
+                self.trace_groups[(observation.evidence_id, raw['trace_id'])].add(position)
             direct = direct_identifiers(observation.raw_fields)
             for field, key in direct:
                 self.postings.setdefault((field, key), {}).setdefault(position, set()).add('direct')
@@ -70,9 +64,14 @@ class EvidenceIndex:
                 entry = selected.setdefault(position, {'matched': set(), 'strength': set()})
                 entry['matched'].add(key)
                 entry['strength'].update(strengths)
-        # Correlation is a candidate link, never direct identity proof. A trace
-        # ID, export row position, or document is the visible join context.
-        for group in self.groups.values():
+        # Only an explicit shared trace ID is a cross-line join. Distinct
+        # customer identifiers within one trace make that group ambiguous.
+        for group in self.trace_groups.values():
+            identities = set()
+            for position in group:
+                identities.update((f, v) for f, v in direct_identifiers(
+                    self.observations[position].raw_fields) if f in ('email', 'user_id'))
+            if len(identities) > 1: continue
             anchors = [position for position in group if position in selected]
             if not anchors: continue
             matched = set().union(*(selected[p]['matched'] for p in anchors))

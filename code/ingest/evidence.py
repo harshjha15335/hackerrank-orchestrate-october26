@@ -203,12 +203,15 @@ def parse_pdf(path, meta):
         raise ExtractionError(f'{meta["file_id"]}: pdftotext failed: {exc}') from exc
     if not run.stdout.strip(): return [], 'needs_multimodal'
     lines = parse_lines(path, meta, 'pdf', run.stdout)
-    # An explicit resource reference may occur on a different page or line
-    # from its identifiers. Keep a separate document-scoped observation, while
-    # retaining every original line and its locator for source inspection.
+    # A document-level association is safe only with one exact subject email
+    # and one explicit resource reference. Multi-person documents remain lines
+    # without a fabricated subject/resource join.
     references = sorted(set(re.findall(r'\b(?:account|support|analytics|search|backup|data_flow|export)_\d+\b', run.stdout)))
-    for resource in references:
-        lines.append(make(meta, f'document:{resource}', {'resource_id': resource, 'text': run.stdout}, 'pdf'))
+    emails = {email.casefold() for email in EMAIL.findall(run.stdout)}
+    user_refs = {value.casefold() for value in USER.findall(run.stdout)}
+    if len(references) == 1 and len(emails) == 1 and len(user_refs) <= 1:
+        lines.append(make(meta, f'document:{references[0]}',
+                          {'resource_id': references[0], 'text': run.stdout}, 'pdf'))
     return lines, 'parsed'
 
 

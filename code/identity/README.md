@@ -12,8 +12,8 @@ The CLI emits an identity resolution and all time-eligible evidence references
 with their file/activity/audit ID, source path, locator, system, resource,
 capture timestamp and match strength. It does not decide resource state or
 deletion status. `direct` comes from explicit identifier fields; `context`
-comes from source text; `correlated` comes from a trace, export row or PDF
-document containing a direct match elsewhere; `mixed_context` marks a record
+comes from source text; `correlated` requires a shared explicit trace ID
+without conflicting customer identifiers; `mixed_context` marks a record
 with more than one direct email/user identity. All are candidates for later
 verification, not proof of the resource's current state. Future captures are
 excluded with an inclusive, timezone-aware case cutoff.
@@ -24,7 +24,8 @@ transitions when viewing an earlier case. Email matching is exact after
 case-folding, phones use digits, and hashes are opaque exact strings.
 Ambiguous matches return candidate user IDs and no chosen user.
 
-The M2 dev-sample recall gate remains unmet for seven cited pairs whose cited
-resource records have no identity link, including absent resources that never
-appear in participant evidence. See the M2 checkpoint report. The CLI does
-not fabricate those links to improve a public sample score.
+SQL table scope is exposed separately by `identity.snapshots`; absent rows are
+never customer-specific hits. The original dev-sample recall is 31/38: three
+SQL negative scopes are discoverable separately, and four records/queries
+remain unattributed. See the M2 checkpoint and forensic reports. The CLI does
+not fabricate links to improve a public sample score.
