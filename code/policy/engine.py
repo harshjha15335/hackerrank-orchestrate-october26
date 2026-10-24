@@ -12,12 +12,12 @@ from collections import defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from ingest.evidence import USER, EMAIL, parse_time
+from ingest.evidence import parse_time
 from state.engine import field_values, system_for
 
 from .categories import classify, load_map
 from .conditions import (FALSE, TRUE, UNKNOWN, Dossier, Record, evaluate, exposed_fields,
-                         explicit_identifier_nulls, load_config, subject_from)
+                         explicit_identifier_nulls, identity_claims, load_config, subject_from)
 from .rules import PolicyTable, load_rules
 
 COMPLIANT, VIOLATION, UNRESOLVED, DEFERRED = 'COMPLIANT', 'VIOLATION', 'UNRESOLVED', 'DEFERRED_M6'
@@ -91,16 +91,9 @@ class Context:
                 self.documents[o.evidence_id].append(o)
 
 
-def _identity_conflict(o, subject) -> bool:
-    """A same-ID record that names someone else is not this subject's record."""
-    fields = field_values(o.raw_fields)
-    for name in ('subject_reference', 'customer_reference', 'user_id'):
-        value = fields.get(name)
-        if isinstance(value, str) and USER.fullmatch(value.strip()) and value.strip() != subject.user_id:
-            return True
-        if isinstance(value, str) and EMAIL.fullmatch(value.strip()) and not subject.owns(value):
-            return True
-    return False
+def _attribution(o, subject) -> str:
+    """Own-record attribution of a same-ID observation; a shared ID alone proves nothing."""
+    return subject.attribution(identity_claims(field_values(o.raw_fields)))
 
 
 def _record(o, linked) -> Record:
@@ -109,8 +102,11 @@ def _record(o, linked) -> Record:
 
 def _dossier(ctx, latest, assertions, resolution, subject, category):
     cutoff = parse_time(resolution.audit_at)
+    # Subject-linked M4 assertions keep their M2/M4 attribution; mixed-identity
+    # context is never subject evidence.
     linked = {(a['evidence_id'], a['locator']) for a in assertions
-              if a['system_id'] == latest['system_id'] and a['resource_id'] == latest['resource_id']}
+              if a['system_id'] == latest['system_id'] and a['resource_id'] == latest['resource_id']
+              and a.get('attribution') != 'mixed_context'}
     seen, observations = set(), []
     for key in sorted(linked):
         o = ctx.by_locator.get(key)
@@ -121,7 +117,9 @@ def _dossier(ctx, latest, assertions, resolution, subject, category):
         if key in seen or system_for(o) != latest['system_id']: continue
         if parse_time(o.captured_at) > cutoff: continue
         if o.record_time and parse_time(o.record_time) > cutoff: continue
-        if _identity_conflict(o, subject): continue
+        # Other copies (including other topologies) count only when the record
+        # itself names this subject and nobody else, as of the audit cutoff.
+        if _attribution(o, subject) != 'SUBJECT': continue
         observations.append((o, False)); seen.add(key)
     observations.sort(key=lambda pair: (parse_time(pair[0].captured_at), pair[0].evidence_id, pair[0].locator),
                       reverse=True)

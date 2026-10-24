@@ -34,3 +34,9 @@ SnapshotIndex scopes remain candidates, not confirmed absence.
 or the observed scope is insufficient. `attribution` distinguishes direct,
 context and trace-correlated links. This stage does not apply retention policy,
 plan remediation, infer ownership from sample answers, or decide final status.
+
+M5 review addendum: a completed, resource- and service-matched readback that
+returns record fields without row/HTTP keys, and a JSON record with non-null
+fields of its own (not a `result` claim), are field-level observations. They
+yield PRESENT, REDACTED (account/support rows without direct identifiers) or
+ANONYMIZED (analytics with retained content), and otherwise stay UNKNOWN.

@@ -262,3 +262,55 @@ def test_full_518_cutoff_determinism_and_anomaly_quarantine():
     assert a == b and a['case_count'] == 518 and a['cutoff_violations'] == 0
     assert len(a['timestamp_anomalies']) == 2
     assert all(d['reason'] == 'record_time_after_manifest_capture' for d in a['timestamp_anomalies'])
+
+
+def field_record(kind, system, resource, raw, event=None):
+    o = Observation('synthetic_evidence', 'evidence/synthetic', 'line:1' if kind == 'log' else '$.records[0]', T,
+                    system, resource, None, None, (('u@example.com', 'u@example.com'),),
+                    {'resource_id': resource, **raw}, kind, None, None, event)
+    return from_hit(Hit(o, (('email', 'u@example.com'),), 'direct'), resolution())
+
+
+def test_completed_readback_with_returned_fields():
+    # M5 review: completed resource-scoped reads that return field values, with no row/HTTP keys.
+    base = {'event': 'support_ticket_read_completed', 'service': 'support_platform', 'trace_id': 'rb-1'}
+    nulls = field_record('log', 'support_platform', 'support_1',
+                         {**base, 'customer_reference': 'user_1', 'requester_email': 'null', 'requester_phone': 'null'}, T)
+    assert (nulls.state, nulls.classification) == ('REDACTED', 'readback')
+    exposed = field_record('log', 'support_platform', 'support_1',
+                           {**base, 'requester_email': 'u@example.com'}, T)
+    assert exposed.state == 'PRESENT' and exposed.supported
+    analytics = field_record('log', 'analytics_platform', 'analytics_1',
+                             {'event': 'analytics_profile_read_completed', 'service': 'analytics_platform',
+                              'audience_cohort': 'x', 'email': 'null', 'phone': 'null'}, T)
+    assert analytics.state == 'ANONYMIZED'
+
+
+@pytest.mark.parametrize('raw,event', [
+    ({'event': 'support_ticket_read_completed', 'service': 'support_platform'}, T),           # envelope only
+    ({'event': 'support_ticket_read_completed', 'service': 'other_service',
+      'requester_email': 'u@example.com'}, T),                                                  # service mismatch
+    ({'event': 'support_ticket_read_completed', 'service': 'support_platform',
+      'requester_email': 'u@example.com'}, None),                                               # no event time
+    ({'event': 'support_ticket_read_started', 'service': 'support_platform',
+      'lookup_key': 'u@example.com'}, T),                                                      # not completed
+    ({'event': 'support_ticket_read_completed', 'service': 'support_platform',
+      'requester_email': 'null', 'requester_name': 'null'}, T),                                 # only nulls
+])
+def test_incomplete_or_unscoped_readbacks_stay_unknown(raw, event):
+    a = field_record('log', 'support_platform', 'support_1', raw, event)
+    assert a.state == 'UNKNOWN' and not a.supported
+
+
+def test_json_records_with_own_fields():
+    audit = field_record('json', 'security_service', 'audit_record_1',
+                         {'subject_reference': 'user_1', 'event_code': 'X', 'retention_until': '2030-01-01T00:00:00Z'})
+    assert (audit.state, audit.classification) == ('PRESENT', 'field_values')
+    redacted = field_record('json', 'support_platform', 'support_1',
+                            {'customer_reference': 'user_1', 'message_excerpt': 'x', 'requester_email': None})
+    assert redacted.state == 'REDACTED'
+    for raw in ({'subject_reference': 'u@example.com', 'result': 'FOUND', 'record_type': 'X'},   # claim
+                {'observed_at': T},                                                               # envelope
+                {'email': None, 'phone': None, 'customer_reference': None}):                     # analytics, no content
+        a = field_record('json', 'analytics_platform', 'analytics_1', raw)
+        assert a.state == 'UNKNOWN', raw

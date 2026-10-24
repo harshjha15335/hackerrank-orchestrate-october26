@@ -131,3 +131,119 @@ M5-1, M5-2, M5-3 and M5-4 pass, the full M0–M5 suite is green (277) and runs a
 reporting requirement is met, but its ≥ 0.80 dev step-F1 target is not (0.329). Per the instruction to
 stop after M5, M6/M7 were not started; the root-cause report identifies the M1 pipe-log parser and the
 M4 field-level gaps as the highest-yield fixes before or alongside M6.
+
+---
+
+# Rev 2 – independent-review corrections (supersedes the numbers above)
+Base: reviewed commit `0570185e48bc622ab3ddd40c84150797d2041922`. Sections 1–8 above are kept unchanged
+as the rev 1 record; rev 1 generated reports are preserved as `M5_UNKNOWN_ROOT_CAUSES_rev1.md` and
+`M5_CONDITION_COVERAGE_rev1.md`, and the current files are regenerated. The security-retention decision
+is unchanged: a record with no supplied retention period stays condition UNKNOWN / UNRESOLVED.
+
+## R1. Cross-customer evidence (priority 1)
+Review finding: `_dossier()` added any same-ID observation unless `_identity_conflict()` saw a
+conflicting stable reference; plain email, phone and hash fields were not checked, and unattributed
+records could supply a retention date or category signal.
+
+Correction (`code/policy/conditions.py: identity_claims, Subject.attribution`, `engine.py: _attribution`):
+- Every explicit identifier a record names is collected: emails anywhere (including free text), user
+  references, phone fields and phone-shaped values, hash fields and `correlation_key` hashes.
+- A same-ID observation that is not already subject-linked by M2/M4 is used only when it names at least
+  one identifier and **every** named identifier belongs to the subject's cutoff-time identity view
+  (`IdentityGraph.at`). FOREIGN and UNATTRIBUTED observations are dropped, whatever their topology.
+- M4 assertions marked `mixed_context` no longer enter the dossier.
+- A PDF retention term counts only if its own document block names the subject and nobody else.
+
+Tests (15 new): different email / phone / email hash / user reference / mixed identities / foreign
+free text on a same-ID record → ignored; same subject via user ref, case-folded email, reformatted phone
+or hash → used and cited; unattributed retention date → ignored; replica copy naming the subject used,
+replica naming another user ignored; historical email known by the cutoff attributes, the same email
+absent from the cutoff view does not, evidence captured after `audit_at` never counts; a decoy record
+with `email_opt_in` for another person leaves category, rule, condition, action, compliance and
+obligations identical; a document term for another subject is ignored.
+Effect on participant data: **0** of 1,440 decisions changed, so no rev 1 decision relied on
+contaminated evidence; the path is now closed.
+
+## R2. M1 pipe-delimited log parser (priority 2)
+`parse_lines()` now recognises `time | LEVEL | service | trace | event | key=value…` when the second
+column is a log severity. It records `level`, `service`, `trace_id` and `event`, parses quoted
+key=value attributes (without letting them overwrite those structural columns), keeps the original line
+in `text`, and leaves the handover format (`time | system | resource | category | state | ids`) and
+all other formats unchanged. `PARSER_VERSION` is `m1-v2`, so cached parses are invalidated.
+Tests: one synthetic fixture (including a spoofed `level=` attribute) and one participant test over
+both operations-stream logs (no severity as system; every line with `resource_id=` gets that ID).
+
+Impact on the 38 malformed assertions (all from `evidence_48`, 10 cases): they disappear and the same
+lines now yield **34** correctly keyed physical copies, of which **20** are source-supported (9 ABSENT
+from completed 404/zero-row profile lookups, 11 PRESENT from completed one-row audit reads) and **14**
+stay UNKNOWN because they are claims (index hits, PII scans, heartbeats). The second operations-stream
+log (`evidence_21`) contributes no latest assertion before or after. The 32 sample cases are unchanged
+by this step. Ingestion coverage remains 94/94 files (83 parsed, 11 images `needs_multimodal`).
+
+## R3. M4 field-level state gaps (priority 3)
+All 96 "missing field-level state" assertions came from four observed shapes:
+
+| Shape | Copies | Content |
+|---|---|---|
+| completed `support_ticket_read_completed` log readback | 33 | returned `customer_reference`, `requester_*` fields; no rows/HTTP keys |
+| completed `analytics_profile_read_completed` log readback | 8 | returned `audience_cohort`, email/phone/hash fields |
+| JSON export/bundle security audit records | 42 | `subject_reference`, `event_code`/`event_name`, retention or integrity seal |
+| JSON support messages / attachment / legal hold | 13 | message or file fields, hold term |
+
+Two narrow rules were added to `code/state/engine.py`:
+- A completed READBACK event with matching `resource_id`, matching `service`, an event time and no row
+  or HTTP key, which returned at least one non-null record field, is a readback of that record.
+- A JSON record (not a `result` claim, not a status/row readback) with at least one non-null field of
+  its own is an observed record.
+For both, identifiers present → PRESENT; account/support rows without direct identifiers → REDACTED
+(same as the existing SQL rule); analytics without identifiers → ANONYMIZED only with retained analytic
+content, else UNKNOWN; other records → PRESENT. Envelope-only lines, `_started` events, service or
+resource mismatches, missing event times, all-null field sets, `result: FOUND` claims and worker
+results stay UNKNOWN (7 new M4 tests). Timestamp quarantine runs afterwards, so both anomalies stay
+quarantined.
+
+Result: all 96 became supported (PRESENT 73, REDACTED 23); **no previously supported latest state
+changed**; replica drift, opposing-fact conflicts and cutoff violations remain 0/0/0. M5 still applies
+its own field checks: e.g. REDACTED support rows whose `message_text` contains an email are violations,
+and the newly PRESENT audit records without a retention term remain UNRESOLVED.
+
+## R4. Re-evaluation
+| Measure | Rev 1 | Rev 2 |
+|---|---|---|
+| Latest physical copies (518 cases) | 1,440 | 1,436 |
+| Source-supported / UNKNOWN | 1,075 / 365 | 1,191 / 245 |
+| UNKNOWN causes | claims 229, field gaps 96, scope 38, timestamp 2 | claims 243, timestamp 2 |
+| Policy-relevant UNKNOWN (deletion requests) | 326 (324) | 240 (238) |
+| Copy decisions COMPLIANT / VIOLATION / UNRESOLVED / DEFERRED_M6 | 199 / 492 / 589 / 160 | 250 / 504 / 519 / 163 |
+| Category MAPPED / PROCESS / UNMAPPED | 1,241 / 160 / 39 | 1,268 / 163 / 5 |
+| rule_12 TRUE / UNKNOWN | 98 / 298 | 98 / 308 |
+| DELETE steps on RETAIN categories | 0 | 0 |
+| M4 DELETE-all provisional dev status | 14/22 | 13/22 |
+| M5 dev status (evidence-decided correct) | 18/22 (5/5) | 19/22 (7/7) |
+| M5 dev step P / R / **F1** | 0.960 / 0.198 / **0.329** | 0.966 / 0.231 / **0.373** |
+| M5 dev policy-scope F1 | 0.358 | 0.406 |
+| M5 dev sequence / field accuracy | 0.045 / 0.958 | 0.045 / 0.944 |
+| Retention counterfactual dev F1 (what-if only) | 0.395 | 0.436 |
+| Holdout step F1 (report only, not tuned) | 0.667 | 0.759 |
+| M0–M5 tests | 277 passed | **301 passed** |
+
+Test count: `pytest code/evaluation/tests code/ingest/tests code/identity/tests code/intent/tests
+code/state/tests code/policy/tests` → **301 passed**, 0 failed/skipped (rev 1 suite 277 + 2 M1 parser
+tests + 7 M4 state tests + 15 M5 attribution tests, counting parametrised cases). Identity/retrieval safety
+tests (M2 decoys, correlation safety, recall accounting) all pass unchanged. Two consecutive 518-case
+policy runs are byte-identical (SHA-256 `29a0089281eb95a744219bf6d6cc7901a6adb6699a550657cf305ffa08c784df`);
+two state runs likewise (`fa6bdc8019f7323cc86d3f51667c75943aaf1aa41c87dc487e6e3f5576e8247d`).
+
+## R5. M5-5 and the remaining gap
+The 0.80 dev step-F1 target is retained and still **not met (0.373)**. On dev, 15 of 22 cases still
+contain at least one UNRESOLVED resource. The remaining gap is dominated by: (a) expected resources that
+M2/M4 never link to the subject (e.g. the always-verified account absence when no account evidence is
+retrieved); (b) 243 operational claims with no readback; (c) security audit records without a supplied
+retention period, deliberately UNRESOLVED; and (d) data-flow findings/remediation/verification, which
+belong to M6, and final ordering/citation rules in M7. None of these is addressed by lowering the
+metric, hardcoding answers or tuning on the holdout.
+
+## R6. Recommendation (rev 2)
+M5-1 to M5-4 PASS; the review's attribution defect, the M1 pipe-log defect and the M4 field-level gaps
+are corrected with regression tests; M5-5 remains FAIL against its 0.80 target. Stopping for
+independent review; M6 not started, no PR opened.

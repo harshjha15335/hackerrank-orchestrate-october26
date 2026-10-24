@@ -111,6 +111,34 @@ def completed_flag_readback(o: Observation, event: str):
     return flag_state(raw, flag, true_state, false_state, 'readback')
 
 
+# Envelope/transport keys that describe how a record was read, not the record.
+ENVELOPE = {'resource_id', 'observed_at', 'recorded_at', 'updated_at', 'event', 'event_time', 'level',
+            'service', 'trace_id', 'instance', 'pod', 'region', 'text', 'duration_ms', 'latency_ms',
+            'attempt', 'seq'}
+CLAIM_KEYS = {'result', 'status_code', 'http_status', 'rows', 'reported_result'}
+CONTENT = ('metrics', 'audience_cohort')
+
+
+def _record_state(o: Observation, values, classification):
+    """State of a record whose own field values were observed (no claim/status keys).
+
+    Only field-bearing records qualify: an envelope with no record fields, a
+    result string or a row/HTTP status is not a materialized record.
+    """
+    fields = {k: v for k, v in values.items() if k not in ENVELOPE}
+    if not fields or CLAIM_KEYS & set(values) or not any(v not in NULLISH for v in fields.values()):
+        return None
+    if _has_direct_values(values):
+        return 'PRESENT', classification, 'observed record fields contain identifiers'
+    if o.resource_id.startswith('analytics_'):
+        if any(values.get(k) not in NULLISH for k in CONTENT):
+            return 'ANONYMIZED', classification, 'observed analytics fields contain no direct identifiers'
+        return None
+    if o.resource_id.startswith(('account_', 'support_')):
+        return 'REDACTED', classification, 'observed retained record has no direct identifiers'
+    return 'PRESENT', classification, 'observed record fields'
+
+
 def _state_for_observation(o: Observation):
     raw = o.raw_fields
     values = field_values(raw)
@@ -143,6 +171,13 @@ def _state_for_observation(o: Observation):
             return 'ABSENT', 'readback', 'completed zero-row readback'
         if event in READBACK_EVENTS and rows in (1, '1'):
             return 'PRESENT', 'readback', 'completed one-row readback'
+        # A completed, resource-scoped read that returned the record's fields
+        # (no row count or HTTP status) is a readback of those fields.
+        if (o.source_type == 'log' and event in READBACK_EVENTS and o.resource_id and
+                raw.get('resource_id') == o.resource_id and raw.get('service') == o.system_id and
+                o.event_time and code is None and rows is None):
+            found = _record_state(o, raw, 'readback')
+            if found: return found
         # "FOUND" and worker results are neither source rows nor verified reads.
         if raw.get('result') is not None:
             return 'UNKNOWN', 'operational_claim', 'result string requires source corroboration'
@@ -154,6 +189,8 @@ def _state_for_observation(o: Observation):
             if _has_direct_values(raw): return 'PRESENT', 'field_values', 'observed record contains identifiers'
             if o.resource_id.startswith('analytics_') and values.get('metrics') is not None:
                 return 'ANONYMIZED', 'field_values', 'observed analytics fields contain no direct identifiers'
+            found = _record_state(o, values, 'field_values')
+            if found: return found
         return 'UNKNOWN', 'operational_claim', 'no validated field-level state'
     return 'UNKNOWN', 'operational_claim', 'documentary or operational statement'
 

@@ -5,20 +5,20 @@ latest assertion). Fixture coverage lists the outcomes exercised by `code/policy
 
 | Rule | Category | Action | Run | TRUE | FALSE | UNKNOWN | Compliant | Violation | Unresolved | Fixture outcomes |
 |---|---|---|---|---|---|---|---|---|---|---|
-| rule_01 | USER_PROFILE | DELETE | 518 eval | 127 | 0 | 0 | 38 | 42 | 47 | ALWAYS |
+| rule_01 | USER_PROFILE | DELETE | 518 eval | 137 | 0 | 0 | 47 | 43 | 47 | ALWAYS |
 |  |  |  | 32 sample | 13 | 0 | 0 | 7 | 3 | 3 |  |
 | rule_02 | SECONDARY_IDENTIFIER | DELETE | 518 eval | 0 | 0 | 0 | 0 | 0 | 0 | ALWAYS |
 |  |  |  | 32 sample | 0 | 0 | 0 | 0 | 0 | 0 |  |
-| rule_03 | SEARCH_INDEX_ENTRY | DELETE | 518 eval | 307 | 0 | 0 | 0 | 230 | 77 | ALWAYS |
+| rule_03 | SEARCH_INDEX_ENTRY | DELETE | 518 eval | 312 | 0 | 0 | 0 | 230 | 82 | ALWAYS |
 |  |  |  | 32 sample | 13 | 0 | 0 | 0 | 8 | 5 |  |
 | rule_04 | CACHE_ENTRY | DELETE | 518 eval | 0 | 0 | 0 | 0 | 0 | 0 | ALWAYS |
 |  |  |  | 32 sample | 0 | 0 | 0 | 0 | 0 | 0 |  |
-| rule_05 | SUPPORT_MESSAGE | REDACT | 518 eval | 137 | 0 | 51 | 16 | 110 | 62 | FALSE, TRUE, UNKNOWN |
-|  |  |  | 32 sample | 5 | 0 | 2 | 0 | 2 | 5 |  |
-| rule_06 | SUPPORT_ATTACHMENT | DELETE | 518 eval | 16 | 0 | 0 | 0 | 15 | 1 | FALSE, TRUE, UNKNOWN |
+| rule_05 | SUPPORT_MESSAGE | REDACT | 518 eval | 137 | 0 | 51 | 25 | 112 | 51 | FALSE, TRUE, UNKNOWN |
+|  |  |  | 32 sample | 5 | 0 | 2 | 3 | 2 | 2 |  |
+| rule_06 | SUPPORT_ATTACHMENT | DELETE | 518 eval | 16 | 0 | 0 | 0 | 16 | 0 | FALSE, TRUE, UNKNOWN |
 |  |  |  | 32 sample | 1 | 0 | 0 | 0 | 0 | 1 |  |
-| rule_07 | ANALYTICS_PROFILE | ANONYMIZE | 518 eval | 61 | 0 | 19 | 0 | 61 | 19 | FALSE, TRUE, UNKNOWN |
-|  |  |  | 32 sample | 4 | 0 | 2 | 0 | 4 | 2 |  |
+| rule_07 | ANALYTICS_PROFILE | ANONYMIZE | 518 eval | 69 | 0 | 12 | 0 | 69 | 12 | FALSE, TRUE, UNKNOWN |
+|  |  |  | 32 sample | 5 | 0 | 1 | 0 | 5 | 1 |  |
 | rule_08 | PRODUCT_TELEMETRY | ANONYMIZE | 518 eval | 0 | 0 | 0 | 0 | 0 | 0 | FALSE, TRUE, UNKNOWN |
 |  |  |  | 32 sample | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | rule_09 | USER_EXPORT | DELETE | 518 eval | 33 | 0 | 0 | 0 | 26 | 7 | ALWAYS |
@@ -27,14 +27,14 @@ latest assertion). Fixture coverage lists the outcomes exercised by `code/policy
 |  |  |  | 32 sample | 1 | 0 | 0 | 0 | 0 | 1 |  |
 | rule_11 | EMAIL_DELIVERY_LOG | REDACT | 518 eval | 0 | 0 | 0 | 0 | 0 | 0 | FALSE, TRUE, UNKNOWN |
 |  |  |  | 32 sample | 0 | 0 | 0 | 0 | 0 | 0 |  |
-| rule_12 | SECURITY_AUDIT_LOG | RETAIN | 518 eval | 98 | 0 | 298 | 66 | 0 | 330 | FALSE, TRUE, UNKNOWN |
-|  |  |  | 32 sample | 6 | 0 | 13 | 1 | 0 | 18 |  |
-| rule_13 | LEGAL_HOLD_RECORD | RETAIN | 518 eval | 9 | 0 | 1 | 8 | 0 | 2 | FALSE, TRUE, UNKNOWN |
+| rule_12 | SECURITY_AUDIT_LOG | RETAIN | 518 eval | 98 | 0 | 308 | 98 | 0 | 308 | FALSE, TRUE, UNKNOWN |
+|  |  |  | 32 sample | 6 | 0 | 13 | 6 | 0 | 13 |  |
+| rule_13 | LEGAL_HOLD_RECORD | RETAIN | 518 eval | 9 | 0 | 1 | 9 | 0 | 1 | FALSE, TRUE, UNKNOWN |
 |  |  |  | 32 sample | 0 | 0 | 0 | 0 | 0 | 0 |  |
-| rule_14 | BACKUP_ARCHIVE | RETAIN | 518 eval | 63 | 0 | 5 | 63 | 0 | 5 | TRUE, UNKNOWN |
+| rule_14 | BACKUP_ARCHIVE | RETAIN | 518 eval | 63 | 0 | 6 | 63 | 0 | 6 | TRUE, UNKNOWN |
 |  |  |  | 32 sample | 4 | 0 | 2 | 4 | 0 | 2 |  |
 | rule_15 | ACCOUNT_TOMBSTONE | REDACT | 518 eval | 16 | 0 | 0 | 8 | 8 | 0 | FALSE, TRUE, UNKNOWN |
-|  |  |  | 32 sample | 2 | 0 | 0 | 0 | 1 | 1 |  |
+|  |  |  | 32 sample | 2 | 0 | 0 | 1 | 1 | 0 |  |
 
-Category mapping over 518 cases: MAPPED 1241, PROCESS 160, UNMAPPED 39.
+Category mapping over 518 cases: MAPPED 1268, PROCESS 163, UNMAPPED 5.
 DELETE steps proposed for RETAIN categories: **0**.

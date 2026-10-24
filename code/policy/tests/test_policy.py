@@ -414,3 +414,93 @@ def test_m5_5_dev_metrics_are_reported():
     assert set(dev['status_basis']) and len(dev['status_basis']) == 22
     for key in ('status_accuracy', 'step_f1', 'sequence_accuracy'):
         assert 0 <= dev['all_steps'][key] <= 1
+
+
+# --- cross-customer attribution (M5 review correction) ------------------------
+
+def retention_term(fields, *, evidence='synthetic_ledger', locator='$.records[1]', captured=T):
+    return obs(dict(fields, retention_until='2030-01-01T00:00:00Z'), 'security_service', 'audit_record_9',
+               evidence=evidence, locator=locator, captured=captured)
+
+
+@pytest.mark.parametrize('identity', [
+    {'customer_email': OTHER_EMAIL},
+    {'phone': '+44 20 7946 0999'},
+    {'email_hash': 'b' * 64},
+    {'subject_reference': 'user_9002'},
+    {'subject_reference': SUBJECT, 'customer_email': OTHER_EMAIL},
+    {'message_text': f'forwarded from {OTHER_EMAIL}'},
+], ids=['email', 'phone', 'email_hash', 'user_ref', 'mixed', 'free_text'])
+def test_other_customer_same_resource_id_is_ignored(identity):
+    d = decide({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9', 'PRESENT',
+               extra=[retention_term(identity)])
+    assert (d.condition_outcome, d.compliance) == (UNKNOWN, UNRESOLVED)
+
+
+@pytest.mark.parametrize('identity', [
+    {'subject_reference': SUBJECT}, {'customer_email': SUBJECT_EMAIL.upper()},
+    {'phone': '+1 (555) 010-0200'}, {'email_hash': SUBJECT_HASH},
+], ids=['user_ref', 'email_case', 'phone_format', 'email_hash'])
+def test_same_subject_retention_evidence_is_used(identity):
+    d = decide({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9', 'PRESENT',
+               extra=[retention_term(identity)])
+    assert (d.condition_outcome, d.compliance) == (TRUE, COMPLIANT)
+    assert d.condition_evidence == ('synthetic_ledger:$.records[1]',)
+
+
+def test_unattributed_record_cannot_supply_retention_date():
+    d = decide({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9', 'PRESENT',
+               extra=[retention_term({})])
+    assert d.condition_outcome == UNKNOWN
+
+
+def test_cross_topology_copies_need_their_own_attribution():
+    replica = Observation('synthetic_sql', 'evidence/synthetic.sql', 'security_audit_records_replica[1]', T,
+                          'security_service', 'audit_record_9', 'security_audit_records', None, (),
+                          {'resource_id': 'audit_record_9', 'subject_reference': SUBJECT,
+                           'retention_until': '2030-01-01T00:00:00Z'}, 'sql', 'replica')
+    assert decide({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9', 'PRESENT',
+                  extra=[replica]).condition_outcome == TRUE
+    from dataclasses import replace
+    foreign = replace(replica, raw_fields=dict(replica.raw_fields, subject_reference='user_9002'))
+    assert decide({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9', 'PRESENT',
+                  extra=[foreign]).condition_outcome == UNKNOWN
+
+
+def test_historical_identifiers_respect_audit_cutoff():
+    old_email = 'old.address@example.com'
+    history = resolution().history + (IdentityValue('email', old_email, old_email, 'synthetic_audit'),)
+    with_history = Resolution('synthetic_case', T, SUBJECT, (SUBJECT,), 'resolved', {'email': SUBJECT_EMAIL}, history)
+    term = retention_term({'customer_email': old_email})
+    ctx = Context([obs({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9'), term], RULES)
+    latest = {'system_id': 'security_service', 'resource_id': 'audit_record_9', 'topology': 'service',
+              'state': 'PRESENT', 'supported': True, 'explanation': 'synthetic',
+              'evidence_id': 'synthetic_evidence', 'locator': '$.records[0]'}
+    # Known by the cutoff: the record is the subject's.
+    assert decide_copy(ctx, latest, [latest], with_history, subject_from(with_history)).condition_outcome == TRUE
+    # Not part of the cutoff-time identity view (e.g. acquired later): another person.
+    res = resolution()
+    assert decide_copy(ctx, latest, [latest], res, subject_from(res)).condition_outcome == UNKNOWN
+    # Evidence captured after audit_at never counts, even for the subject.
+    late = decide({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9', 'PRESENT',
+                  extra=[retention_term({'subject_reference': SUBJECT}, captured='2026-12-01T00:00:00Z')])
+    assert late.condition_outcome == UNKNOWN
+
+
+def test_other_persons_record_cannot_change_policy_decision():
+    base = decide({'audience_cohort': 'x', 'email': SUBJECT_EMAIL}, 'analytics_platform', 'analytics_9', 'PRESENT')
+    decoy = obs({'email_opt_in': 'true', 'email': OTHER_EMAIL}, 'analytics_platform', 'analytics_9',
+                evidence='synthetic_decoy')
+    contaminated = decide({'audience_cohort': 'x', 'email': SUBJECT_EMAIL}, 'analytics_platform', 'analytics_9',
+                          'PRESENT', extra=[decoy])
+    keys = ('category', 'rule_id', 'condition_outcome', 'effective_action', 'compliance', 'obligations')
+    assert [getattr(base, k) for k in keys] == [getattr(contaminated, k) for k in keys]
+    assert base.category == 'ANALYTICS_PROFILE'
+
+
+def test_document_term_for_another_subject_is_ignored():
+    lines = ['Event reference audit_record_9', 'subject reference user_9002', 'retain until 25 Aug 2027 04 03 UTC']
+    docs = [Observation('synthetic_pdf', 'evidence/synthetic.pdf', f'line:{n}', T, None, None, None, None, (),
+                        {'text': text}, 'pdf') for n, text in enumerate(lines, 1)]
+    d = decide({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9', 'PRESENT', extra=docs)
+    assert d.condition_outcome == UNKNOWN

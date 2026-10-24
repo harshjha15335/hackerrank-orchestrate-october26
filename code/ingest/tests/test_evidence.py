@@ -182,3 +182,30 @@ def test_manifest_escape_rejected(tmp_path):
     (d/'evidence_files.csv').write_text('file_id,file_path,origin,captured_at\nsynthetic,../outside.txt,none,2026-01-01T00:00:00Z\n')
     (tmp_path/'outside.txt').write_text('hello')
     with pytest.raises(ExtractionError,match='unsafe'):ingest(d)
+
+
+def test_pipe_log_with_severity_column(tmp_path):
+    p = tmp_path / 'fixture.log'
+    p.write_text('2026-01-02T00:00:00Z | DEBUG | account_service | tr-1 | profile_lookup_completed | '
+                 'instance="a-1" resource_id="synthetic_a" rows="0" http_status="404" level="spoofed"\n'
+                 '2026-01-02T00:00:01Z | WARN | support_platform | tr-2 | message_pii_scan | '
+                 'resource_id="synthetic_b" matched_value="x@example.test"\n')
+    first, second = parse_lines(p, meta(p), 'log')
+    assert first.system_id == 'account_service' and first.resource_id == 'synthetic_a'
+    assert first.raw_fields['level'] == 'DEBUG' and first.raw_fields['trace_id'] == 'tr-1'
+    assert first.raw_fields['event'] == 'profile_lookup_completed'
+    assert (first.raw_fields['rows'], first.raw_fields['http_status']) == ('0', '404')
+    assert first.event_time == '2026-01-02T00:00:00Z' and first.state is None
+    assert second.system_id == 'support_platform' and second.raw_fields['matched_value'] == 'x@example.test'
+    assert all(o.system_id not in ('DEBUG', 'WARN') for o in (first, second))
+
+
+def test_participant_pipe_logs_never_use_severity_as_system():
+    for name in ('operations_stream_me_central_20260203.log', 'operations_stream_eu_central_20260705.log'):
+        path = DATASET / 'evidence/logs' / name
+        obs = parse_lines(path, meta(path), 'log')
+        assert len(obs) == len(path.read_text().splitlines())
+        assert not any(o.system_id in ('DEBUG', 'INFO', 'WARN', 'ERROR') for o in obs)
+        with_ids = [o for o in obs if 'resource_id=' in o.raw_fields['text']]
+        assert with_ids and all(o.resource_id and o.resource_id in o.raw_fields['text'] for o in with_ids)
+        assert all(o.raw_fields['text'] for o in obs)

@@ -27,7 +27,11 @@ UNKNOWN M4 states, unmapped or ambiguous categories and unbound or UNKNOWN
 conditions are always UNRESOLVED. Stable internal references
 (`subject_reference`) are permitted on tombstones and support messages; direct
 identifiers, including those inside free text, are exposure. Physical copies
-roll up per resource with the worst copy deciding. Backups keep the RETAIN
+roll up per resource with the worst copy deciding. A same-ID record that is
+not already subject-linked by M2/M4 is used for conditions or categories only
+when every identifier it names (email, phone, hash, user reference) belongs to
+the subject's cutoff-time identity view; a shared resource ID alone is never
+attribution. Backups keep the RETAIN
 verdict and carry a separate restore obligation.
 
 This stage does not plan data flows (M6), order or cite final steps, or decide

@@ -111,3 +111,9 @@ states and four unattributed sample references.** M5 must apply policy and
 later milestones must assess omitted resources, source authority beyond the
 explicit SQL comparison tables, and attribution of currently unlinked records.
 The 14/22 provisional status baseline is not final deletion-decision accuracy.
+
+## Addendum (2026-10-24, M5 review correction)
+Two narrowly scoped M4 state rules (completed readbacks that return record fields; JSON records with
+their own fields) and an M1 pipe-log parser fix were added on `feature/m5-policy-engine`. The figures
+above describe the reviewed M4 commit; current counts are in `M5_report.md` §R2–R4 (UNKNOWN 365 → 245,
+no previously supported state changed, provisional DELETE-all dev status 14/22 → 13/22).

@@ -13,10 +13,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-PARSER_VERSION = 'm1-v1'
+PARSER_VERSION = 'm1-v2'
 EMAIL = re.compile(r'(?<![\w.])[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?![\w.])')
 USER = re.compile(r'\buser_\d+\b', re.I)
 PHONE = re.compile(r'\+\d[\d ()-]{6,}\d')
+LOG_LEVELS = {'TRACE', 'DEBUG', 'INFO', 'NOTICE', 'WARN', 'WARNING', 'ERROR', 'CRITICAL', 'FATAL'}
 TIME = re.compile(r'^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$')
 TABLE_SYSTEM = {'customer_profiles': 'account_service', 'customer_search_documents': 'search_service',
                 'customer_analytics_profiles': 'analytics_platform', 'support_records': 'support_platform',
@@ -170,6 +171,15 @@ def parse_json(path, meta):
     return out
 
 
+def key_values(text, raw, protected=()):
+    try: tokens = shlex.split(text)
+    except ValueError: tokens = text.split()
+    for token in tokens:
+        if '=' in token:
+            key, value = token.split('=', 1)
+            if key and re.fullmatch(r'[A-Za-z_][\w-]*', key) and key not in protected: raw[key] = value
+
+
 def parse_lines(path, meta, kind, text=None):
     if text is None: text = path.read_text(encoding='utf-8')
     out = []
@@ -177,16 +187,16 @@ def parse_lines(path, meta, kind, text=None):
         if not line.strip(): continue
         raw = {'text': line}
         parts = [p.strip() for p in line.lstrip('- ').split('|')]
-        if len(parts) >= 5 and TIME.fullmatch(parts[0]):
+        if len(parts) >= 5 and TIME.fullmatch(parts[0]) and parts[1].upper() in LOG_LEVELS:
+            # Pipe-delimited log: time | level | service | trace | event | key=value...
+            # The severity is never a system; record fields come from key=value pairs.
+            raw.update(zip(('event_time', 'level', 'service', 'trace_id', 'event'), parts[:5]))
+            if len(parts) > 5: key_values(' | '.join(parts[5:]), raw, protected=tuple(raw))
+        elif len(parts) >= 5 and TIME.fullmatch(parts[0]):
             raw.update(zip(('event_time', 'system_id', 'resource_id', 'data_category', 'state'), parts[:5]))
             if len(parts) > 5: raw['identifiers_text'] = '|'.join(parts[5:])
         else:
-            try: tokens = shlex.split(line)
-            except ValueError: tokens = line.split()
-            for token in tokens:
-                if '=' in token:
-                    key, value = token.split('=', 1)
-                    if key and re.fullmatch(r'[A-Za-z_][\w-]*', key): raw[key] = value
+            key_values(line, raw)
             first = line.split(maxsplit=1)[0]
             if TIME.fullmatch(first): raw['event_time'] = first
         when = raw.get('event_time')

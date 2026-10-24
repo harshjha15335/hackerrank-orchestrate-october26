@@ -35,6 +35,16 @@ class Subject:
     phones: frozenset[str]
     hashes: frozenset[str]
 
+    def holds(self, claim: tuple[str, str]) -> bool:
+        kind, value = claim
+        return {'email': value in self.emails, 'phone': value in self.phones,
+                'email_hash': value in self.hashes, 'user_id': value == self.user_id}[kind]
+
+    def attribution(self, claims) -> str:
+        """SUBJECT if every named identifier is this subject's, FOREIGN if any is not."""
+        if not claims: return 'UNATTRIBUTED'
+        return 'SUBJECT' if all(self.holds(c) for c in claims) else 'FOREIGN'
+
     def owns(self, value: str) -> bool:
         text = str(value)
         if self.user_id and text == self.user_id: return True
@@ -49,6 +59,25 @@ class Subject:
         return (any(e in lowered for e in self.emails) or any(h in text for h in self.hashes)
                 or any(p and len(p) >= 7 and p in digits for p in self.phones)
                 or bool(self.user_id and re.search(rf'\b{re.escape(self.user_id)}\b', text)))
+
+
+def identity_claims(value, key='') -> set[tuple[str, str]]:
+    """Explicit customer identifiers named by a record: emails, phones, hashes, user refs."""
+    found = set()
+    if isinstance(value, dict):
+        for k, v in value.items(): found |= identity_claims(v, k)
+    elif isinstance(value, list):
+        for v in value: found |= identity_claims(v, key)
+    elif isinstance(value, str) and value.strip():
+        text, name = value.strip(), key.casefold()
+        found |= {('email', e.casefold()) for e in EMAIL.findall(text)}
+        found |= {('user_id', u) for u in USER.findall(text)}
+        phones = PHONE.findall(text) or ([text] if 'phone' in name else [])
+        found |= {('phone', ''.join(c for c in p if c.isdigit())) for p in phones
+                  if sum(c.isdigit() for c in p) >= 7}
+        if 'hash' in name or name == 'correlation_key':
+            found |= {('email_hash', h) for h in HASH.findall(text)}
+    return found
 
 
 def subject_from(resolution) -> Subject:
@@ -214,9 +243,15 @@ def _document_retention(d: Dossier) -> tuple[datetime, str] | None:
     for citation, lines in d.documents:
         for i, line in enumerate(lines):
             if not d.resource_id or not re.search(rf'\b{re.escape(d.resource_id)}\b', line): continue
+            block = []
             for follow in lines[i + 1:]:
                 if re.search(r'\b(audit|record)_\w*\d+\b', follow) and 'reference' in follow.casefold():
                     break
+                block.append(follow)
+            claims = set().union(*(identity_claims(t) for t in [line, *block]))
+            # A document term counts only when its block itself names this subject.
+            if d.subject.attribution(claims) != 'SUBJECT': continue
+            for follow in block:
                 if 'retain until' in follow.casefold():
                     m = PDF_DATE.search(follow.split('retain until', 1)[-1])
                     if m:
