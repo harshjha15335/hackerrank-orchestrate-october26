@@ -95,3 +95,18 @@ inference judge, or automatic output repair.
 explains each missed or extra expected obligation from the M6 assessment. It
 also scores a provisional M5+M6 steps_json (operation-table order, no M7
 citation guard) before and after M6. Holdout numbers are report-only.
+
+## M7 inference and evaluation
+
+```sh
+python3 code/synthesis/main.py --output /tmp/m7/predictions.csv --summary   # 518 cases, temp path only
+python3 code/synthesis/main.py --sample --case <case_id> --explain          # one case with diagnostics
+python3 code/evaluation/main.py validate /tmp/m7/predictions.csv --mode full
+python3 code/evaluation/m7_metrics.py                                        # evaluation only (reads samples)
+python3 -m pytest -q -p no:cacheprovider code                                # M0–M7 suite
+```
+
+`validate` keeps the strict M0 plan shape. M7 rows that are INCOMPLETE only
+because of unresolved uncertainty (no step, or future verification only) are
+accepted by `validate_rows(..., nonstandard_allow_unproven_incomplete=True)`; see
+`code/synthesis/README.md` and `checkpoints/M7_report.md`.

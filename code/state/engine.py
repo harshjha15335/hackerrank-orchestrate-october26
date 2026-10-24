@@ -9,7 +9,7 @@ from typing import Iterable
 from identity.graph import Resolution
 from identity.retrieval import Hit, direct_identifiers
 from identity.snapshots import SnapshotIndex
-from ingest.evidence import Observation, parse_time
+from ingest.evidence import TABLE_SYSTEM, Observation, parse_time
 
 DIRECT_FIELDS = ('email', 'phone', 'email_hash', 'full_name', 'display_name',
                  'requester_email', 'requester_phone', 'requester_name',
@@ -53,10 +53,25 @@ def physical_scope(o: Observation) -> str:
     return o.topology or 'service'
 
 
+# Owning systems named by M1's table map; a file whose manifest origin is one of
+# them was exported by that system (M7: closes system-less record gaps).
+KNOWN_SYSTEMS = frozenset(TABLE_SYSTEM.values())
+# Snapshot tables whose name differs from M1's table map only by the
+# "customer_" prefix (customer_search_primary_*.sql uses search_documents_*).
+TABLE_ALIASES = {'search_documents': 'search_service'}
+
+
 def system_for(o: Observation) -> str | None:
     if o.system_id: return o.system_id
     if o.source_type == 'sql' and o.locator.startswith('customer_profiles_'):
         return 'account_service'
+    if o.source_type == 'sql':
+        table = o.locator.split('[', 1)[0]
+        for prefix, system in TABLE_ALIASES.items():
+            if table == prefix or table.startswith(prefix + '_'):
+                return system
+    if o.source_type not in ('activity', 'audit') and o.source_origin in KNOWN_SYSTEMS:
+        return o.source_origin
     return None
 
 
