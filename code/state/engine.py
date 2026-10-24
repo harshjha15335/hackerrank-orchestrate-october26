@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import asdict, dataclass, replace
-from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
@@ -71,6 +70,47 @@ def _has_direct_values(raw) -> bool:
     return any(values.get(k) not in NULLISH for k in DIRECT_FIELDS)
 
 
+def parse_source_bool(value) -> bool | None:
+    """Recognize only source booleans, SQLite 0/1 and log/SQL text forms."""
+    if type(value) is bool:
+        return value
+    if type(value) is int and value in (0, 1):
+        return bool(value)
+    if isinstance(value, str):
+        word = value.strip().casefold()
+        if word in ('true', '1'):
+            return True
+        if word in ('false', '0'):
+            return False
+    return None
+
+
+def flag_state(raw, flag: str, true_state: str, false_state: str, classification: str):
+    value = parse_source_bool(raw.get(flag))
+    if value is None:
+        return 'UNKNOWN', 'unknown', f'{flag} is missing or not an explicit boolean'
+    return (true_state if value else false_state), classification, f'validated {flag}={str(value).lower()}'
+
+
+def completed_flag_readback(o: Observation, event: str):
+    """Accept flag evidence only from a completed, resource-scoped source read."""
+    raw = o.raw_fields
+    expected = {'connector_config_read_completed': ('integration_service', 'data_flow_', 'enabled', 'ACTIVE', 'DISABLED'),
+                'restore_policy_read_completed': ('backup_service', 'backup_', 'restore_allowed',
+                                                  'RESTORE_ENABLED', 'RESTORE_BLOCKED')}
+    system, prefix, flag, true_state, false_state = expected[event]
+    if (not o.resource_id or not o.resource_id.startswith(prefix) or
+            raw.get('resource_id') != o.resource_id or o.system_id != system or
+            raw.get('service') != system or not o.event_time):
+        return 'UNKNOWN', 'unknown', 'completed readback lacks explicit resource, service or event time'
+    if ('rows' in raw and (type(raw['rows']) not in (int, str) or str(raw['rows']).strip() != '1')):
+        return 'UNKNOWN', 'unknown', 'readback flag conflicts with row count or HTTP status'
+    if any(key in raw and (type(raw[key]) not in (int, str) or str(raw[key]).strip() != '200')
+           for key in ('http_status', 'status_code')):
+        return 'UNKNOWN', 'unknown', 'readback flag conflicts with row count or HTTP status'
+    return flag_state(raw, flag, true_state, false_state, 'readback')
+
+
 def _state_for_observation(o: Observation):
     raw = o.raw_fields
     values = field_values(raw)
@@ -79,11 +119,9 @@ def _state_for_observation(o: Observation):
     if o.source_type == 'sql':
         if o.resource_id is None: return 'UNKNOWN', 'unknown', 'scope metadata is not a record'
         if o.data_category == 'connector_subscriptions' or o.resource_id.startswith('data_flow_'):
-            if values.get('enabled') in (1, True, '1', 'true'): return 'ACTIVE', 'snapshot', 'enabled connector row'
-            if values.get('enabled') in (0, False, '0', 'false'): return 'DISABLED', 'snapshot', 'disabled connector row'
+            return flag_state(values, 'enabled', 'ACTIVE', 'DISABLED', 'snapshot')
         if o.resource_id.startswith('backup_'):
-            if values.get('restore_allowed') in (1, True, '1', 'true'): return 'RESTORE_ENABLED', 'snapshot', 'backup row permits restore'
-            if values.get('restore_allowed') in (0, False, '0', 'false'): return 'RESTORE_BLOCKED', 'snapshot', 'backup row blocks restore'
+            return flag_state(values, 'restore_allowed', 'RESTORE_ENABLED', 'RESTORE_BLOCKED', 'snapshot')
         if o.resource_id.startswith('analytics_') and not _has_direct_values(raw):
             return 'ANONYMIZED', 'snapshot', 'analytics row has no direct identifiers'
         if o.resource_id.startswith(('account_', 'support_')) and not _has_direct_values(raw):
@@ -95,6 +133,8 @@ def _state_for_observation(o: Observation):
         rows = raw.get('rows')
         if o.source_type == 'log' and event not in READBACK_EVENTS:
             return 'UNKNOWN', 'operational_claim', 'log event is not a completed readback'
+        if o.source_type == 'log' and event in ('connector_config_read_completed', 'restore_policy_read_completed'):
+            return completed_flag_readback(o, event)
         if code in (404, '404') and rows in (0, '0', None) and (event in READBACK_EVENTS or 'profile_lookups' in o.locator):
             return 'ABSENT', 'readback', 'resource-scoped 404 readback'
         if code in (200, '200') and (rows in (1, '1', None)) and (event in READBACK_EVENTS or 'profile_lookups' in o.locator):
@@ -107,12 +147,10 @@ def _state_for_observation(o: Observation):
         if raw.get('result') is not None:
             return 'UNKNOWN', 'operational_claim', 'result string requires source corroboration'
         if o.source_type == 'json' and o.resource_id:
-            if 'enabled' in values:
-                return ('ACTIVE' if values['enabled'] in (True, 1, 'true', '1') else 'DISABLED',
-                        'field_values', 'connector configuration fields')
-            if 'restore_allowed' in values:
-                return ('RESTORE_ENABLED' if values['restore_allowed'] in (True, 1, 'true', '1') else 'RESTORE_BLOCKED',
-                        'field_values', 'restore policy fields')
+            if o.resource_id.startswith('data_flow_'):
+                return flag_state(values, 'enabled', 'ACTIVE', 'DISABLED', 'field_values')
+            if o.resource_id.startswith('backup_'):
+                return flag_state(values, 'restore_allowed', 'RESTORE_ENABLED', 'RESTORE_BLOCKED', 'field_values')
             if _has_direct_values(raw): return 'PRESENT', 'field_values', 'observed record contains identifiers'
             if o.resource_id.startswith('analytics_') and values.get('metrics') is not None:
                 return 'ANONYMIZED', 'field_values', 'observed analytics fields contain no direct identifiers'

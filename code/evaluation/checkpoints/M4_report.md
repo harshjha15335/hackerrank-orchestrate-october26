@@ -1,4 +1,4 @@
-# M4 — audit-time state reconstruction — PASS for independent review
+# M4 — audit-time state reconstruction — corrected for independent review
 
 Date: 2026-10-24. Branch: `feature/m4-state-reconstruction` from verified
 merged M3 `main` at `6c3eb90d42c8b2338434c97b491a6da579e4620b`.
@@ -14,6 +14,17 @@ source reliability, conflicts, SQL scope and a participant-derived replica
 fixture. `code/evaluation/m4_baseline.py` alone reads sample gold for the
 provisional metric. The narrow M3 mixed-negation correction adds two tests.
 `code/main.py`, the official dataset and root `output.csv` are unchanged.
+
+Independent review found that completed connector/restore log readbacks were
+discarded when they lacked HTTP or row-count fields, and invalid JSON flags
+could be interpreted as safe false values. `parse_source_bool()` now accepts
+only JSON booleans, SQLite integer 0/1 and explicit `true`/`false` or `1`/`0`
+text. Missing, null, malformed, floating-point and ambiguous values yield
+UNKNOWN across SQL, JSON and log sources. A completed log event must name the
+expected service and resource type, have a matching resource ID and event
+time, and have no contradictory row-count or status metadata. Its flag state
+takes precedence over a generic PRESENT readback. Delivery status and worker
+results do not establish flow or restore state.
 
 Observed SQL rows, field-level JSON, and completed scoped HTTP/row-count
 readbacks can support states. Workflow/activity successes and bare `FOUND`
@@ -41,17 +52,26 @@ ABSENT assertion. Other SQL tables do not supply negative proof.
 | M4-2 | Deterministic latest-state and tie tests pass; verified 404 → 200 yields PRESENT and 200 → verified 404 yields ABSENT within one scope. Opposing equal-time facts yield UNKNOWN. Full-run JSON repeated byte-identically. |
 | M4-3 | Synthetic worker/activity `reported_result=SUCCESS` and generic `result=FOUND` both remain UNKNOWN without a source readback. |
 | M4-4 | Participant SQL topology fixture: one independently identified account is ABSENT in the complete primary table but PRESENT in the failover table. Sample inspection reports one physical-copy drift; the 518 evaluation cases report zero drift at their cutoffs. |
-| M4-5 | Provisional first-22 development-sample status accuracy with a DELETE-all M5 stub: **12/22 (54.5%)**. No M5 policy, step planning or final accuracy claim. |
+| M4-5 | Provisional first-22 development-sample status accuracy with a DELETE-all M5 stub: **14/22 (63.6%)** after the readback correction; previously 12/22. No M5 policy, step planning or final accuracy claim. |
 
 The 518 evaluation cases have **1,440** latest physical-resource assertions:
-**1,028** source-supported states and **412 UNKNOWN**. Latest states are
-PRESENT 750, ABSENT 38, REDACTED 81, ANONYMIZED 0, ACTIVE 86, DISABLED 25,
-RESTORE_ENABLED 23 and RESTORE_BLOCKED 25. The case-specific latest views
+**1,075** source-supported states and **365 UNKNOWN**. Latest states are
+PRESENT 750, ABSENT 38, REDACTED 81, ANONYMIZED 0, ACTIVE 107, DISABLED 36,
+RESTORE_ENABLED 27 and RESTORE_BLOCKED 36. The case-specific latest views
 contain **0** opposing-fact conflicts, **0** replica drift, and **0** cutoff
 violations; synthetic conflicting-fact tests prove the unresolved path. The
-32 samples have 80 latest assertions, 44 supported and 36 UNKNOWN, with one
-real SQL drift. Per-case histories preserve 1,141 UNKNOWN claim assertions
+32 samples have 80 latest assertions, 46 supported and 34 UNKNOWN, with one
+real SQL drift. Per-case histories preserve 1,094 UNKNOWN claim assertions
 in the full run rather than converting claims into compliance evidence.
+
+Before/after full-run counts: supported **1,028 → 1,075**; UNKNOWN
+**412 → 365**; ACTIVE **86 → 107**; DISABLED **25 → 36**;
+RESTORE_ENABLED **23 → 27**; RESTORE_BLOCKED **25 → 36**. The remaining state
+categories and the 1,440-resource denominator are unchanged. Provisional
+development status accuracy changed **12/22 → 14/22**. Replica drift,
+opposing-fact conflicts and cutoff violations remained **0/0/0** on the 518
+cases; the real sample SQL drift remained **1**. These changes arise from
+validated source readbacks, not answer-specific rules.
 
 The four M2 unattributed references remain unresolved:
 `analytics_9406` (null-identifier log lookup), `analytics_901`
@@ -68,12 +88,16 @@ state assertions quarantined when reached.
 
 `/tmp/m0-venv/bin/python -m pytest -q -p no:cacheprovider
 code/evaluation/tests code/ingest/tests code/identity/tests code/intent/tests code/state/tests`
-reported **170 passed in 22.14s**, zero failures/skips. Two full CLI runs
+reported **217 passed** after correction, zero failures/skips. Two full CLI runs
 matched byte-for-byte, SHA-256
-`830f531719f3695dce2b37ff24aed93c3fd141c47c35e51d9ae7218c7f4cab2b`.
+`5fa436635072568b10229ef49a68eab8c875e649e5d6109efdec12f067863156`.
 The sample inspection SHA-256 was
-`6197ca9701654c1b71f38c45bed35316460de1601dfcf0d5e185e953a38e2aad`.
+`4dc1ef85cc59a2fdedb4bf7d2da9bc02f8d063e1bf7b4dd5ebe694b52538bee3`.
 The baseline command is `python3 code/evaluation/m4_baseline.py`.
+The added regressions cover completed true/false connector and restore
+readbacks, four participant-observed event/flag combinations, invalid values
+on every source type, unfinished and unscoped events, contradictory metadata,
+provenance, temporal transitions and timezone-aware cutoff boundaries.
 
 Trenton's pinned May source
 `benchmarks/trenton/code/agent/pipeline.py:107-118` escalates a claimed
@@ -82,8 +106,8 @@ principle to timestamped, per-copy source facts: workflow success alone is
 not deletion proof, and a read of one store cannot prove every other store
 empty. May's support-ticket status metrics are not reused.
 
-**PASS for M4 independent review, with 412 explicitly unresolved latest
+**PASS recommendation for renewed M4 independent review, with 365 explicitly unresolved latest
 states and four unattributed sample references.** M5 must apply policy and
 later milestones must assess omitted resources, source authority beyond the
 explicit SQL comparison tables, and attribution of currently unlinked records.
-The 12/22 provisional status baseline is not final deletion-decision accuracy.
+The 14/22 provisional status baseline is not final deletion-decision accuracy.

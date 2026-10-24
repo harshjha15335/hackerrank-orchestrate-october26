@@ -1427,3 +1427,160 @@ branch=feature/m4-state-reconstruction
 repo_root=/workspace/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+
+## [2026-10-24T16:02:55.609560+00:00] Correct M4 completed readbacks and boolean validation
+
+User Prompt (verbatim, secrets redacted):
+## M4 Independent Audit — Fix required before merge
+
+HOLD — Targeted correction
+
+I verified the published commit [`07da2b84`](https://github.com/harshjha15335/hackerrank-orchestrate-october26/commit/07da2b84a3880e8dfbc35ac89a0960a9cfa197f4?utm_source=chatgpt.com) and inspected the state engine, regression tests, baseline evaluator and actual evidence files.
+
+The branch is correctly based on merged M3 and is one commit ahead of `main`.
+
+| Audit area                          | Finding                                   |
+| ----------------------------------- | ----------------------------------------- |
+| 518-case processing                 | Implemented                               |
+| Audit-time cutoff enforcement       | PASS in source tests                      |
+| Worker `SUCCESS` treated as a claim | PASS                                      |
+| Primary/failover drift detection    | PASS on a real SQL fixture                |
+| Conflicting state handling          | PASS in synthetic tests                   |
+| 170 automated tests                 | Reported passing; not independently rerun |
+| 12/22 provisional accuracy          | Correctly labeled as a baseline           |
+| Completed log readbacks             | Normalization gap identified              |
+
+### The defect
+
+In `code/state/engine.py`, completed log readbacks can establish `PRESENT` or `ABSENT` from verified HTTP status or row counts. However, they do not currently interpret the explicit state fields of completed connector and backup readbacks.
+
+I verified these participant-visible examples:
+
+- `connector_config_read_completed` with `enabled=false` and `last_delivery_status=stopped`
+- `restore_policy_read_completed` with `restore_allowed=false`
+- Other completed connector readbacks with `enabled=true`
+
+The current implementation classifies these log observations as UNKNOWN, because they lack the HTTP status or `rows` fields expected by the existing readback branches.
+
+This unnecessarily discards potentially decisive evidence about whether customer data can be synchronized or restored. Those are central to the deletion challenge.
+
+The fix should recognize the structured values only on properly validated, completed, resource-scoped readbacks—not on arbitrary configuration strings or worker claims.
+
+The 412 unresolved latest states remain a risk, not proof of failure by themselves. Likewise, the 12/22 baseline cannot be treated as final performance because deletion policy has not yet been applied.
+
+### One related safety risk
+
+The JSON state parser also treats unrecognized values of `enabled` and `restore_allowed` as disabled or blocked. For example, `enabled=null` must mean UNKNOWN, not `DISABLED`.
+
+This could incorrectly make an unsafe system appear compliant. Both issues should be corrected together.
+
+## Send this correction to Codex
+
+# M4 Final Correction — Readback State and Strict Boolean Validation
+
+Continue on `feature/m4-state-reconstruction`.
+
+Starting commit:\
+`07da2b84a3880e8dfbc35ac89a0960a9cfa197f4`
+
+Independent review found two related state-classification defects. Resolve them before merging M4.
+
+## 1. Completed connector/restore readbacks
+
+In `code/state/engine.py`, the following completed log events can provide observed state:
+
+- `connector_config_read_completed`
+- `restore_policy_read_completed`
+
+The participant evidence contains completed readbacks with fields such as:
+
+- `enabled=true`
+- `enabled=false`
+- `restore_allowed=true`
+- `restore_allowed=false`
+
+Currently, these can become UNKNOWN when no HTTP status or row count exists.
+
+Implement event-specific interpretation of these documented fields, requiring valid completed events and explicit resource scope.
+
+Map connector states to `ACTIVE` or `DISABLED`, and restore permissions to `RESTORE_ENABLED` or `RESTORE_BLOCKED`.
+
+Do not promote `last_delivery_status`, worker results or generic claims into state proof without sufficient context.
+
+## 2. Strict boolean parsing
+
+Create one reusable boolean parser for supported source representations, including actual JSON booleans and documented SQLite/log representations.
+
+Accept only explicitly recognized true/false values.
+
+For missing, null, malformed, ambiguous or unsupported values, return UNKNOWN.
+
+Never treat an unrecognized value as `DISABLED` or `RESTORE_BLOCKED` merely because it is not true.
+
+Apply this consistently across JSON, SQL and completed log-readback state handling.
+
+For completed connector or restore events containing both flags and row-count/status metadata, ensure the final state represents the resource's actual flow/restore condition rather than a generic record PRESENT state.
+
+## 3. Tests
+
+Add regression fixtures for:
+
+- Completed connector enabled and disabled readbacks
+- Completed restore allowed and blocked readbacks
+- Missing, null and invalid flag values
+- Uncompleted events and worker claims
+- Conflicting older/newer readbacks
+- Audit cutoffs and timezone boundaries
+- Correct preservation of resource identity and evidence locator
+- Contradictory observations on the same resource
+- JSON and SQL flag interpretation
+
+Include at least two examples based on participant-visible log structures, without hardcoding customer IDs into production logic.
+
+## 4. Verify impact
+
+Rerun the full M0–M4 suite.
+
+Regenerate the full 518-case metrics and report changes in:
+
+- Source-supported states
+- UNKNOWN states
+- ACTIVE/DISABLED states
+- RESTORE_ENABLED/RESTORE_BLOCKED states
+- The 12/22 provisional development baseline
+- Drift, conflicts and cutoff violations
+
+A changed metric is acceptable if evidence now supports it. Do not preserve old numbers artificially.
+
+Ensure M1–M3 behavior remains unchanged and root `output.csv` is untouched.
+
+## 5. Publish
+
+Update `code/evaluation/checkpoints/M4_report.md`, including before/after metrics, tests and remaining limitations.
+
+Preserve the append-only log and accurately report the runtime model-ID limitation.
+
+Commit and push the correction to the existing M4 branch without changing `main` or force-pushing.
+
+Report the exact SHA and PASS/FAIL recommendation.
+
+**Do not start M5 until this correction passes independent review.**
+
+Next: Once this fix passes, we can merge M4 and start two parallel workstreams: Codex on M5 policy rules, and Gemini on M8 screenshot extraction. Claude Code can review the more complex policy and remediation decisions without spending its limited quota on routine parsing.
+
+Agent Response Summary:
+Added strict source boolean parsing shared by SQL, JSON and completed log readbacks, rejecting missing/null/malformed values as UNKNOWN. Validated connector and restore log readbacks now require a completed event, matching service/resource and event time, and no contradictory status metadata; flags establish ACTIVE/DISABLED or RESTORE_ENABLED/RESTORE_BLOCKED. Added synthetic and participant-derived regressions, updated M4 report with before/after counts, and kept main and M5 untouched. All 217 M0–M4 tests passed.
+
+Actions:
+* Updated code/state/engine.py, code/state/tests/test_state.py, code/state/README.md and M4_report.md.
+* Ran full regression suite, full and sample inspection CLI, provisional baseline and deterministic hash checks.
+* Appended this entry without rewriting earlier logs.
+
+Context:
+tool=Codex
+model=unavailable: exact runtime model identifier is not exposed
+branch=feature/m4-state-reconstruction
+repo_root=/workspace/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from identity.graph import Resolution
 from identity.retrieval import Hit
 from ingest.evidence import Observation
-from state.engine import from_hit, latest, reconstruct, sql_absences
+from state.engine import from_hit, latest, parse_source_bool, sql_absences
 from state.main import build, run_all, run_case
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -72,6 +72,94 @@ def test_restore_and_connector_flags_preserve_physical_state():
                                  ('data_flow_1', {'enabled': 0}, 'DISABLED')]:
         a = assertion(resource=resource, raw={'resource_id': resource, **raw})
         assert a.state == state
+
+
+@pytest.mark.parametrize('raw,expected', [(True, True), (False, False), (1, True), (0, False),
+                                         ('true', True), ('FALSE', False), (' 1 ', True), ('0', False),
+                                         (None, None), ('null', None), ('yes', None), ('', None),
+                                         (2, None), (1.0, None), ({'value': True}, None)])
+def test_strict_source_boolean(raw, expected):
+    assert parse_source_bool(raw) is expected
+
+
+@pytest.mark.parametrize('kind,resource,flag', [('sql', 'data_flow_1', 'enabled'),
+                                               ('json', 'data_flow_1', 'enabled'),
+                                               ('sql', 'backup_1', 'restore_allowed'),
+                                               ('json', 'backup_1', 'restore_allowed')])
+@pytest.mark.parametrize('value', [None, 'null', 'maybe', 2, 1.0])
+def test_invalid_or_missing_flags_never_become_safe_states(kind, resource, flag, value):
+    for raw in ({'resource_id': resource, flag: value}, {'resource_id': resource}):
+        a = assertion(kind=kind, resource=resource, raw=raw)
+        assert a.state == 'UNKNOWN' and not a.supported
+
+
+def completed_log(event, resource, flag, value, *, capture=T, when='2026-09-02T22:00:00Z', **extra):
+    service = 'integration_service' if event.startswith('connector') else 'backup_service'
+    raw = {'event': event, 'service': service, 'resource_id': resource, flag: value, **extra}
+    o = replace(observation('log', raw=raw, resource=resource, capture=capture, event=when,
+                            locator='line:17'), system_id=service)
+    return from_hit(Hit(o, (('user_id', 'user_1'),), 'direct'), resolution())
+
+
+@pytest.mark.parametrize('event,resource,flag,value,expected', [
+    ('connector_config_read_completed', 'data_flow_1', 'enabled', 'true', 'ACTIVE'),
+    ('connector_config_read_completed', 'data_flow_1', 'enabled', 'false', 'DISABLED'),
+    ('restore_policy_read_completed', 'backup_1', 'restore_allowed', 'true', 'RESTORE_ENABLED'),
+    ('restore_policy_read_completed', 'backup_1', 'restore_allowed', 'false', 'RESTORE_BLOCKED'),
+])
+def test_completed_flag_readbacks_are_scoped_and_preserve_provenance(event, resource, flag, value, expected):
+    a = completed_log(event, resource, flag, value, rows='1', http_status='200')
+    assert a.state == expected and a.supported and a.classification == 'readback'
+    assert (a.resource_id, a.evidence_id, a.locator) == (resource, 'synthetic_evidence', 'line:17')
+
+
+@pytest.mark.parametrize('value', [None, 'null', 'maybe', '', 2])
+def test_completed_log_invalid_flags_remain_unknown_even_with_rows(value):
+    a = completed_log('connector_config_read_completed', 'data_flow_1', 'enabled', value,
+                      rows='1', http_status='200')
+    assert a.state == 'UNKNOWN' and not a.supported
+
+
+def test_uncompleted_claim_and_unscoped_or_conflicting_readbacks():
+    o = replace(observation('log', raw={'event': 'connector_config_read_started',
+                                        'service': 'integration_service', 'resource_id': 'data_flow_1',
+                                        'enabled': 'false'}, resource='data_flow_1', event=T),
+                system_id='integration_service')
+    assert from_hit(Hit(o, (), 'direct'), resolution()).state == 'UNKNOWN'
+    assert completed_log('connector_config_read_completed', 'data_flow_1', 'enabled', 'false',
+                         rows='0').state == 'UNKNOWN'
+    assert completed_log('connector_config_read_completed', 'data_flow_1', 'enabled', 'false',
+                         http_status='404').state == 'UNKNOWN'
+    assert completed_log('connector_config_read_completed', 'data_flow_1', 'enabled', 'false',
+                         rows=True).state == 'UNKNOWN'
+    assert completed_log('connector_config_read_completed', 'data_flow_1', 'enabled', 'false',
+                         status_code='404').state == 'UNKNOWN'
+    missing = replace(observation('log', raw={'event': 'connector_config_read_completed',
+                                               'service': 'integration_service', 'enabled': 'false'},
+                                  event=T), system_id='integration_service')
+    assert from_hit(Hit(missing, (), 'direct'), resolution()).state == 'UNKNOWN'
+    wrong = replace(observation('log', raw={'event': 'connector_config_read_completed',
+                                            'service': 'backup_service', 'resource_id': 'data_flow_1',
+                                            'enabled': 'false'}, resource='data_flow_1', event=T),
+                    system_id='backup_service')
+    assert from_hit(Hit(wrong, (), 'direct'), resolution()).state == 'UNKNOWN'
+
+
+def test_flag_readback_timeline_conflict_and_cutoff():
+    old = completed_log('connector_config_read_completed', 'data_flow_1', 'enabled', 'true',
+                        capture='2026-09-02T21:00:00Z', when='2026-09-02T20:50:00Z')
+    new = completed_log('connector_config_read_completed', 'data_flow_1', 'enabled', 'false')
+    result = latest([old, new])[0]
+    assert result.state == 'DISABLED' and result.conflicts
+    assert latest([new, old])[0] == result
+    tied = replace(new, state='ACTIVE', locator='line:18')
+    assert latest([new, tied])[0].state == 'UNKNOWN'
+    boundary = completed_log('restore_policy_read_completed', 'backup_1', 'restore_allowed', 'false',
+                             capture='2026-09-03T00:00:00+01:00', when='2026-09-02T22:55:00Z')
+    assert boundary.state == 'RESTORE_BLOCKED'
+    with pytest.raises(ValueError):
+        completed_log('restore_policy_read_completed', 'backup_1', 'restore_allowed', 'false',
+                      capture='2026-09-03T00:00:01+01:00')
 
 
 def test_timeline_resync_and_verified_deletion():
@@ -145,6 +233,27 @@ def test_negative_sql_scope_needs_independent_reference(real):
     assert sql_absences(resolved, [], scopes, ROOT / 'dataset') == []
     assert scopes.absence_candidate(file_id, 'customer_profiles_primary',
                                     resource, resolved.audit_at) is None
+
+
+def test_participant_completed_connector_and_restore_log_structures(real):
+    _, evidence, _, _ = real
+    seen = set()
+    for o in evidence.observations:
+        if o.source_type != 'log' or o.raw_fields.get('event') not in (
+                'connector_config_read_completed', 'restore_policy_read_completed'):
+            continue
+        event = o.raw_fields['event']
+        flag = 'enabled' if event.startswith('connector') else 'restore_allowed'
+        value = parse_source_bool(o.raw_fields.get(flag))
+        if value is None: continue
+        a = from_hit(Hit(o, (), 'direct'), resolution(o.captured_at))
+        expected = (('ACTIVE' if value else 'DISABLED') if flag == 'enabled' else
+                    ('RESTORE_ENABLED' if value else 'RESTORE_BLOCKED'))
+        assert a.state == expected and a.supported
+        assert (a.resource_id, a.evidence_id, a.locator) == (o.resource_id, o.evidence_id, o.locator)
+        seen.add((flag, value))
+    assert {('enabled', True), ('enabled', False), ('restore_allowed', True),
+            ('restore_allowed', False)} <= seen
 
 
 def test_full_518_cutoff_determinism_and_anomaly_quarantine():

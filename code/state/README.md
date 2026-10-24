@@ -19,6 +19,9 @@ readback can supersede an earlier one within the same scope. Different SQL
 tables are distinct copies, so primary deletion does not erase a replica.
 
 SQL rows and validated field-level/readback results are observed states.
+Connector and restore flags use one strict boolean parser across SQL, JSON
+and completed log readbacks. Missing or unrecognized flags yield UNKNOWN;
+log flags require a matching completed event, service, resource and time.
 Activity SUCCESS, bare FOUND strings and other operational messages remain
 UNKNOWN unless corroborated. HTTP 200/404 is accepted only on a completed,
 resource-scoped readback. A source record time after the manifest capture or
