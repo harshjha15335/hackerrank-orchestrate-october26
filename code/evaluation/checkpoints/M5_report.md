@@ -247,3 +247,65 @@ metric, hardcoding answers or tuning on the holdout.
 M5-1 to M5-4 PASS; the review's attribution defect, the M1 pipe-log defect and the M4 field-level gaps
 are corrected with regression tests; M5-5 remains FAIL against its 0.80 target. Stopping for
 independent review; M6 not started, no PR opened.
+
+---
+
+# Rev 3 – attribution and temporal-evidence safeguards
+Base: reviewed commit `a5c4e939c6372ebc0d3d59bf3b4f88b184ab955d`. Rev 1 and Rev 2 sections above are kept.
+
+## T1. Already-linked M2/M4 observations (`code/policy/engine.py: _dossier, decide_copy`)
+Rev 2 re-checked only *additional* same-ID observations. Now every observation entering the policy
+dossier, including those already linked by M2/M4, is re-checked against every identifier it names
+(emails including free text, phones, email hashes, user references) and the subject's cutoff-time
+identity view:
+- all identifiers belong to the subject → usable;
+- any identifier belongs to someone else, or M4 marked the link `mixed_context` → **contradictory**:
+  the observation is kept as evidence in `attribution_conflicts`, never used, and the copy's decision
+  becomes UNRESOLVED with no obligations (never COMPLIANT, never a DELETE/REDACT plan);
+- no identifiers at all → usable only when M2/M4 joined it through an explicit trace correlation
+  (`correlated`); otherwise ignored (an identifier-free record has no own-record attribution).
+The state-establishing record itself is subject to the same rule, and category signals now come only
+from usable observations plus the assertion's own system/resource prefix.
+
+## T2. Temporal admissibility
+One check (`_admissible_time`) now guards both dossier loops and PDF document terms: evidence is
+inadmissible when `captured_at` > `audit_at`, its record or event time is after `audit_at` or after
+its own capture, or M1 quarantined it (`record_time_after_manifest_capture`, passed in from ingestion).
+
+## T3. Tests (11 new; 312 total)
+Contradictory linked records (subject email + foreign phone, subject user ID + foreign email hash, two
+customers in one record) → UNRESOLVED with the conflict cited; `mixed_context` link → UNRESOLVED;
+historical email in the cutoff view → COMPLIANT, the same record without that history → UNRESOLVED;
+identifier-free record → used via `correlated` trace join, ignored via `context`/`direct`; a quarantined
+linked record with a favourable retention date stays UNKNOWN (not COMPLIANT); late record time and late
+event time are rejected for linked and additional records; a post-cutoff capture is rejected even when
+linked; both participant M1 anomalies are excluded with and without the quarantine set (neither is
+cited, neither yields COMPLIANT). The rev 2 attachment FALSE fixture is now reached through the
+predicate directly, because in the engine a linked attachment naming another uploader is a
+contradictory attribution and stays UNRESOLVED first.
+
+## T4. Real-data effect and non-regression
+On the 518 cases, linked observations entering M5 are: subject-attributed 1,827 (direct 1,409,
+direct_verified 172, context 246), identifier-free but trace-correlated 97, temporally inadmissible 2
+(the two M1 anomalies, whose assertions were already UNKNOWN). None is contradictory. Consequently
+**0 of 1,436 decisions changed**; the safeguards close paths that the participant data does not
+exercise today. The full 518-case policy JSON is byte-stable across runs (SHA-256
+`cae487cdcf2a2ee0efcf5c14ba04b5ec4e3aaa36d6ab715fe76ab77a1d5f2f8e`; it differs from rev 2 only by the
+new `attribution_conflicts` fields and summary count). The M4 state output is unchanged from rev 2
+(`fa6bdc80…e8247d`), so the evidence_48 parsing, its 20 recovered states and the 96 structured-record
+states are preserved. Regenerated `M5_UNKNOWN_ROOT_CAUSES.md` and `M5_CONDITION_COVERAGE.md` are
+byte-identical to rev 2, and `m5_metrics.py` output is identical: dev status 19/22, dev step F1
+**0.373** (target 0.80 retained, unmet), holdout reported only. Strict boolean parsing, identifier
+conflict checks and the security-retention UNKNOWN decision are unchanged.
+
+## T5. Gates (rev 3)
+| Gate | Result |
+|---|---|
+| M5-1 CSV-driven rules | PASS |
+| M5-2 per-rule condition fixtures | PASS |
+| M5-3 tombstone redaction (participant bundles) | PASS |
+| M5-4 no DELETE on RETAIN categories (0 in 518 + 32) | PASS |
+| M5-5 dev step F1 ≥ 0.80 | **FAIL** (0.373); explicitly unmet integration target pending M6/M7 |
+| Attribution safety (linked + additional records) | PASS (tests) |
+| Temporal admissibility (incl. both M1 anomalies) | PASS (tests) |
+| M0–M5 regression | **312 passed**, 0 failed/skipped |

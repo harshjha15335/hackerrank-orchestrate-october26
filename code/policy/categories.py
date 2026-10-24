@@ -37,9 +37,6 @@ def _signals(o, system_id, resource_id, known, cmap):
             out.append(('record_fields', signal['category']))
     if raw.get('event') in cmap['event_signals']:
         out.append(('readback_event', cmap['event_signals'][raw['event']]))
-    for prefix, category in cmap['resource_prefixes'].get(system_id or '', {}).items():
-        if resource_id and resource_id.startswith(prefix):
-            out.append(('resource_prefix', category))
     return out
 
 
@@ -49,6 +46,10 @@ def classify(observations, system_id, resource_id, policy_categories, cmap) -> C
     signals = set()
     for o in observations:
         signals.update(_signals(o, system_id, resource_id, known, cmap))
+    # The system and resource ID come from the M4 assertion itself, not a record.
+    for prefix, category in cmap['resource_prefixes'].get(system_id or '', {}).items():
+        if resource_id and resource_id.startswith(prefix):
+            signals.add(('resource_prefix', category))
     for rank in RANKS:
         found = sorted({c for r, c in signals if r == rank})
         if not found: continue

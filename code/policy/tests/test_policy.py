@@ -61,12 +61,14 @@ def obs(fields, system, resource, *, category=None, kind='json', evidence='synth
 
 
 def decide(fields, system, resource, state, *, category=None, rules=RULES, extra=(), kind='json',
-           cutoff=T, bindings=None):
+           cutoff=T, bindings=None, attribution='correlated', anomalies=frozenset()):
+    # Policy fixtures model a record linked to the subject by an explicit trace
+    # join; attribution tests pass the strength under test.
     o = obs(fields, system, resource, category=category, kind=kind)
-    ctx = Context([o, *extra], rules if isinstance(rules, Path) else rules, bindings=bindings)
+    ctx = Context([o, *extra], rules if isinstance(rules, Path) else rules, bindings=bindings, anomalies=anomalies)
     latest = {'system_id': system, 'resource_id': resource, 'topology': 'service', 'state': state,
               'supported': state != 'UNKNOWN', 'explanation': 'synthetic', 'evidence_id': o.evidence_id,
-              'locator': o.locator}
+              'locator': o.locator, 'attribution': attribution}
     res = resolution(cutoff)
     return decide_copy(ctx, latest, [latest], res, subject_from(res))
 
@@ -104,8 +106,6 @@ CASES = [
      'SUPPORT_MESSAGE', UNRESOLVED, []),
     ('SUPPORT_ATTACHMENT', TRUE, {'file_name': 'receipt.pdf', 'uploaded_by': SUBJECT_EMAIL}, 'support_platform',
      'support_9', 'PRESENT', None, VIOLATION, ['REPORT_REMAINING_RECORD', 'DELETE_RECORD', 'VERIFY_RECORD_ABSENT']),
-    ('SUPPORT_ATTACHMENT', FALSE, {'file_name': 'receipt.pdf', 'uploaded_by': OTHER_EMAIL}, 'support_platform',
-     'support_9', 'PRESENT', None, UNRESOLVED, []),
     ('SUPPORT_ATTACHMENT', UNKNOWN, {'file_name': 'receipt.pdf'}, 'support_platform', 'support_9', 'PRESENT',
      None, UNRESOLVED, []),
     ('ANALYTICS_PROFILE', TRUE, {'email': SUBJECT_EMAIL, 'audience_cohort': 'x'}, 'analytics_platform',
@@ -155,7 +155,11 @@ CASES = [
     ('ACCOUNT_TOMBSTONE', UNKNOWN, {'subject_reference': SUBJECT}, 'identity_service', 'tombstone_9', 'PRESENT',
      None, UNRESOLVED, []),
 ]
-COVERAGE = sorted({(c[0], c[1]) for c in CASES})
+# Reached only through the predicate: in the engine, a linked attachment that
+# names another person is a contradictory attribution and stays UNRESOLVED first
+# (test_attachment_shared_with_another_person).
+PREDICATE_ONLY = [('SUPPORT_ATTACHMENT', FALSE)]
+COVERAGE = sorted({(c[0], c[1]) for c in CASES} | set(PREDICATE_ONLY))
 
 
 @pytest.mark.parametrize('case', CASES, ids=[f'{c[0]}-{c[1]}-{c[5]}' for c in CASES])
@@ -278,10 +282,13 @@ def test_m5_3_tombstone_fixture_from_snapshot_bundle():
     config = load_config()
     for record in exposed + clean:
         reference = record['subject_reference']
+        # The bundle names the subject's own identifiers; give the cutoff view all of them.
+        history = tuple(IdentityValue(f, record[f], v, 's') for f, v in (
+            ('email', (record['email'] or '').casefold()),
+            ('phone', ''.join(c for c in record['phone'] or '' if c.isdigit())),
+            ('email_hash', record['email_hash'] or '')) if record[f])
         res = Resolution('synthetic_case', T, reference, (reference,), 'resolved',
-                         {'email': record['email']},
-                         (IdentityValue('email', record['email'], record['email'].casefold(), 's'),)
-                         if record['email'] else ())
+                         {'email': record['email']}, history)
         o = obs({k: v for k, v in record.items() if k != 'resource_id'}, 'identity_service', record['resource_id'])
         ctx = Context([o], RULES)
         state = 'PRESENT' if record in exposed else 'REDACTED'
@@ -504,3 +511,128 @@ def test_document_term_for_another_subject_is_ignored():
                         {'text': text}, 'pdf') for n, text in enumerate(lines, 1)]
     d = decide({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9', 'PRESENT', extra=docs)
     assert d.condition_outcome == UNKNOWN
+
+
+def test_attachment_shared_with_another_person():
+    from policy.conditions import Dossier, Record, attachment_subject_only
+    res = resolution()
+    record = Record('synthetic_evidence', '$.records[0]', T, {'uploaded_by': OTHER_EMAIL}, True)
+    dossier = Dossier('SUPPORT_ATTACHMENT', 'PRESENT', T, subject_from(res), record, [record])
+    assert attachment_subject_only(dossier, load_config()).outcome == FALSE
+    d = decide({'file_name': 'receipt.pdf', 'uploaded_by': OTHER_EMAIL}, 'support_platform', 'support_9', 'PRESENT')
+    assert d.compliance == UNRESOLVED and d.attribution_conflicts and not d.obligations
+
+
+# --- Rev 3: already-linked observations and temporal admissibility ----------------
+
+AUDIT = ('security_service', 'audit_record_9')
+FAVOURABLE = {'retention_until': '2031-01-01T00:00:00Z'}
+
+
+@pytest.mark.parametrize('identity', [
+    {'customer_email': SUBJECT_EMAIL, 'phone': '+44 20 7946 0999'},
+    {'subject_reference': SUBJECT, 'email_hash': 'b' * 64},
+    {'customer_email': SUBJECT_EMAIL, 'owner_email': OTHER_EMAIL},
+], ids=['subject_email_foreign_phone', 'subject_ref_foreign_hash', 'two_customers'])
+def test_linked_record_with_contradictory_identity_is_unresolved(identity):
+    d = decide({**identity, **FAVOURABLE}, *AUDIT, 'PRESENT', attribution='direct')
+    assert d.compliance == UNRESOLVED and d.attribution_conflicts == ('synthetic_evidence:$.records[0]',)
+    assert d.obligations == () and 'another person' in d.reason
+
+
+def test_mixed_context_link_is_unresolved():
+    d = decide({'subject_reference': SUBJECT, **FAVOURABLE}, *AUDIT, 'PRESENT', attribution='mixed_context')
+    assert d.compliance == UNRESOLVED and d.attribution_conflicts
+
+
+def test_linked_record_with_historical_identifier_is_used():
+    old_email = 'old.address@example.com'
+    history = resolution().history + (IdentityValue('email', old_email, old_email, 'synthetic_audit'),)
+    res = Resolution('synthetic_case', T, SUBJECT, (SUBJECT,), 'resolved', {'email': SUBJECT_EMAIL}, history)
+    o = obs({'customer_email': old_email, **FAVOURABLE}, *AUDIT)
+    latest = {'system_id': AUDIT[0], 'resource_id': AUDIT[1], 'topology': 'service', 'state': 'PRESENT',
+              'supported': True, 'explanation': 'synthetic', 'evidence_id': o.evidence_id, 'locator': o.locator,
+              'attribution': 'direct'}
+    d = decide_copy(Context([o], RULES), latest, [latest], res, subject_from(res))
+    assert (d.condition_outcome, d.compliance, d.attribution_conflicts) == (TRUE, COMPLIANT, ())
+    # Without that history the same record names a stranger.
+    plain = resolution()
+    d = decide_copy(Context([o], RULES), latest, [latest], plain, subject_from(plain))
+    assert d.compliance == UNRESOLVED and d.attribution_conflicts
+
+
+def test_identifier_free_record_needs_explicit_trace_join():
+    joined = decide(dict(FAVOURABLE, event_code='X'), *AUDIT, 'PRESENT', attribution='correlated')
+    assert (joined.condition_outcome, joined.compliance) == (TRUE, COMPLIANT)
+    for strength in ('context', 'direct'):
+        unjoined = decide(dict(FAVOURABLE, event_code='X'), *AUDIT, 'PRESENT', attribution=strength)
+        assert unjoined.condition_outcome == UNKNOWN and unjoined.compliance == UNRESOLVED
+
+
+@pytest.mark.parametrize('kwargs', [
+    {'anomalies': {('synthetic_evidence', '$.records[0]')}},
+], ids=['m1_quarantine'])
+def test_quarantined_linked_record_cannot_supply_retention(kwargs):
+    d = decide({'subject_reference': SUBJECT, **FAVOURABLE}, *AUDIT, 'PRESENT', attribution='direct', **kwargs)
+    assert d.condition_outcome == UNKNOWN and d.compliance != COMPLIANT
+
+
+@pytest.mark.parametrize('record_time,event_time', [
+    ('2026-09-11T00:00:00Z', None),            # record time after audit_at and capture
+    (None, '2026-09-11T00:00:00Z'),            # event time after audit_at and capture
+])
+def test_late_source_times_are_inadmissible(record_time, event_time):
+    for linked in (True, False):
+        o = Observation('synthetic_late', 'evidence/synthetic.json', '$.records[3]', T, *AUDIT, None, None, (),
+                        {'resource_id': AUDIT[1], 'subject_reference': SUBJECT, **FAVOURABLE}, 'json', None,
+                        record_time, event_time)
+        base = obs({'subject_reference': SUBJECT}, *AUDIT)
+        ctx = Context([base, o], RULES)
+        latest = {'system_id': AUDIT[0], 'resource_id': AUDIT[1], 'topology': 'service', 'state': 'PRESENT',
+                  'supported': True, 'explanation': 'synthetic', 'evidence_id': base.evidence_id,
+                  'locator': base.locator, 'attribution': 'direct'}
+        assertions = [latest] + ([dict(latest, evidence_id=o.evidence_id, locator=o.locator)] if linked else [])
+        res = resolution()
+        d = decide_copy(ctx, latest, assertions, res, subject_from(res))
+        assert d.condition_outcome == UNKNOWN and d.compliance == UNRESOLVED
+
+
+def test_post_cutoff_capture_is_inadmissible_even_when_linked():
+    late = obs({'subject_reference': SUBJECT, **FAVOURABLE}, *AUDIT, evidence='synthetic_late',
+               locator='$.records[3]', captured='2026-12-01T00:00:00Z')
+    base = obs({'subject_reference': SUBJECT}, *AUDIT)
+    latest = {'system_id': AUDIT[0], 'resource_id': AUDIT[1], 'topology': 'service', 'state': 'PRESENT',
+              'supported': True, 'explanation': 'synthetic', 'evidence_id': base.evidence_id,
+              'locator': base.locator, 'attribution': 'direct'}
+    res = resolution()
+    d = decide_copy(Context([base, late], RULES), latest,
+                    [latest, dict(latest, evidence_id=late.evidence_id, locator=late.locator)], res, subject_from(res))
+    assert d.condition_outcome == UNKNOWN
+
+
+def test_both_participant_timestamp_anomalies_are_inadmissible():
+    from ingest.evidence import ingest
+    from identity.graph import IdentityGraph
+    observations, _, discrepancies = ingest(DATASET, CACHE)
+    flagged = {(d['file_id'], d['locator']) for d in discrepancies
+               if d['reason'] == 'record_time_after_manifest_capture'}
+    assert len(flagged) == 2
+    by_key = {(o.evidence_id, o.locator): o for o in observations}
+    for key in sorted(flagged):
+        o = by_key[key]
+        # A subject whose identity view holds every identifier the record names,
+        # so only the temporal guard can keep it out.
+        from policy.conditions import identity_claims
+        from state.engine import field_values
+        claims = identity_claims(field_values(o.raw_fields))
+        users = [v for k, v in claims if k == 'user_id']
+        history = tuple(IdentityValue(k, v, v, 'fixture') for k, v in sorted(claims) if k != 'user_id')
+        res = Resolution('synthetic_case', o.captured_at, users[0] if users else 'user_9001', (), 'resolved', {},
+                         history)
+        latest = {'system_id': o.system_id, 'resource_id': o.resource_id, 'topology': 'service', 'state': 'PRESENT',
+                  'supported': True, 'explanation': 'fixture', 'evidence_id': o.evidence_id, 'locator': o.locator,
+                  'attribution': 'direct'}
+        for anomalies in (flagged, frozenset()):   # flagged by M1, and by the record-time check alone
+            d = decide_copy(Context([o], RULES, anomalies=anomalies), latest, [latest], res, subject_from(res))
+            assert not any(key[0] in c for c in d.condition_evidence)
+            assert d.compliance != COMPLIANT

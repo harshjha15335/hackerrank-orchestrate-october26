@@ -1638,3 +1638,24 @@ branch=feature/m5-policy-engine
 repo_root=/home/claude/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T19:10:00Z] Close M5 attribution and temporal-evidence gaps (Rev 3)
+
+User Prompt (verbatim, secrets redacted):
+[Independent review "M5 Rev 2 — Independent GitHub Review — HOLD — One final safety correction": apply the all-identifier check to already-linked M2/M4 observations (contradictory evidence kept and decision UNRESOLVED, never COMPLIANT); exclude quarantined and post-cutoff evidence (captured_at > audit_at, record/event time after cutoff or capture, M1 anomalies) from both _dossier loops and all evaluators, with a favourable-retention quarantine regression and both real M1 anomalies; do not regress Rev 2; run M0–M5, regenerate reports and metrics, report changed real-data decisions; commit and push the existing branch; stop for review, no M6. Full text is in the project thread.]
+
+Agent Response Summary:
+Linked observations now pass the same temporal admissibility and attribution checks as extra same-resource records. A linked record naming another person's identifier is kept as an attribution conflict and forces the copy to UNRESOLVED; mixed-context links are treated the same; identifier-free linked records are used only through an explicit correlated trace join. Quarantined, post-cutoff and late-record evidence never reaches a dossier or evaluator. On the 518 cases no real decision changed (0 FOREIGN linked records; 2 time-inadmissible records were already UNKNOWN); reports and metrics are identical to Rev 2. Dev step F1 stays 0.373 (M5-5 FAIL, unmet target).
+
+Actions:
+* Edited code/policy/{engine,categories,main}.py, README and tests (86 policy tests, incl. contradictory-link, mixed-context, quarantine-retention and both participant anomalies).
+* Appended Rev 3 (T1–T5) to M5_report.md; regenerated reports byte-identical to Rev 2, rev 1 copies preserved.
+* Ran the full M0–M5 suite (312 passed); dataset/ and root output.csv untouched.
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=feature/m5-policy-engine
+repo_root=/home/claude/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

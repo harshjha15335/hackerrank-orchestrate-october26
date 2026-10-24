@@ -31,7 +31,11 @@ roll up per resource with the worst copy deciding. A same-ID record that is
 not already subject-linked by M2/M4 is used for conditions or categories only
 when every identifier it names (email, phone, hash, user reference) belongs to
 the subject's cutoff-time identity view; a shared resource ID alone is never
-attribution. Backups keep the RETAIN
+attribution. Already-linked M2/M4 records are re-checked the same way: a record
+naming another person is kept in `attribution_conflicts` and makes the copy
+UNRESOLVED; an identifier-free record counts only through an explicit trace
+join. Evidence captured, recorded or emitted after `audit_at` (or after its own
+capture), or quarantined by M1, never decides a condition. Backups keep the RETAIN
 verdict and carry a separate restore obligation.
 
 This stage does not plan data flows (M6), order or cite final steps, or decide

@@ -9,7 +9,7 @@ unmapped categories and unbound conditions are UNRESOLVED, never compliant.
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 
 from ingest.evidence import parse_time
@@ -69,6 +69,7 @@ class PolicyDecision:
     reason: str
     obligations: tuple[tuple[str, str, str], ...]
     restore_obligations: tuple[tuple[str, str, str], ...]
+    attribution_conflicts: tuple[str, ...] = ()
 
     def as_dict(self):
         return asdict(self)
@@ -77,7 +78,9 @@ class PolicyDecision:
 class Context:
     """Case-independent indexes over M1 observations for attribute lookups."""
 
-    def __init__(self, observations, rules: Path | PolicyTable, category_map=None, bindings=None):
+    def __init__(self, observations, rules: Path | PolicyTable, category_map=None, bindings=None,
+                 anomalies=frozenset()):
+        self.anomalies = frozenset(anomalies)
         self.table = rules if isinstance(rules, PolicyTable) else load_rules(rules)
         self.cmap = category_map or load_map()
         self.config = bindings or load_config()
@@ -100,40 +103,66 @@ def _record(o, linked) -> Record:
     return Record(o.evidence_id, o.locator, o.captured_at, field_values(o.raw_fields), linked)
 
 
+def _admissible_time(ctx, o, cutoff) -> bool:
+    """Evidence captured, recorded or emitted after the cutoff, or after its own
+    capture, or quarantined by M1, never decides a policy condition."""
+    if parse_time(o.captured_at) > cutoff or (o.evidence_id, o.locator) in ctx.anomalies:
+        return False
+    for stamp in (o.record_time, o.event_time):
+        if stamp and (parse_time(stamp) > cutoff or parse_time(stamp) > parse_time(o.captured_at)):
+            return False
+    return True
+
+
 def _dossier(ctx, latest, assertions, resolution, subject, category):
+    """Collect admissible, subject-attributed field sets for one physical copy.
+
+    Returns the dossier, the usable observations and the citations of linked
+    observations whose identifiers contradict the subject (kept as evidence,
+    never used, and reported so the assessment stays unresolved).
+    """
     cutoff = parse_time(resolution.audit_at)
-    # Subject-linked M4 assertions keep their M2/M4 attribution; mixed-identity
-    # context is never subject evidence.
-    linked = {(a['evidence_id'], a['locator']) for a in assertions
-              if a['system_id'] == latest['system_id'] and a['resource_id'] == latest['resource_id']
-              and a.get('attribution') != 'mixed_context'}
-    seen, observations = set(), []
-    for key in sorted(linked):
+    linked = {}
+    for a in assertions:
+        if a['system_id'] == latest['system_id'] and a['resource_id'] == latest['resource_id']:
+            linked[(a['evidence_id'], a['locator'])] = a.get('attribution')
+    seen, observations, conflicts = set(), [], set()
+    for key, strength in sorted(linked.items(), key=lambda item: item[0]):
         o = ctx.by_locator.get(key)
-        if o and o.source_type not in ('activity', 'audit'):
-            observations.append((o, True)); seen.add(key)
+        if not o or o.source_type in ('activity', 'audit'): continue
+        seen.add(key)
+        if not _admissible_time(ctx, o, cutoff): continue
+        # M2/M4 links are re-checked against every identifier the record names.
+        verdict = _attribution(o, subject)
+        if verdict == 'FOREIGN' or strength == 'mixed_context':
+            conflicts.add(f'{o.evidence_id}:{o.locator}'); continue
+        # An identifier-free record is usable only through an explicit trace join.
+        if verdict == 'UNATTRIBUTED' and strength != 'correlated': continue
+        observations.append((o, True))
     for o in ctx.by_resource.get(latest['resource_id'], ()):
         key = (o.evidence_id, o.locator)
         if key in seen or system_for(o) != latest['system_id']: continue
-        if parse_time(o.captured_at) > cutoff: continue
-        if o.record_time and parse_time(o.record_time) > cutoff: continue
+        if not _admissible_time(ctx, o, cutoff): continue
         # Other copies (including other topologies) count only when the record
         # itself names this subject and nobody else, as of the audit cutoff.
         if _attribution(o, subject) != 'SUBJECT': continue
         observations.append((o, False)); seen.add(key)
     observations.sort(key=lambda pair: (parse_time(pair[0].captured_at), pair[0].evidence_id, pair[0].locator),
                       reverse=True)
+    usable = {(o.evidence_id, o.locator) for o, _ in observations}
     current = ctx.by_locator.get((latest['evidence_id'], latest['locator']))
+    if current and (current.evidence_id, current.locator) not in usable:
+        current = None
     documents = []
     for evidence_id, lines in sorted(ctx.documents.items()):
-        if not lines or parse_time(lines[0].captured_at) > cutoff: continue
+        if not lines or any(not _admissible_time(ctx, l, cutoff) for l in lines): continue
         texts = [l.raw_fields.get('text', '') for l in sorted(lines, key=lambda l: int(l.locator.split(':')[1]))]
         if any(latest['resource_id'] in t for t in texts):
             documents.append((evidence_id, texts))
     dossier = Dossier(category or '', latest['state'], resolution.audit_at, subject,
                       _record(current, True) if current and latest['supported'] else None,
                       [_record(o, linked) for o, linked in observations], documents, latest['resource_id'])
-    return dossier, [o for o, _ in observations]
+    return dossier, [o for o, _ in observations], tuple(sorted(conflicts))
 
 
 def _comply(action, state, exposure, dossier, config):
@@ -163,16 +192,28 @@ def _comply(action, state, exposure, dossier, config):
 
 
 def decide_copy(ctx: Context, latest: dict, assertions: list[dict], resolution, subject) -> PolicyDecision:
+    decision, conflicts = _decide_copy(ctx, latest, assertions, resolution, subject)
+    if not conflicts:
+        return decision
+    # Contradictory attribution: keep the evidence, never decide from it.
+    compliance = decision.compliance if decision.compliance == DEFERRED else UNRESOLVED
+    return replace(decision, compliance=compliance, attribution_conflicts=conflicts,
+                   obligations=() if compliance == UNRESOLVED else decision.obligations,
+                   restore_obligations=() if compliance == UNRESOLVED else decision.restore_obligations,
+                   reason=('linked evidence names another person: ' + ', '.join(conflicts)
+                           if compliance == UNRESOLVED else decision.reason))
+
+
+def _decide_copy(ctx, latest, assertions, resolution, subject):
     base = dict(case_id=resolution.case_id, user_id=resolution.user_id, system_id=latest['system_id'],
                 resource_id=latest['resource_id'], topology=latest['topology'],
                 observed_state=latest['state'], state_supported=latest['supported'],
                 state_explanation=latest['explanation'], evidence_id=latest['evidence_id'],
                 locator=latest['locator'])
-    _, observations = _dossier(ctx, latest, assertions, resolution, subject, None)
-    current = ctx.by_locator.get((latest['evidence_id'], latest['locator']))
-    pool = observations + ([current] if current and current not in observations else [])
-    category = classify(pool, latest['system_id'], latest['resource_id'], ctx.table.categories, ctx.cmap)
-    dossier, _ = _dossier(ctx, latest, assertions, resolution, subject, category.category)
+    _, observations, conflicts = _dossier(ctx, latest, assertions, resolution, subject, None)
+    category = classify(observations, latest['system_id'], latest['resource_id'],
+                        ctx.table.categories, ctx.cmap)
+    dossier, _, _ = _dossier(ctx, latest, assertions, resolution, subject, category.category)
     empty = dict(rule_id=None, required_action=None, condition=None, condition_outcome=None,
                  condition_reason='', condition_evidence=(), on_false=None, effective_action=None,
                  exposed_fields=(), obligations=(), restore_obligations=())
@@ -180,12 +221,12 @@ def decide_copy(ctx: Context, latest: dict, assertions: list[dict], resolution, 
                   category_basis=category.basis)
     if category.status == 'PROCESS':
         return PolicyDecision(**common, **dict(empty, compliance=DEFERRED,
-                              reason='process resource; active-flow policy belongs to M6'))
+                              reason='process resource; active-flow policy belongs to M6')), conflicts
     rule = ctx.table.rule_for(category.category) if category.status == 'MAPPED' else None
     if rule is None:
         why = {'AMBIGUOUS': 'conflicting category signals', 'UNMAPPED': 'no policy category for observed signals'}
         return PolicyDecision(**common, **dict(empty, compliance=UNRESOLVED,
-                              reason=why.get(category.status, 'no rule for category')))
+                              reason=why.get(category.status, 'no rule for category'))), conflicts
     result, binding = evaluate(rule, dossier, ctx.config)
     on_false = binding['on_false'] if binding else None
     permitted = tuple(ctx.config['permitted_fields'].get(rule.data_category, ()))
@@ -206,7 +247,7 @@ def decide_copy(ctx: Context, latest: dict, assertions: list[dict], resolution, 
         why = ('condition is UNKNOWN at audit_at' if result.outcome == UNKNOWN
                else 'condition FALSE and no supplied rule decides the treatment')
         return PolicyDecision(**common, **fields, compliance=UNRESOLVED, reason=why,
-                              obligations=(), restore_obligations=())
+                              obligations=(), restore_obligations=()), conflicts
     if result.outcome == FALSE and on_false == 'TARGET_SATISFIED' and latest['state'] != 'UNKNOWN':
         # The predicate itself established, from observed fields, that the
         # identifiability this action removes is already gone.
@@ -223,7 +264,7 @@ def decide_copy(ctx: Context, latest: dict, assertions: list[dict], resolution, 
     if restore and action == 'RETAIN':
         obligations = ()
     return PolicyDecision(**common, **fields, compliance=compliance, reason=reason,
-                          obligations=obligations, restore_obligations=restore)
+                          obligations=obligations, restore_obligations=restore), conflicts
 
 
 def rollup(decisions: list[PolicyDecision]) -> list[dict]:

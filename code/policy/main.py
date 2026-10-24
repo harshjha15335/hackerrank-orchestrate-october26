@@ -26,7 +26,7 @@ def run_all(dataset: Path, sample=False, cache: Path | None = None, rules: Path 
     evidence, scopes = EvidenceIndex(observations), SnapshotIndex(observations, coverage)
     anomalies = {(d['file_id'], d['locator']) for d in discrepancies
                  if d['reason'] == 'record_time_after_manifest_capture'}
-    ctx = Context(observations, rules or dataset / 'deletion_rules.csv', category_map, bindings)
+    ctx = Context(observations, rules or dataset / 'deletion_rules.csv', category_map, bindings, anomalies)
     classifier = IntentClassifier()
     cases, unknown_rows = [], []
     for request in graph.requests(sample):
@@ -46,6 +46,7 @@ def run_all(dataset: Path, sample=False, cache: Path | None = None, rules: Path 
         'category_status': dict(sorted(Counter(d['category_status'] for d in decisions).items())),
         'condition_outcomes': dict(sorted(Counter(f'{d["rule_id"]}:{d["condition_outcome"]}'
                                                   for d in decisions if d['rule_id']).items())),
+        'attribution_conflicts': sum(bool(d['attribution_conflicts']) for d in decisions),
         'retain_category_delete_steps': sum(
             1 for d in decisions if d['required_action'] == 'RETAIN'
             for phase, op, _ in d['obligations'] if op == 'DELETE_RECORD'),
