@@ -209,3 +209,52 @@ def test_participant_pipe_logs_never_use_severity_as_system():
         with_ids = [o for o in obs if 'resource_id=' in o.raw_fields['text']]
         assert with_ids and all(o.resource_id and o.resource_id in o.raw_fields['text'] for o in with_ids)
         assert all(o.raw_fields['text'] for o in obs)
+
+
+def test_log_envelopes_normalize_to_key_value_fields(tmp_path):
+    p = tmp_path / 'fixture.log'
+    p.write_text(
+        '2026-01-02T00:00:00Z {"severity":"INFO","logger":"account_service","service":"account_service",'
+        '"trace_id":"tr-1","resource_id":"synthetic_a","event":"profile_lookup_completed","rows":"0",'
+        '"http_status":"404","event_time":"2030-01-01T00:00:00Z"}\n'
+        '2026-01-02T00:00:01Z [WARN] [integration_service] [tr-2] connector_heartbeat: '
+        'resource_id="synthetic_b" enabled="true" service="spoofed" event="spoofed"\n'
+        '2026-01-02T00:00:02Z <12>1 node-1 backup_service tr-3 - - level=ERROR '
+        'resource_id="synthetic_c" event="restore_candidate_evaluated" service="spoofed"\n'
+        '2026-01-02T00:00:03Z requestId=tr-4 level=INFO function=search_service '
+        'message="resource_id=\\"synthetic_d\\" event=\\"index_query_completed\\" service=\\"spoofed\\""\n'
+        '2026-01-02T00:00:04Z [DEBUG] [log_router] [collector-9] export_started: sources="x"\n'
+        '2026-01-02T00:00:05Z {not json}\n')
+    a, b, c, d, router, broken = parse_lines(p, meta(p), 'log')
+    assert (a.system_id, a.resource_id, a.raw_fields['level'], a.raw_fields['trace_id']) == (
+        'account_service', 'synthetic_a', 'INFO', 'tr-1')
+    # An embedded timestamp never replaces the envelope time.
+    assert a.event_time == '2026-01-02T00:00:00Z' and a.raw_fields['http_status'] == '404'
+    assert (b.system_id, b.raw_fields['event'], b.raw_fields['trace_id'], b.raw_fields['enabled']) == (
+        'integration_service', 'connector_heartbeat', 'tr-2', 'true')
+    assert (c.system_id, c.raw_fields['event'], c.raw_fields['level'], c.raw_fields['trace_id']) == (
+        'backup_service', 'restore_candidate_evaluated', 'ERROR', 'tr-3')
+    assert (d.system_id, d.resource_id, d.raw_fields['event'], d.raw_fields['trace_id']) == (
+        'search_service', 'synthetic_d', 'index_query_completed', 'tr-4')
+    # A collector/instance name in the trace slot is not a join key.
+    assert 'trace_id' not in router.raw_fields and router.system_id == 'log_router'
+    assert broken.resource_id is None and broken.raw_fields['text'].endswith('{not json}')
+
+
+@pytest.mark.parametrize('name', ['structured_service_events_eu_west_20260918.log',
+                                  'structured_service_events_ca_central_20260419.log',
+                                  'syslog_archive_us_east_20260824.log',
+                                  'syslog_archive_ap_southeast_20260325.log',
+                                  'application_trace_ap_northeast_20260730.log',
+                                  'application_trace_eu_north_20260302.log',
+                                  'cloud_runtime_export_us_west_20260608.log',
+                                  'cloud_runtime_export_af_south_20260930.log'])
+def test_participant_envelope_logs_keep_resource_service_and_event(name):
+    path = DATASET / 'evidence/logs' / name
+    obs = parse_lines(path, meta(path), 'log')
+    assert len(obs) == len([l for l in path.read_text().splitlines() if l.strip()])
+    with_ids = [o for o in obs if 'resource_id' in o.raw_fields['text']]
+    assert with_ids and all(o.resource_id and o.resource_id in o.raw_fields['text'] for o in with_ids)
+    assert all(o.system_id and o.raw_fields.get('event') for o in with_ids)
+    assert all(o.event_time == o.raw_fields['text'][:20] for o in obs)
+    assert not any(o.system_id in ('DEBUG', 'INFO', 'WARN', 'ERROR') for o in obs)

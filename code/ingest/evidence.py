@@ -13,12 +13,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-PARSER_VERSION = 'm1-v2'
+PARSER_VERSION = 'm1-v3'
 EMAIL = re.compile(r'(?<![\w.])[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}(?![\w.])')
 USER = re.compile(r'\buser_\d+\b', re.I)
 PHONE = re.compile(r'\+\d[\d ()-]{6,}\d')
 LOG_LEVELS = {'TRACE', 'DEBUG', 'INFO', 'NOTICE', 'WARN', 'WARNING', 'ERROR', 'CRITICAL', 'FATAL'}
 TIME = re.compile(r'^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$')
+STAMP = r'\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)'
+# Log envelopes that carry the same fields as key=value logs in another layout.
+JSON_LINE = re.compile(rf'^({STAMP}) (\{{.*\}})$')
+BRACKET_LINE = re.compile(rf'^({STAMP}) \[([A-Z]+)\] \[([\w.-]+)\] \[([\w.-]+)\] ([\w.-]+):(?: (.*))?$')
+SYSLOG_LINE = re.compile(rf'^({STAMP}) <\d+>\d+ (\S+) ([\w.-]+) (\S+) (\S+) (\S+)(?: (.*))?$')
+TRACE = re.compile(r'^(?:tr|rb)-[\w-]+$')
+ENVELOPE_KEYS = ('event_time', 'level', 'service', 'trace_id', 'event')
 TABLE_SYSTEM = {'customer_profiles': 'account_service', 'customer_search_documents': 'search_service',
                 'customer_analytics_profiles': 'analytics_platform', 'support_records': 'support_platform',
                 'customer_exports': 'export_service', 'connector_subscriptions': 'integration_service',
@@ -180,6 +187,59 @@ def key_values(text, raw, protected=()):
             if key and re.fullmatch(r'[A-Za-z_][\w-]*', key) and key not in protected: raw[key] = value
 
 
+def _trace(raw, value):
+    # Only an explicit trace/request token is a cross-line join key; a
+    # collector or instance name in the same slot is not.
+    if value and TRACE.fullmatch(value): raw['trace_id'] = value
+
+
+def envelope(line, raw):
+    """Normalize JSON, bracket, syslog and function-runtime log lines to the
+    key=value field names (event_time, level, service, trace_id, event, ...).
+    Envelope fields are never overridden by message content."""
+    found = JSON_LINE.match(line)
+    if found:
+        try: body = json.loads(found.group(2))
+        except ValueError: return False
+        if not isinstance(body, dict): return False
+        raw['event_time'] = found.group(1)
+        if isinstance(body.get('severity'), str): raw['level'] = body['severity']
+        for key, value in body.items():
+            if key in ('event_time', 'text') or isinstance(value, (dict, list)): continue
+            if key == 'trace_id':
+                if isinstance(value, str): _trace(raw, value)
+                continue
+            raw.setdefault(key, value if value is None or isinstance(value, str) else str(value).lower()
+                           if isinstance(value, bool) else str(value))
+        return True
+    found = BRACKET_LINE.match(line)
+    if found:
+        when, level, service, trace, event, rest = found.groups()
+        raw.update(event_time=when, level=level, service=service, event=event)
+        _trace(raw, trace)
+        if rest: key_values(rest, raw, protected=ENVELOPE_KEYS)
+        return True
+    found = SYSLOG_LINE.match(line)
+    if found:
+        when, _host, service, procid, _msgid, _sd, rest = found.groups()
+        raw.update(event_time=when, service=service)
+        _trace(raw, procid)
+        if rest: key_values(rest, raw, protected=('event_time', 'service', 'trace_id'))
+        return True
+    first = line.split(maxsplit=1)[0] if line.split() else ''
+    if TIME.fullmatch(first) and ' function=' in line and ' message=' in line:
+        outer = {}
+        key_values(line, outer)
+        if not isinstance(outer.get('function'), str) or not isinstance(outer.get('message'), str):
+            return False
+        raw.update(event_time=first, service=outer['function'])
+        if isinstance(outer.get('level'), str): raw['level'] = outer['level']
+        _trace(raw, outer.get('requestId'))
+        key_values(outer['message'], raw, protected=('event_time', 'service', 'trace_id', 'level'))
+        return True
+    return False
+
+
 def parse_lines(path, meta, kind, text=None):
     if text is None: text = path.read_text(encoding='utf-8')
     out = []
@@ -187,7 +247,9 @@ def parse_lines(path, meta, kind, text=None):
         if not line.strip(): continue
         raw = {'text': line}
         parts = [p.strip() for p in line.lstrip('- ').split('|')]
-        if len(parts) >= 5 and TIME.fullmatch(parts[0]) and parts[1].upper() in LOG_LEVELS:
+        if envelope(line, raw):
+            pass
+        elif len(parts) >= 5 and TIME.fullmatch(parts[0]) and parts[1].upper() in LOG_LEVELS:
             # Pipe-delimited log: time | level | service | trace | event | key=value...
             # The severity is never a system; record fields come from key=value pairs.
             raw.update(zip(('event_time', 'level', 'service', 'trace_id', 'event'), parts[:5]))

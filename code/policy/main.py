@@ -23,9 +23,9 @@ def run_all(dataset: Path, sample=False, cache: Path | None = None, rules: Path 
     dataset = Path(dataset)
     graph = IdentityGraph(dataset)
     observations, coverage, discrepancies = ingest(dataset, cache)
-    evidence, scopes = EvidenceIndex(observations), SnapshotIndex(observations, coverage)
     anomalies = {(d['file_id'], d['locator']) for d in discrepancies
                  if d['reason'] == 'record_time_after_manifest_capture'}
+    evidence, scopes = EvidenceIndex(observations, anomalies), SnapshotIndex(observations, coverage)
     ctx = Context(observations, rules or dataset / 'deletion_rules.csv', category_map, bindings, anomalies)
     classifier = IntentClassifier()
     cases, unknown_rows = [], []
