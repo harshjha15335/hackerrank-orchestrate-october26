@@ -1,3 +1,6 @@
 
 # Read-only May 2026 reference clones used for benchmarking (never submitted)
 benchmarks/
+
+__pycache__/
+.pytest_cache/
