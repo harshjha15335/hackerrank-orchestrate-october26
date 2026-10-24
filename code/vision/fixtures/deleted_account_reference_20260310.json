@@ -1,5 +1,5 @@
 {
- "schema_version": "m8-visual-v1",
+ "schema_version": "m8-visual-v2",
  "file_id": "evidence_42",
  "file_path": "evidence/images/deleted_account_reference_20260310.png",
  "image_sha256": "68c28a72afd6ed184d5990d15c543f8a516face204f0360f732755a8a63c28be",
@@ -8,7 +8,7 @@
   "model_call": false,
   "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
   "transcribed_on": "2026-10-24",
-  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
  },
  "screen": {
   "application": "Customer Reference Registry",
@@ -88,6 +88,21 @@
   {
    "label": "History",
    "text": "10 Mar 2026 Metadata reviewed",
+   "times": []
+  },
+  {
+   "label": "History",
+   "text": "22 Aug 2024 Finance link added",
+   "times": []
+  },
+  {
+   "label": "History",
+   "text": "03 Jun 2024 Support link added",
+   "times": []
+  },
+  {
+   "label": "History",
+   "text": "14 Feb 2024 Support link added",
    "times": []
   },
   {

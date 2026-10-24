@@ -26,7 +26,8 @@ RELIABILITY = {'snapshot': 4, 'readback': 3, 'field_values': 3, 'telemetry': 2,
 # M8 screenshots of a connector console: a continuous sync mode together with a
 # running status shows risk. A screenshot never proves a safe state.
 VISUAL_FLOW = {'mode_fields': ('sync_mode', 'mode'), 'running_modes': {'continuous', 'continuous sync'},
-               'status_fields': ('status',), 'running_statuses': {'healthy', 'active', 'running'}}
+               'status_fields': ('status',), 'running_statuses': {'healthy', 'active', 'running'},
+               'throughput_fields': ('events_per_hour',)}
 # Inventory vocabularies. A backup that is merely FOUND/PRESENT says nothing
 # about restore access, so it is not in the restore vocabulary.
 INVENTORY_STATES = {FLOW: {'ACTIVE': 'ACTIVE', 'ENABLED': 'ACTIVE', 'DISABLED': 'DISABLED'},
@@ -142,9 +143,14 @@ def _visual(o: Observation, kind: str):
     def words(names):
         return {str(raw[n]).strip().casefold() for n in names if isinstance(raw.get(n), str)}
     modes, statuses = words(VISUAL_FLOW['mode_fields']), words(VISUAL_FLOW['status_fields'])
-    if modes and modes <= VISUAL_FLOW['running_modes'] and statuses and statuses <= VISUAL_FLOW['running_statuses']:
-        return 'ACTIVE', 'screenshot shows a continuous connector with a running status'
-    return 'UNKNOWN', 'screenshot does not show both a continuous mode and a running status'
+    # A health badge or a mode label alone is a configuration claim; the screen
+    # must also show the connector currently moving data.
+    rates = [raw[n].replace(',', '').strip() for n in VISUAL_FLOW['throughput_fields'] if isinstance(raw.get(n), str)]
+    moving = bool(rates) and all(r.isdigit() and int(r) > 0 for r in rates)
+    if (modes and modes <= VISUAL_FLOW['running_modes'] and statuses and statuses <= VISUAL_FLOW['running_statuses']
+            and moving):
+        return 'ACTIVE', 'screenshot shows a continuous connector with a running status and non-zero throughput'
+    return 'UNKNOWN', 'screenshot does not show a continuous mode, a running status and non-zero throughput together'
 
 
 def read(o: Observation) -> Reading | None:

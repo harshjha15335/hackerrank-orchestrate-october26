@@ -45,6 +45,9 @@ class FixtureProvider:
 
     def __init__(self, directory: Path = FIXTURES):
         self.directory = Path(directory)
+        # A corrected fixture must not be shadowed by a cached older transcription.
+        self.fingerprint = hashlib.sha256(b''.join(
+            p.name.encode() + b'\0' + p.read_bytes() for p in sorted(self.directory.glob('*.json')))).hexdigest()[:16]
 
     def extract(self, image: bytes, meta: dict) -> Response:
         path = self.directory / (Path(meta['file_path']).stem + '.json')
@@ -82,6 +85,7 @@ class Extractor:
 
     def key(self, digest: str) -> str:
         material = f'{digest}\n{self.prompt_version}\n{self.provider.name}:{self.provider.model}'
+        if getattr(self.provider, 'fingerprint', None): material += f'\n{self.provider.fingerprint}'
         return hashlib.sha256(material.encode()).hexdigest()
 
     def one(self, image: bytes, meta: dict) -> Extraction:

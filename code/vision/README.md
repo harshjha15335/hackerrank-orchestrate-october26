@@ -24,7 +24,9 @@ PNG directly. No vision API was called: this environment has no API key for
 one, so the usage ledger records `model_call=false` and no token counts for
 every extraction. Each fixture states this in its `provenance` block and is
 bound to the SHA-256 of the image bytes it was made from; a changed image
-invalidates its fixture.
+invalidates its fixture. The fixture provider's cache key also covers the
+fixture files' content, so a corrected fixture is never shadowed by a cached
+older transcription.
 
 A model provider can be added as a `ModelProvider` subclass returning the
 provider-reported token usage. The schema, retry and cache paths for that
@@ -58,17 +60,31 @@ model provider ships with M8.
 - The owning system comes from M5's resource-prefix map, or from the manifest
   origin when that origin is a known system. If the two disagree, nothing is
   emitted.
+- Each visible time has a role: `record` (the record's own past event),
+  `expiry` (a scheduled end), `generated` (when the shown result set was
+  produced, such as a query execution; it must name its result set and the
+  visible text that ties it to that set) or `page` (other screen metadata).
 - If a record's own stated time is after the manifest capture, M1's
   `record_time_after_manifest_capture` anomaly is raised and the record is
-  quarantined. If only a page-level time is after the capture, it is reported
-  but not used.
+  quarantined.
+- Rows rendered together share a `result_set`. If the set's generation time,
+  or any member row's own time, is after the manifest capture, every emitted
+  record in the set gets `result_set_rendered_after_manifest_capture` and is
+  quarantined: the screen shows the set as it was after the capture, not at
+  it. The observation's `event_time` is that later instant, so the M2/M4/M6
+  admissibility gates and the M7 citation guard reject it even without the
+  anomaly list. The manifest capture time is never changed.
+- Expiry times and unrelated page times never quarantine; a page time after
+  capture is reported as `screen_time_after_manifest_capture`. Times without
+  a stated date, year or zone stay unresolved and decide nothing.
 - M4 (`state/engine.py`): a screenshot can show `PRESENT` but never `ABSENT`,
   `REDACTED` or `ANONYMIZED`. Account, support and analytics records need
   visible identifiers to count as `PRESENT`. A visible expiry at or before
   `audit_at` makes the state `UNKNOWN`, because an expiry is a schedule and
   not proof of deletion.
-- M6 (`flow/evidence.py`): a connector screen that shows both a continuous
-  mode and a running status is a risk-only `ACTIVE` reading of class `visual`.
+- M6 (`flow/evidence.py`): a connector screen that shows a continuous mode,
+  a running status and a non-zero throughput together is a risk-only `ACTIVE`
+  reading of class `visual`. Any one of them alone is `UNKNOWN`.
   A screenshot never shows a flow as disabled or a restore as blocked.
 - Retention periods, restore controls and resource IDs that are not on the
   screen are listed under `not_visible` and are never filled in.

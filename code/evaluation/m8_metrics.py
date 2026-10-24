@@ -74,7 +74,8 @@ def full_run(dataset, cache):
                          'no_finding': {c['case_id']: c for c in analyse(rows, diagnostics)},
                          'unknown_items': unknown_items(rows, diagnostics),
                          'unknown_items_all': unknown_items(rows, diagnostics, only_no_finding=False),
-                         'unresolved_items': sum(len(d.get('unresolved', ())) for d in diagnostics.values())}
+                         'unresolved_items': sum(len(d.get('unresolved', ())) for d in diagnostics.values()),
+                         'm4_unknown_latest': sum(d.get('m4_unknown_latest', 0) for d in diagnostics.values())}
     rerun, _, _ = run(dataset, cache=cache, visual=True)
     base, vis = result['without_visual'], result['with_visual']
     before = {r['case_id']: r for r in base['rows']}
@@ -104,6 +105,7 @@ def full_run(dataset, cache):
         'nonstandard_validator_errors': {k: result[k]['nonstandard_errors'] for k in result},
         'incomplete_without_findings': {k: len(result[k]['no_finding']) for k in result},
         'unresolved_items': {k: result[k]['unresolved_items'] for k in result},
+        'm4_unknown_latest': {k: result[k]['m4_unknown_latest'] for k in result},
         'changed_rows': changed,
         'reassessed_no_finding_rows': reassessed,
         'unknown_treatment_items': {

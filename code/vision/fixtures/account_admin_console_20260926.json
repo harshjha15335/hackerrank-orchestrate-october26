@@ -1,5 +1,5 @@
 {
- "schema_version": "m8-visual-v1",
+ "schema_version": "m8-visual-v2",
  "file_id": "evidence_04",
  "file_path": "evidence/images/account_admin_console_20260926.png",
  "image_sha256": "d5c32ca5b6e1a2b4bbe9f5d41835ef1fd5d4f7061dab9067a4f9f88cea3c1861",
@@ -8,7 +8,7 @@
   "model_call": false,
   "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
   "transcribed_on": "2026-10-24",
-  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
  },
  "screen": {
   "application": "Customer Operations",

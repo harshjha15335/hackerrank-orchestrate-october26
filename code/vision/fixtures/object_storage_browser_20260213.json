@@ -1,5 +1,5 @@
 {
- "schema_version": "m8-visual-v1",
+ "schema_version": "m8-visual-v2",
  "file_id": "evidence_46",
  "file_path": "evidence/images/object_storage_browser_20260213.png",
  "image_sha256": "96e9a191380c29b9e0ab997007268c4cd6353cb6721ebd1ed4a32599d8d37e04",
@@ -8,7 +8,7 @@
   "model_call": false,
   "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
   "transcribed_on": "2026-10-24",
-  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
  },
  "screen": {
   "application": "Nimbus Object Storage",
@@ -18,7 +18,9 @@
    {
     "label": "Captured",
     "text": "13 Feb 2026 08:00 UTC",
-    "role": "page"
+    "role": "generated",
+    "result_set": "objects",
+    "basis": "\"Captured\" stamp in the object list header"
    }
   ]
  },
@@ -83,7 +85,8 @@
      "role": "record"
     }
    ],
-   "note": "Object names only; no resource ID or customer identifier is visible."
+   "note": "Object names only; no resource ID or customer identifier is visible.",
+   "result_set": "objects"
   },
   {
    "record_key": "objects[2]",
@@ -119,7 +122,8 @@
      "role": "record",
      "tz_label": "Modified (UTC)"
     }
-   ]
+   ],
+   "result_set": "objects"
   },
   {
    "record_key": "objects[3]",
@@ -155,7 +159,8 @@
      "role": "record",
      "tz_label": "Modified (UTC)"
     }
-   ]
+   ],
+   "result_set": "objects"
   },
   {
    "record_key": "objects[4]",
@@ -191,7 +196,8 @@
      "role": "record",
      "tz_label": "Modified (UTC)"
     }
-   ]
+   ],
+   "result_set": "objects"
   },
   {
    "record_key": "objects[5]",
@@ -227,7 +233,8 @@
      "role": "record",
      "tz_label": "Modified (UTC)"
     }
-   ]
+   ],
+   "result_set": "objects"
   },
   {
    "record_key": "objects[6]",
@@ -263,7 +270,8 @@
      "role": "record",
      "tz_label": "Modified (UTC)"
     }
-   ]
+   ],
+   "result_set": "objects"
   },
   {
    "record_key": "objects[7]",
@@ -299,7 +307,8 @@
      "role": "record",
      "tz_label": "Modified (UTC)"
     }
-   ]
+   ],
+   "result_set": "objects"
   },
   {
    "record_key": "objects[8]",
@@ -335,7 +344,8 @@
      "role": "record",
      "tz_label": "Modified (UTC)"
     }
-   ]
+   ],
+   "result_set": "objects"
   }
  ],
  "context": [

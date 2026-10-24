@@ -114,3 +114,112 @@ M8 does not resolve the strict-validator failure. 75 rows still need a decision 
 
 ## 6. Recommendation: PASS for the M8 integration gates, submission still FAIL
 M8-1 through M8-5 pass, with the M8-1 caveat that only manual fixtures were exercised. The ablation keeps the screenshots: holdout is unchanged and dev is unchanged. Carried-forward gates stay FAIL: M5-5 (dev F1 0.780 < 0.80), M7-5 (sequence accuracy), strict output validation (109 errors in 75 rows) and submission readiness. Next, per the owner's plan and only when asked: M9 reporting, then M10 packaging.
+
+---
+
+## M8 Rev 2 – visual re-audit and temporal-provenance correction (appended 2026-10-24)
+
+Reviewed commit `0a05b50` → Rev 2 on the same branch. M8 was not rebuilt. Sections 0–6 above are kept as they were written for `0a05b50`. Where they conflict with this section, this section supersedes them. The screenshot-by-screenshot audit is in `M8_VISUAL_REAUDIT.md`. Metrics come from `python3 code/evaluation/m8_metrics.py`, saved as `M8_REV2_METRICS.json`; `M8_METRICS.json` is the Rev 1 run and is unchanged.
+
+### What changed
+
+**Re-audit of all 11 PNGs**, independently and at zoom:
+- Score is 9.84.
+- The account page shows `CS-8538 · support_9538`, with no `support_8538`.
+- The checksum prefix is `41ca09...`.
+- export_1260's owner, creation time, expiry, status and panel attribution are confirmed.
+
+Fixture corrections:
+- Added the export summary cards ("Created today 1").
+- Added 3 deleted-reference history entries.
+- Added time roles and result sets.
+
+No ID, identity, zone or retention value was wrong.
+
+**Temporal provenance (general rule):**
+- Times now carry the roles `record`, `expiry`, `generated` and `page` (schema `m8-visual-v2`).
+- A result set whose generation time, or any member row's own time, is after the manifest capture is quarantined as `result_set_rendered_after_manifest_capture`. Its `event_time` is set to that later instant, so M2, M4, M6 and the M7 guard reject it.
+- The capture time is unchanged.
+- Expiry, unrelated page times and unresolved times never quarantine.
+
+**Connector rule (M6 visual reading):** a continuous mode, a running status and non-zero throughput are now required together.
+
+**Cache key:** for the fixture provider it now covers the fixture content, so a corrected fixture cannot be shadowed by a cached old one.
+
+### Effect on the five Rev 1 findings
+
+| case | Rev 1 | Rev 2 | reason |
+|---|---|---|---|
+| case_34 | FINDING `account_5762` (evidence_04) | **kept** | passes all 8 criteria |
+| case_35 | FINDING `search_428` (evidence_09) | **removed**; future-only `VERIFY_RECORD_ABSENT search_428` | rows are the output of the query run at 06:00:14 UTC, after the 06:00:00 capture |
+| case_39 | FINDING `data_flow_1121` (evidence_14) | **kept** | Continuous + Healthy + 1,284 events/hour; risk-only |
+| case_52 | FINDING `export_1260` (evidence_23) | **removed**; future-only `VERIFY_RECORD_ABSENT export_1260` | the list includes a job created 20 Jun 14:18 UTC, after the 18 Jun 12:00 capture |
+| case_53 | FINDING `support_1034` (evidence_28) | **kept**, flagged | no zone or date is visible on the ticket or order times. Kept under "unresolved stays unresolved" (see the re-audit report, section 4) |
+
+The changed rows against `--no-visual` are still case_33, 34, 35, 39, 45, 52 and 53, with 0 status changes. A quarantined screenshot row still names its resource. It then yields only an uncited future check with an empty `evidence_id`, the same way M1-quarantined rows already do (case_135, case_383).
+
+### Before and after, against the reviewed Rev 1 baseline
+
+| Metric | M7 (`--no-visual`) | M8 Rev 1 (`0a05b50`) | **M8 Rev 2** |
+|---|---|---|---|
+| tests (full suite) | 437 | 479 | **503** |
+| 518 rows changed vs M7 | – | 7 | **7** (same cases) |
+| new evidenced findings | – | 5 | **3** (case_34, 39, 53) |
+| strict validator | 120 errors / 80 rows | 109 / 75 | **111 / 77** |
+| nonstandard validator | 0 | 0 | **0** |
+| INCOMPLETE rows without a finding | 80 | 75 | **77** |
+| screenshot citations accepted | – | 5/5 | **3/3** |
+| all citations accepted | 806/806 | 811/811 | **809/809** |
+| M4 UNKNOWN latest states | 308 | 312 | **314** |
+| unresolved items | 327 | 336 | **338** |
+| unknown conditional-treatment items (no-finding rows / all) | 77 / 262 | 83 / 269 | **83 / 269**; 0 baseline items decided |
+| dev F1 / holdout F1 (32 samples) | 0.780 / 0.848 | 0.780 / 0.848 | **0.780 / 0.848**; 0 sample rows change |
+| output sha256 | `aeb5c135…` | `6cb5652f…` | **`ab8a5801…`** (two runs identical) |
+
+The two removed findings lower the strict-validator result, and they stay removed. No code was tuned to sample gold or to an output hash.
+
+**80-row reassessment (Rev 2):**
+- 3 have an evidenced finding: case_34, case_39, case_53.
+- 43 have future-only checks, including case_33, 35, 45 and 52.
+- 32 have undecided treatments only.
+- 2 have no linked resources.
+
+### Commands and outcomes
+
+| Command | Outcome |
+|---|---|
+| `python3 -m pytest -q -p no:cacheprovider code` | 503 passed |
+| `python3 -m pytest -q -p no:cacheprovider code/vision` | 66 passed |
+| `python3 code/synthesis/main.py --output X` (twice) | sha256 `ab8a580183e0a3ce8b79ca76acc792012b4f1e9bc36ef474ed794a6d03b8cd0e` both times |
+| `python3 code/synthesis/main.py --no-visual --output X` | `aeb5c135…`, byte-identical to M7 |
+| `python3 code/evaluation/m8_metrics.py > code/evaluation/checkpoints/M8_REV2_METRICS.json` | strict FAIL 111/77; nonstandard 0; samples unchanged; 3/3 image citations accepted |
+| `python3 code/vision/main.py` | 11 valid extractions; 0 model calls; 10 discrepancies: 9 quarantining entries covering 7 records, 1 report-only |
+
+### Usage (pipeline vs coding assistant)
+
+- **Pipeline:** 0 vision model calls, 0 input tokens, 0 output tokens, $0. All 11 extractions are manual fixtures (`model_call=false`), and the M3 classifier runs in offline rules mode.
+- **Retry path:** the "retry once" path was exercised only with the offline `FakeModel` in tests. No live provider exists, and no credential, runtime model name, token count or cost is claimed for one.
+- **Coding assistant (separate):** the screenshots were read and the fixtures written by the Claude Code session doing this work. Its own usage is not a pipeline cost and is not measured here.
+
+### Gates after Rev 2
+
+- **PASS:**
+  - M8-1, on manual fixtures only.
+  - M8-2: goldens re-verified against the pixels.
+  - M8-3.
+  - M8-4.
+  - M8-5: dev and holdout unchanged.
+  - Regression.
+  - Ablation baseline.
+  - Determinism.
+- **FAIL (carried forward):**
+  - M5-5: dev F1 0.780 < 0.80.
+  - M7-5: sequence accuracy.
+  - Strict output validation: 111 errors in 77 rows.
+  - Submission readiness.
+- **PENDING (for review):**
+  - case_53, the unresolved-time judgment call.
+  - Whether the visual connector rule should count as an evidenced finding at all.
+  - Live vision inference, which remains untested.
+
+M9/M10 have not been started.

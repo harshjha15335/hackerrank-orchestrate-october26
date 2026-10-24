@@ -16,21 +16,23 @@ ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'code'))
 
 from evaluation.contract import load_context, read_output, validate_rows
-from flow.evidence import read as read_process
+from flow.evidence import admissible, read as read_process
 from identity.graph import IdentityGraph
 from identity.retrieval import EvidenceIndex, Hit
 from state.engine import _state_for_observation, attribution_for, from_hit
 from synthesis.main import run, serialize
-from vision.adapter import adapt, load, owning_system, prefix_systems
-from vision.extract import Extractor, FixtureProvider, ModelProvider, Response, PROMPT_VERSION
-from vision.schema import SchemaError, validate
+from policy.conditions import subject_from
+from vision.adapter import QUARANTINE_REASONS, SET_AFTER_CAPTURE, adapt, load, owning_system, prefix_systems
+from vision.extract import Extraction, Extractor, FixtureProvider, ModelProvider, Response, PROMPT_VERSION
+from vision.schema import SCHEMA_VERSION, SchemaError, validate
 from vision.times import resolve
 
 DATASET = ROOT / 'dataset'
 FIXTURES = ROOT / 'code/vision/fixtures'
 HERE = Path(__file__).resolve().parent
 M7_BASELINE_SHA = 'aeb5c13565bfeda694f8aa15bd80326b9a32f1cb791745b44da84c9acfd80e80'
-M8_SHA = '6cb5652fd3fc4af1be3b2f4ee5ff14b717767f5ca4da22d5eecb287f4c32bf02'
+M8_REV1_SHA = '6cb5652fd3fc4af1be3b2f4ee5ff14b717767f5ca4da22d5eecb287f4c32bf02'   # reviewed 0a05b50
+M8_SHA = 'ab8a580183e0a3ce8b79ca76acc792012b4f1e9bc36ef474ed794a6d03b8cd0e'
 
 
 @pytest.fixture(scope='module')
@@ -83,6 +85,10 @@ def test_m8_1_all_eleven_screenshots_yield_valid_json(visual):
     (lambda d: d['records'][0]['times'].append({'label': 'x', 'text': 'y', 'role': 'deleted'}), 'role'),
     (lambda d: d['records'][0].update(state='ABSENT'), 'unexpected'),
     (lambda d: d['records'][0]['fields'].append({'label': 'm', 'name': 'visual', 'value': 'x'}), 'name'),
+    (lambda d: d['screen']['times'][0].pop('basis'), 'generated time needs'),
+    (lambda d: d['screen']['times'][0].update(role='page'), 'generated time needs'),
+    (lambda d: d['screen']['times'][0].update(result_set='other_list'), 'unknown result set'),
+    (lambda d: d['records'][0]['times'][0].update(result_set='results'), 'generated time needs'),
 ])
 def test_m8_1_schema_rejects_malformed_extractions(mutate, message):
     doc = fixture_doc('search_index_inspector_20260901.json')
@@ -151,6 +157,14 @@ def test_m8_2_search_golden_and_near_miss_decoy(visual, graph):
     assert attribution_for(found[0], resolution) == 'direct_verified'
     # Query history on the same screen ("customer_reference:user_9842") lends no identity.
     assert 'user_9842' not in json.dumps([o.raw_fields for o in visual.observations])
+    # Rev 2: the two rows are the output of the query executed at 06:00:14, after
+    # the 06:00:00 capture, so the shown result cannot support a finding.
+    assert hit.captured_at == '2026-09-01T06:00:00Z' and hit.event_time == '2026-09-01T06:00:14Z'
+    anomalies = {(d['file_id'], d['locator']) for d in visual.discrepancies if d['reason'] in QUARANTINE_REASONS}
+    assert {('evidence_09', hit.locator), ('evidence_09', decoy.locator)} <= anomalies
+    state = from_hit(found[0], resolution, anomalies)
+    assert state.state == 'UNKNOWN' and 'quarantined' in state.explanation
+    assert from_hit(found[0], resolution).state == 'UNKNOWN'   # event_time alone also excludes it
 
 
 def test_m8_2_account_golden(visual, graph):
@@ -179,10 +193,20 @@ def test_m8_2_connector_golden_is_risk_only(visual):
 def test_m8_2_export_golden_expiry_and_staff_rows(visual, graph):
     [o] = by_resource(visual, 'export_1260')
     assert (o.raw_fields['owner_email'], o.raw_fields['expires_at']) == ('ingrid.dahl@outlook.com', '2026-06-25T06:42:00Z')
+    assert (o.raw_fields['status'], o.raw_fields['checksum']) == ('Ready', 'SHA-256 · 41ca09...')
+    # Rev 2: the list also shows export_1261 created 20 Jun 14:18 UTC, after the
+    # 18 Jun 12:00 capture, so the list as rendered is not the state at capture.
+    assert o.captured_at == '2026-06-18T12:00:00Z' and o.event_time == '2026-06-20T14:18:00Z'
     before = from_hit(Hit(o, (), 'direct'), case(graph, 'case_52'))   # audit 2026-06-19
     after = from_hit(Hit(o, (), 'direct'), case(graph, 'case_33'))    # audit 2026-07-19
-    assert before.state == 'PRESENT' and after.state == 'UNKNOWN'
-    assert 'expiry' in after.explanation
+    assert before.state == after.state == 'UNKNOWN'
+    assert 'quarantined' in before.explanation
+    # Without the later row the record would be PRESENT, and its expiry before
+    # audit_at would still leave case_33 UNKNOWN.
+    clean = replace(o, event_time=None)
+    assert from_hit(Hit(clean, (), 'direct'), case(graph, 'case_52')).state == 'PRESENT'
+    later = from_hit(Hit(clean, (), 'direct'), case(graph, 'case_33'))
+    assert later.state == 'UNKNOWN' and 'expiry' in later.explanation
     # export_1261 "20 Jun 14:18 UTC" takes the screen's year and is after the 18 Jun capture.
     assert {'file_id': 'evidence_23', 'locator': 'image:all_exports[1]', 'reason': 'record_time_after_manifest_capture',
             'visible_time': '20 Jun 14:18 UTC', 'resolved': '2026-06-20T14:18:00Z'} in visual.discrepancies
@@ -222,10 +246,23 @@ def test_record_time_after_capture_is_quarantined(visual, graph):
     assert from_hit(Hit(o, (), 'direct'), case(graph, 'case_50')).state == 'UNKNOWN'
 
 
-def test_screen_level_times_are_reported_not_used(visual):
+def test_screen_level_times_are_classified(visual):
     reasons = {(d['file_id'], d['reason']) for d in visual.discrepancies}
-    assert ('evidence_09', 'screen_time_after_manifest_capture') in reasons
+    # The query execution time is tied to its result set and quarantines it.
+    assert ('evidence_09', SET_AFTER_CAPTURE) in reasons
+    assert ('evidence_09', 'screen_time_after_manifest_capture') not in reasons
+    # The deleted-reference page has no emitted record: its later time is reported only.
     assert ('evidence_42', 'screen_time_after_manifest_capture') in reasons
+    # Unrelated page metadata (the connector subtitle) and the object-list stamp equal
+    # to capture quarantine nothing.
+    assert not [d for d in visual.discrepancies if d['file_id'] in ('evidence_14', 'evidence_46')]
+    quarantined = {d['file_id'] for d in visual.discrepancies if d['reason'] in QUARANTINE_REASONS}
+    assert quarantined == {'evidence_09', 'evidence_19', 'evidence_23'}
+    # The manifest capture time is never rewritten.
+    import csv
+    with (DATASET / 'evidence_files.csv').open(encoding='utf-8') as stream:
+        captured = {m['file_id']: m['captured_at'] for m in csv.DictReader(stream)}
+    assert all(o.captured_at == captured[o.evidence_id] for o in visual.observations)
 
 
 @pytest.mark.parametrize('text, label, year, iso', [
@@ -305,7 +342,7 @@ def _injection_dataset(tmp_path, message):
         'file_id,file_path,origin,captured_at\n'
         'evidence_inj,evidence/images/injection_ticket.png,support_platform,2026-05-01T00:00:00Z\n')
     image = (dataset / 'evidence/images/injection_ticket.png').read_bytes()
-    doc = {'schema_version': 'm8-visual-v1', 'file_id': 'evidence_inj',
+    doc = {'schema_version': SCHEMA_VERSION, 'file_id': 'evidence_inj',
            'file_path': 'evidence/images/injection_ticket.png', 'image_sha256': hashlib.sha256(image).hexdigest(),
            'provenance': {'method': 'manual_fixture', 'model_call': False, 'transcriber': 'test',
                           'transcribed_on': '2026-10-24', 'origin_note': 'synthetic injection fixture'},
@@ -363,7 +400,9 @@ def test_m8_full_run_is_pinned_and_citations_valid(runs):
     assert pipeline.guard.log and all(e['accepted'] for e in pipeline.guard.log)
     images = {e['evidence_id'] for e in pipeline.guard.log} & {f'evidence_{n}' for n in
                                                             ('04', '09', '14', '19', '23', '28', '32', '37', '42', '46', '60')}
-    assert images == {'evidence_04', 'evidence_09', 'evidence_14', 'evidence_23', 'evidence_28'}
+    # Rev 2: evidence_09 (query run after capture) and evidence_23 (list rendered after
+    # capture) no longer support any citation.
+    assert images == {'evidence_04', 'evidence_14', 'evidence_28'}
 
 
 def test_m8_strict_validator_still_fails_honestly(runs):
@@ -374,7 +413,9 @@ def test_m8_strict_validator_still_fails_honestly(runs):
     unproven = analyse(rows, diagnostics)
     assert not strict.valid
     assert {e.split(':')[0] for e in strict.errors} == {c['case_id'] for c in unproven}
-    assert len(unproven) == 75 and len(strict.errors) == 109
+    # Rev 2: case_35 and case_52 lost their screenshot findings (rows 75 -> 77, errors 109 -> 111).
+    assert len(unproven) == 77 and len(strict.errors) == 111
+    assert {'case_35', 'case_52'} <= {c['case_id'] for c in unproven}
     before = {r['case_id']: r for r in runs[False][0]}
     changed = sorted(r['case_id'] for r in rows if before[r['case_id']] != r)
     assert changed == ['case_33', 'case_34', 'case_35', 'case_39', 'case_45', 'case_52', 'case_53']
@@ -394,3 +435,166 @@ def test_no_sample_answer_ids_in_vision_code():
     text = '\n'.join(p.read_text(encoding='utf-8') for p in (ROOT / 'code/vision').glob('*.py'))
     assert 'sample_output' not in text
     assert sorted(i for i in ids if re.search(rf'\b{re.escape(i)}\b', text)) == []
+
+
+# ---- Rev 2: general temporal-provenance safeguard (synthetic screens) -------
+
+def _screen(records, screen_times=(), captured='2026-05-10T12:00:00Z'):
+    """A synthetic extraction run through the real schema and adapter."""
+    doc = {'schema_version': SCHEMA_VERSION, 'file_id': 'evidence_syn', 'file_path': 'evidence/images/syn.png',
+           'image_sha256': '0' * 64,
+           'provenance': {'method': 'manual_fixture', 'model_call': False, 'transcriber': 'test',
+                          'transcribed_on': '2026-10-24', 'origin_note': 'synthetic'},
+           'screen': {'application': 'Console', 'title': 'Lookup', 'subtitle': 'prod', 'times': list(screen_times)},
+           'records': records, 'context': [], 'not_visible': []}
+    validate(doc, file_id='evidence_syn', file_path='evidence/images/syn.png', image_sha256='0' * 64)
+    meta = {'file_id': 'evidence_syn', 'file_path': 'evidence/images/syn.png', 'captured_at': captured,
+            'origin': 'search_index_admin'}
+    observations, discrepancies, _, unresolved = adapt(Extraction(meta, '0' * 64, doc, 'extracted'), prefix_systems())
+    anomalies = {(d['file_id'], d['locator']) for d in discrepancies if d['reason'] in QUARANTINE_REASONS}
+    return {o.resource_id: o for o in observations}, discrepancies, anomalies, unresolved
+
+
+def _row(key, resource, times=(), result_set=None):
+    row = {'record_key': key, 'panel': 'table_row', 'scope': 'customer_record', 'resource_id': resource,
+           'fields': [{'label': 'Email', 'name': 'email', 'value': 'someone@example.invalid'}], 'times': list(times)}
+    if result_set: row['result_set'] = result_set
+    return row
+
+
+def _t(text, role='record', **extra):
+    return dict({'label': 'When', 'text': text, 'role': role}, **extra)
+
+
+QUERY = 'query box and hit count name these rows'
+
+
+@pytest.mark.parametrize('executed, quarantined', [
+    ('10 May 2026 12:00:14 UTC', True),     # query run 14 s after capture
+    ('10 May 2026 12:00:00 UTC', False),    # run exactly at capture
+    ('10 May 2026 11:58:00 UTC', False),    # run before capture
+])
+def test_generated_time_after_capture_quarantines_its_result_set(executed, quarantined):
+    found, discrepancies, anomalies, _ = _screen(
+        [_row('r1', 'search_1', [_t('10 May 2026 11:00 UTC')], 'hits'), _row('r2', 'search_2', result_set='hits')],
+        [_t(executed, 'generated', result_set='hits', basis=QUERY)])
+    for o in found.values():
+        assert o.captured_at == '2026-05-10T12:00:00Z'                     # never rewritten
+        assert ((o.evidence_id, o.locator) in anomalies) is quarantined
+        assert o.event_time == resolve(executed, None, None)[0]           # never earlier than shown
+        for audit_at in ('2026-05-10T12:00:00Z', '2026-05-11T00:00:00Z', '2026-06-30T00:00:00Z'):
+            assert admissible(o, audit_at, anomalies) is not quarantined
+            assert admissible(o, audit_at) is not quarantined             # event_time alone suffices
+        assert not admissible(o, '2026-05-10T11:59:00Z', anomalies)       # audit before capture
+
+
+def test_unrelated_page_time_after_capture_is_reported_not_quarantining():
+    found, discrepancies, anomalies, _ = _screen(
+        [_row('r1', 'search_1', [_t('10 May 2026 11:00 UTC')])],
+        [_t('12 May 2026 09:00 UTC', 'page')])
+    assert anomalies == set() and found['search_1'].event_time is None
+    assert [d['reason'] for d in discrepancies] == ['screen_time_after_manifest_capture']
+    assert admissible(found['search_1'], '2026-05-20T00:00:00Z', anomalies)
+
+
+def test_later_sibling_row_quarantines_its_list_but_not_another_list():
+    found, discrepancies, anomalies, _ = _screen([
+        _row('a1', 'export_1', [_t('09 May 2026 08:00 UTC')], 'jobs'),
+        _row('a2', 'export_2', [_t('11 May 2026 08:00 UTC')], 'jobs'),       # created after capture
+        _row('b1', 'search_3', [_t('09 May 2026 08:00 UTC')], 'other'),
+    ])
+    assert ('evidence_syn', 'image:a1') in anomalies and ('evidence_syn', 'image:a2') in anomalies
+    assert ('evidence_syn', 'image:b1') not in anomalies
+    assert found['export_1'].event_time == '2026-05-11T08:00:00Z'
+    reasons = {(d['locator'], d['reason']) for d in discrepancies}
+    assert ('image:a2', 'record_time_after_manifest_capture') in reasons
+    assert ('image:a1', SET_AFTER_CAPTURE) in reasons
+
+
+def test_expiry_after_capture_never_quarantines():
+    found, discrepancies, anomalies, _ = _screen(
+        [_row('r1', 'export_1', [_t('09 May 2026 08:00 UTC'), _t('17 May 2026 08:00 UTC', 'expiry')])])
+    assert anomalies == set() and discrepancies == []
+    assert found['export_1'].raw_fields['expires_at'] == '2026-05-17T08:00:00Z'
+
+
+@pytest.mark.parametrize('text', ['10 May 12:00:14', '12:00:14 UTC', '10 May 2026 12:00:14'])
+def test_unresolved_generated_time_stays_unresolved(text):
+    found, discrepancies, anomalies, unresolved = _screen(
+        [_row('r1', 'search_1', result_set='hits')], [_t(text, 'generated', result_set='hits', basis=QUERY)])
+    # No zone or year is assumed: the time decides nothing either way.
+    assert [u['text'] for u in unresolved] == [text]
+    assert anomalies == set() and found['search_1'].event_time is None
+
+
+def test_citation_guard_rejects_quarantined_screenshot_rows(runs, graph):
+    _, _, pipeline = runs[True]
+    for case_id, evidence_id, locator, resource, system in (
+            ('case_35', 'evidence_09', 'image:results[1]+raw_document', 'search_428', 'search_service'),
+            ('case_52', 'evidence_23', 'image:all_exports[2]+detail', 'export_1260', 'export_service')):
+        resolution = case(graph, case_id)
+        step = {'step_no': 1, 'phase': 'FINDING', 'system_id': system, 'resource_id': resource,
+                'operation': 'REPORT_REMAINING_RECORD', 'state': 'PRESENT', 'evidence_id': evidence_id}
+        verdict = pipeline.guard._check(step, {'evidence_id': evidence_id, 'locator': locator, 'kind': 'm4'},
+                                        resolution, subject_from(resolution))
+        assert not verdict.accepted and 'quarantined' in verdict.reason
+
+
+# ---- Rev 2: connector evidence (case_39 decision) ---------------------------
+
+def _connector(visual):
+    [o] = by_resource(visual, 'data_flow_1121')
+    return o
+
+
+@pytest.mark.parametrize('change', [
+    {'mode': 'Scheduled', 'sync_mode': 'Nightly batch'},           # Healthy alone
+    {'status': 'Degraded'},                                        # Continuous alone
+    {'events_per_hour': '0'},                                      # configured but not moving data
+    {'events_per_hour': None},                                     # throughput not shown
+    {'status': None},                                              # status not shown
+])
+def test_connector_needs_mode_status_and_throughput_together(visual, change):
+    o = _connector(visual)
+    fields = {k: v for k, v in dict(o.raw_fields, **change).items() if v is not None}
+    assert read_process(replace(o, raw_fields=fields)).state == 'UNKNOWN'
+
+
+def test_connector_without_fields_is_unknown_and_never_disabled(visual):
+    o = _connector(visual)
+    bare = replace(o, raw_fields={'resource_id': o.resource_id, 'visual': o.raw_fields['visual']})
+    assert read_process(bare).state == 'UNKNOWN'
+    for status in ('Paused', 'Disabled', 'Stopped'):
+        assert read_process(replace(o, raw_fields=dict(o.raw_fields, status=status))).state == 'UNKNOWN'
+
+
+def test_another_customers_connector_is_never_attributed(visual, graph):
+    found = {h.observation.resource_id for h in EvidenceIndex(visual.observations).find(case(graph, 'case_39'))}
+    assert found == {'data_flow_1121'}
+    # The other customer's row on the same topology list (selected by its row position).
+    [other] = [o for o in visual.observations if o.locator == 'image:topology[2]']
+    assert other.raw_fields['selector_email'] == 'lucia-torres@gmail.com' and other.resource_id not in found
+
+
+def test_supported_active_connector_produces_cited_finding(runs):
+    rows, _, pipeline = runs[True]
+    [row] = [r for r in rows if r['case_id'] == 'case_39']
+    findings = [s for s in row['steps_json'] if s['phase'] == 'FINDING' and s['evidence_id'] == 'evidence_14']
+    assert [(s['operation'], s['resource_id'], s['state']) for s in findings] == \
+        [('REPORT_ACTIVE_DATA_FLOW', 'data_flow_1121', 'ACTIVE')]
+    assert any(e['case_id'] == 'case_39' and e['evidence_id'] == 'evidence_14' and e['accepted']
+               for e in pipeline.guard.log)
+
+
+# ---- Rev 2: negative decisions stay negative -------------------------------
+
+def test_backup_screen_never_blocks_a_restore(visual):
+    rows = [o for o in visual.observations if o.evidence_id == 'evidence_32']
+    assert rows and all(read_process(o) is None or read_process(o).state == 'UNKNOWN' for o in rows)
+    assert all(_state_for_observation(o)[0] == 'UNKNOWN' for o in rows)
+
+
+def test_object_and_deleted_reference_screens_invent_no_ids(visual):
+    assert not [o for o in visual.observations if o.evidence_id in ('evidence_42', 'evidence_46')]
+    doc = fixture_doc('deleted_account_reference_20260310.json')
+    assert all(r['resource_id'] is None for r in doc['records'])

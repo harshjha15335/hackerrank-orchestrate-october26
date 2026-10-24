@@ -1,5 +1,5 @@
 {
- "schema_version": "m8-visual-v1",
+ "schema_version": "m8-visual-v2",
  "file_id": "evidence_32",
  "file_path": "evidence/images/backup_restore_console_20260429.png",
  "image_sha256": "2c246aa5843bec609b9ddfdf1154cd81e0fd61996f83954735e9856e48c18bf3",
@@ -8,7 +8,7 @@
   "model_call": false,
   "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
   "transcribed_on": "2026-10-24",
-  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
  },
  "screen": {
   "application": "Vault Recovery Manager",
@@ -55,7 +55,8 @@
      "text": "26 Apr 02:00",
      "role": "record"
     }
-   ]
+   ],
+   "result_set": "archives"
   },
   {
    "record_key": "archives[2]",
@@ -95,7 +96,8 @@
      "text": "26 Apr 02:00",
      "role": "record"
     }
-   ]
+   ],
+   "result_set": "archives"
   },
   {
    "record_key": "archives[3]+detail",
@@ -155,7 +157,8 @@
      "text": "26 Apr 2026 02:00 UTC",
      "role": "record"
     }
-   ]
+   ],
+   "result_set": "archives"
   },
   {
    "record_key": "archives[4]",
@@ -195,7 +198,8 @@
      "text": "26 Apr 02:00",
      "role": "record"
     }
-   ]
+   ],
+   "result_set": "archives"
   }
  ],
  "context": [

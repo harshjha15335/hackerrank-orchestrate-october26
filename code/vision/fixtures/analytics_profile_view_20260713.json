@@ -1,5 +1,5 @@
 {
- "schema_version": "m8-visual-v1",
+ "schema_version": "m8-visual-v2",
  "file_id": "evidence_19",
  "file_path": "evidence/images/analytics_profile_view_20260713.png",
  "image_sha256": "4e4cb259bc2010b622b0c53fe5872258f994fefc23452a83bb27473758693484",
@@ -8,7 +8,7 @@
   "model_call": false,
   "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
   "transcribed_on": "2026-10-24",
-  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
  },
  "screen": {
   "application": "Pulse Analytics",

@@ -1,5 +1,5 @@
 {
- "schema_version": "m8-visual-v1",
+ "schema_version": "m8-visual-v2",
  "file_id": "evidence_37",
  "file_path": "evidence/images/security_audit_explorer_20260905.png",
  "image_sha256": "ca59f693f4e7002466b3fdeaf1bb6763618770963dd811b60003772d07b4b03b",
@@ -8,7 +8,7 @@
   "model_call": false,
   "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
   "transcribed_on": "2026-10-24",
-  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
  },
  "screen": {
   "application": "Sentinel",
@@ -86,7 +86,8 @@
      "text": "2026-08-25T04:03:00Z",
      "role": "record"
     }
-   ]
+   ],
+   "result_set": "events"
   },
   {
    "record_key": "events[2]",
@@ -127,7 +128,8 @@
      "role": "record",
      "tz_label": "Time (UTC)"
     }
-   ]
+   ],
+   "result_set": "events"
   },
   {
    "record_key": "events[3]",
@@ -168,7 +170,8 @@
      "role": "record",
      "tz_label": "Time (UTC)"
     }
-   ]
+   ],
+   "result_set": "events"
   },
   {
    "record_key": "events[4]",
@@ -209,7 +212,8 @@
      "role": "record",
      "tz_label": "Time (UTC)"
     }
-   ]
+   ],
+   "result_set": "events"
   },
   {
    "record_key": "events[5]",
@@ -250,7 +254,8 @@
      "role": "record",
      "tz_label": "Time (UTC)"
     }
-   ]
+   ],
+   "result_set": "events"
   },
   {
    "record_key": "events[6]",
@@ -291,7 +296,8 @@
      "role": "record",
      "tz_label": "Time (UTC)"
     }
-   ]
+   ],
+   "result_set": "events"
   }
  ],
  "context": [

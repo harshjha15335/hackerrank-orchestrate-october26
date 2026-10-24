@@ -1,5 +1,5 @@
 {
- "schema_version": "m8-visual-v1",
+ "schema_version": "m8-visual-v2",
  "file_id": "evidence_14",
  "file_path": "evidence/images/connector_management_console_20260807.png",
  "image_sha256": "e81fabc93ea1b5f4c918d934cdb2bea05d61737adfcc29f281494f5d8ec46355",
@@ -8,7 +8,7 @@
   "model_call": false,
   "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
   "transcribed_on": "2026-10-24",
-  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
  },
  "screen": {
   "application": "BridgeOps",
@@ -75,7 +75,8 @@
      "value": "200 OK · 1.8 s"
     }
    ],
-   "times": []
+   "times": [],
+   "result_set": "topology"
   },
   {
    "record_key": "topology[2]",
@@ -110,7 +111,8 @@
     }
    ],
    "times": [],
-   "note": "Row only; the per-connector Status is shown only in the data_flow_1121 detail panel."
+   "note": "Row only; the per-connector Status is shown only in the data_flow_1121 detail panel.",
+   "result_set": "topology"
   },
   {
    "record_key": "topology[3]",

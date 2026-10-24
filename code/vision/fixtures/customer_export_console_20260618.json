@@ -1,5 +1,5 @@
 {
- "schema_version": "m8-visual-v1",
+ "schema_version": "m8-visual-v2",
  "file_id": "evidence_23",
  "file_path": "evidence/images/customer_export_console_20260618.png",
  "image_sha256": "18b95c1bd8b8956e40216df935498a9f3c181ea2a69b5cd6d3c0841a816d5557",
@@ -8,7 +8,7 @@
   "model_call": false,
   "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
   "transcribed_on": "2026-10-24",
-  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence."
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
  },
  "screen": {
   "application": "Customer Download Center",
@@ -45,7 +45,8 @@
      "text": "20 Jun 14:18 UTC",
      "role": "record"
     }
-   ]
+   ],
+   "result_set": "all_exports"
   },
   {
    "record_key": "all_exports[2]+detail",
@@ -100,7 +101,8 @@
      "text": "25 Jun 2026 06:42 UTC",
      "role": "expiry"
     }
-   ]
+   ],
+   "result_set": "all_exports"
   },
   {
    "record_key": "all_exports[3]",
@@ -130,7 +132,8 @@
      "text": "17 Jun 11:03 UTC",
      "role": "record"
     }
-   ]
+   ],
+   "result_set": "all_exports"
   },
   {
    "record_key": "all_exports[4]",
@@ -160,10 +163,16 @@
      "text": "16 Jun 09:27 UTC",
      "role": "record"
     }
-   ]
+   ],
+   "result_set": "all_exports"
   }
  ],
  "context": [
+  {
+   "label": "Summary cards",
+   "text": "Ready 2 · Processing 2 · Created today 1 · Downloads today 0 (4 jobs)",
+   "times": []
+  },
   {
    "label": "Activity",
    "text": "06:46 Ready for download",

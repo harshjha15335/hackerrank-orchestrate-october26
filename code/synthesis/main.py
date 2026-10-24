@@ -34,7 +34,7 @@ from state.engine import reconstruct
 from synthesis.citations import CitationGuard
 from synthesis.risk import overlay, referenced_sources, rollup
 from synthesis.synthesizer import synthesize
-from vision.adapter import load as load_visual
+from vision.adapter import QUARANTINE_REASONS, load as load_visual
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -54,7 +54,7 @@ class Pipeline:
             observations = observations + self.visual.observations
             discrepancies = discrepancies + self.visual.discrepancies
         self.anomalies = {(d['file_id'], d['locator']) for d in discrepancies
-                          if d['reason'] == 'record_time_after_manifest_capture'}
+                          if d['reason'] in QUARANTINE_REASONS}
         self.evidence = EvidenceIndex(observations, self.anomalies)
         self.scopes = SnapshotIndex(observations, coverage)
         self.ctx = Context(observations, self.dataset / 'deletion_rules.csv', anomalies=self.anomalies)

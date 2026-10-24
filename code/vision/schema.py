@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 
-SCHEMA_VERSION = 'm8-visual-v1'
+SCHEMA_VERSION = 'm8-visual-v2'
 METHODS = ('manual_fixture', 'model')
 PANELS = re.compile(r'[a-z_]+(?:\+[a-z_]+)*\Z')
 NAME = re.compile(r'[a-z_][a-z0-9_]*\Z')
@@ -18,7 +18,11 @@ RESOURCE = re.compile(r'[a-z]+(?:_[a-z]+)*_\d+\Z')
 # visible; the other scopes are kept for provenance only.
 SCOPES = ('customer_record', 'process_record', 'reference_only', 'non_customer',
           'linked_context', 'unattributed_object')
-ROLES = ('record', 'expiry', 'page')
+# record: the record's own past event; expiry: a scheduled future end (never
+# quarantines); generated: when the shown result set was produced (query run,
+# snapshot taken), with the visible basis tying it to that set; page: other
+# screen metadata, reported only.
+ROLES = ('record', 'expiry', 'generated', 'page')
 TOP = {'schema_version', 'file_id', 'file_path', 'image_sha256', 'provenance', 'screen',
        'records', 'context', 'not_visible'}
 PROVENANCE = {'manual_fixture': {'method', 'model_call', 'transcriber', 'transcribed_on', 'origin_note'},
@@ -48,10 +52,14 @@ def _times(items, where):
     if not isinstance(items, list): raise SchemaError(f'{where}: expected a list')
     for i, t in enumerate(items):
         w = f'{where}[{i}]'
-        _keys(t, ('label', 'text', 'role'), ('tz_label',), w)
+        _keys(t, ('label', 'text', 'role'), ('tz_label', 'result_set', 'basis'), w)
         _text(t['label'], w + '.label'); _text(t['text'], w + '.text')
         if t['role'] not in ROLES: raise SchemaError(f'{w}.role: {t["role"]!r}')
         if 'tz_label' in t: _text(t['tz_label'], w + '.tz_label')
+        bound = 'result_set' in t or 'basis' in t
+        if (t['role'] == 'generated') != bound or (bound and not ('result_set' in t and 'basis' in t)):
+            raise SchemaError(f'{w}: a generated time needs result_set and a visible basis, and only it may have them')
+        if bound: _text(t['result_set'], w + '.result_set'); _text(t['basis'], w + '.basis')
 
 
 def validate(doc: dict, *, file_id: str, file_path: str, image_sha256: str) -> dict:
@@ -78,7 +86,8 @@ def validate(doc: dict, *, file_id: str, file_path: str, image_sha256: str) -> d
     keys = set()
     for i, r in enumerate(doc['records']):
         w = f'$.records[{i}]'
-        _keys(r, ('record_key', 'panel', 'scope', 'resource_id', 'fields', 'times'), ('note',), w)
+        _keys(r, ('record_key', 'panel', 'scope', 'resource_id', 'fields', 'times'), ('note', 'result_set'), w)
+        if 'result_set' in r: _text(r['result_set'], w + '.result_set')
         _text(r['record_key'], w + '.record_key')
         if r['record_key'] in keys: raise SchemaError(f'{w}.record_key: duplicate')
         keys.add(r['record_key'])
@@ -102,6 +111,10 @@ def validate(doc: dict, *, file_id: str, file_path: str, image_sha256: str) -> d
             names.add(f['name'])
             _text(f['value'], fw + '.value', nullable=True)
         _times(r['times'], w + '.times')
+    sets = {r.get('result_set', r['record_key']) for r in doc['records']}
+    for t in screen['times'] + [t for r in doc['records'] for t in r['times']]:
+        if t['role'] == 'generated' and t['result_set'] not in sets:
+            raise SchemaError(f'$: generated time names unknown result set {t["result_set"]!r}')
     if not isinstance(doc['context'], list): raise SchemaError('$.context: expected a list')
     for i, c in enumerate(doc['context']):
         _keys(c, ('label', 'text', 'times'), (), f'$.context[{i}]')
