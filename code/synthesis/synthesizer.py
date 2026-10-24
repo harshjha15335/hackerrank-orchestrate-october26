@@ -57,12 +57,32 @@ def _provenance(resource, finding=False):
                  and c['locator'] == deciding['locator'] and c['topology'] == deciding['topology']), None)
     risk = deciding.get('risk')
     if finding and risk:
-        return {'kind': 'risk', 'evidence_id': risk['evidence_id'], 'locator': risk['locator']}
+        return {'kind': 'risk', 'evidence_id': risk['evidence_id'], 'locator': risk['locator'],
+                'scope': deciding['topology']}
     return {'kind': 'm4', 'evidence_id': deciding['evidence_id'], 'locator': deciding['locator'],
+            'scope': deciding['topology'],
             'category': resource['category'],
             'redaction_observed': bool(copy and copy['compliance'] == 'COMPLIANT'
                                        and copy['effective_action'] in ('REDACT', 'ANONYMIZE')),
             'm2_correlated': bool(copy and copy.get('_attribution') == 'correlated')}
+
+
+def _future_record(resource, target):
+    """Why a future-only check exists and why nothing else is emitted for it."""
+    copies = [c for c in resource['copy_decisions'] if c['compliance'] != 'DEFERRED_M6']
+    return {
+        'operation': target[1],
+        'identity_sources': sorted({f"{c['evidence_id']}:{c['locator']} ({c.get('_attribution') or 'referenced'})"
+                                    for c in copies}),
+        'rule_id': resource['rule_id'], 'required_treatment': resource['effective_action'],
+        'condition_outcomes': sorted({c['condition_outcome'] or '' for c in copies}),
+        'current_state_known': False,
+        'copy_states': sorted({f"{c['topology']}:{c['observed_state']}" for c in copies}),
+        'omitted': 'no admissible, subject-owned reading proves the record present, exposed or compliant, so a '
+                   'finding or remediation would assert an unproven state',
+        'strict_contract': 'valid only if the case also has an evidenced finding; otherwise the row is '
+                           'INCOMPLETE without FINDING/REMEDIATION and fails the strict M0 plan shape',
+    }
 
 
 def plan(case):
@@ -103,7 +123,7 @@ def plan(case):
             if target:
                 entry['steps'].append({'phase': target[0], 'operation': target[1], 'state': target[2],
                                        'cite': 'never', 'provenance': None})
-                entry['future_only'] = True
+                entry['future_only'] = _future_record(r, target)
         items.append(entry)
     for key, a in sorted(process.items()):
         entry = {'kind': a['kind'], 'system_id': a['system_id'], 'resource_id': a['resource_id'],
@@ -178,6 +198,10 @@ def synthesize(case, guard, resolution, subject, edges=()):
     ordered, report = apply_dependencies(list(unique.values()), edges)
     diagnostics['dependency_report'] = report
     diagnostics['items'] = [{k: v for k, v in i.items() if k != 'steps'} for i in items]
+    emitted = {(s['operation'], s['system_id'], s['resource_id']) for s in ordered}
+    diagnostics['future_only'] = [dict(i['future_only'], system_id=i['system_id'], resource_id=i['resource_id'])
+                                  for i in items if i.get('future_only') and
+                                  (i['future_only']['operation'], i['system_id'], i['resource_id']) in emitted]
     return {'case_id': cid, 'deletion_status': 'COMPLETE' if complete else 'INCOMPLETE',
             'steps_json': renumber(ordered)}, diagnostics
 

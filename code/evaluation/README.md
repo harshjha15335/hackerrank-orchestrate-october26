@@ -108,5 +108,5 @@ python3 -m pytest -q -p no:cacheprovider code                                # M
 
 `validate` keeps the strict M0 plan shape. M7 rows that are INCOMPLETE only
 because of unresolved uncertainty (no step, or future verification only) are
-accepted by `validate_rows(..., allow_unproven_incomplete=True)`; see
+accepted by `validate_rows(..., nonstandard_allow_unproven_incomplete=True)`; see
 `code/synthesis/README.md` and `checkpoints/M7_report.md`.

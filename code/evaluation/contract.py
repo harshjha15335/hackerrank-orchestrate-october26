@@ -95,13 +95,17 @@ def step_shape(step) -> bool:
 
 
 def validate_rows(rows: list[dict], requests: dict[str, datetime],
-                  evidence: dict[str, datetime], allow_unproven_incomplete: bool = False) -> ValidationResult:
+                  evidence: dict[str, datetime],
+                  nonstandard_allow_unproven_incomplete: bool = False) -> ValidationResult:
     """Validate all cases and structurally detectable plan coverage; never repairs output.
 
-    With ``allow_unproven_incomplete`` (M7 production output), an INCOMPLETE
-    case whose only problem is unresolved uncertainty may carry no finding:
-    either no steps at all or future verification steps only. Any finding
-    still requires remediation and verification.
+    The default is the strict M0 contract check and the only mode that may be
+    cited for submission validity. ``nonstandard_allow_unproven_incomplete``
+    is a DIAGNOSTIC, NONSTANDARD mode: it lets an INCOMPLETE case whose only
+    problem is unresolved uncertainty carry no finding (no steps, or future
+    verification only) so other defects stay visible. It is not the official
+    contract and must never be used to claim final submission validity. Any
+    finding still requires remediation and verification.
     """
     result = ValidationResult(len(rows))
     errors = result.errors
@@ -125,7 +129,7 @@ def validate_rows(rows: list[dict], requests: dict[str, datetime],
             continue
         if status == 'NOT_APPLICABLE' and steps:
             fail('NOT_APPLICABLE must have zero steps')
-        if status == 'COMPLETE' and not steps or status == 'INCOMPLETE' and not steps and not allow_unproven_incomplete:
+        if status == 'COMPLETE' and not steps or status == 'INCOMPLETE' and not steps and not nonstandard_allow_unproven_incomplete:
             fail(f'{status} requires nonempty steps')
         keys = []
         typed = []
@@ -163,7 +167,7 @@ def validate_rows(rows: list[dict], requests: dict[str, datetime],
             fail('incorrect phase/operation/system_id/resource_id ordering')
         if status == 'INCOMPLETE':
             phases = {s['phase'] for s in typed}
-            unproven = allow_unproven_incomplete and 'FINDING' not in phases
+            unproven = nonstandard_allow_unproven_incomplete and 'FINDING' not in phases
             if unproven and 'REMEDIATION' in phases:
                 fail('remediation without an evidenced finding')
             elif not unproven and phases != set(OPERATIONS):

@@ -411,7 +411,7 @@ def test_m7_4_incomplete_plan_shape_and_citation_placement():
     present = _row()
     violation = decision('search_service', 'search_1', state='PRESENT', compliance='VIOLATION',
                          evidence='ev_sql', locator='search_documents_primary[1]',
-                         reason='record must be deleted but is PRESENT')
+                         topology='search_documents_primary', reason='record must be deleted but is PRESENT')
     retained = decision('security_service', 'audit_record_1', state='PRESENT', action='RETAIN',
                         category='SECURITY_AUDIT_LOG', evidence='ev_sql', locator='other')
     row, _ = synth([violation, retained], [present])
@@ -549,7 +549,7 @@ def test_overlay_does_not_decide_security_retention():
 def test_full_run_contract_and_properties(full_run):
     rows, diagnostics, _ = full_run
     requests, evidence = load_context(DATASET, 'full')
-    result = validate_rows(rows, requests, evidence, allow_unproven_incomplete=True)
+    result = validate_rows(rows, requests, evidence, nonstandard_allow_unproven_incomplete=True)
     assert result.valid, result.errors[:5]
     assert [r['case_id'] for r in rows] == sorted(requests)
     for row in rows:
@@ -595,3 +595,120 @@ def test_serialize_uses_contract_field_order():
          'system_id': 's', 'phase': 'VERIFICATION', 'step_no': 1}]}
     line = serialize([row]).splitlines()[1]
     assert line.startswith('c,INCOMPLETE,"[{""step_no"":1,""phase"":""VERIFICATION""')
+
+
+# ---- Rev 2: physical scope of risk readings -----------------------------------
+
+PRIMARY, FAILOVER, REPORTING = ('search_documents_primary', 'search_documents_failover_replica',
+                                'search_documents_reporting_replica')
+
+
+def _scoped(scope, when, result='hit', evidence=None, owner=EMAIL):
+    raw = {'event': 'index_query_completed', 'result': result, 'correlation_key': owner,
+           'service': 'search_service', 'resource_id': 'search_1', 'event_time': when}
+    return obs(evidence or f'ev_{scope}_{result}_{when[8:10]}', 'line:1', 'search_service', 'search_1', raw,
+               'log', captured='2026-09-09T00:00:00Z', event_time=when, topology=scope)
+
+
+def _unknown_copy(scope):
+    return decision('search_service', 'search_1', state='UNKNOWN', compliance='UNRESOLVED', topology=scope,
+                    evidence=f'ev_sql_{scope}', locator=f'{scope}[1]', reason='M4 state is unresolved')
+
+
+def _overlay(observations, copies):
+    ctx, fctx, res = _ctx(observations), FlowContext(observations), resolution()
+    out, notes = overlay(ctx, fctx, {'decisions': copies}, res, subject_from(res), {})
+    return {d['topology']: d['compliance'] for d in out}, notes
+
+
+def test_rev2_risky_primary_never_promotes_failover():
+    states, notes = _overlay([_scoped(PRIMARY, '2026-08-30T00:00:00Z')],
+                             [_unknown_copy(PRIMARY), _unknown_copy(FAILOVER)])
+    assert states == {PRIMARY: 'VIOLATION', FAILOVER: 'UNRESOLVED'}
+    assert [(n['topology'], n['to']) for n in notes] == [(PRIMARY, 'VIOLATION')]
+
+
+def test_rev2_safe_primary_never_hides_unsafe_failover():
+    # The primary's miss is later than the failover's hit; it must not cancel it.
+    observations = [_scoped(FAILOVER, '2026-08-29T00:00:00Z'),
+                    _scoped(PRIMARY, '2026-08-31T00:00:00Z', result='miss')]
+    states, _ = _overlay(observations, [_unknown_copy(PRIMARY), _unknown_copy(FAILOVER)])
+    assert states == {PRIMARY: 'UNRESOLVED', FAILOVER: 'VIOLATION'}
+
+
+def test_rev2_three_copies_with_conflicting_times_stay_per_copy():
+    observations = [_scoped(PRIMARY, '2026-08-28T00:00:00Z'),
+                    _scoped(FAILOVER, '2026-08-27T00:00:00Z'),
+                    _scoped(FAILOVER, '2026-08-30T00:00:00Z', result='miss'),
+                    _scoped(REPORTING, '2026-09-01T00:00:00Z', result='miss'),
+                    _scoped(REPORTING, '2026-09-02T00:00:00Z')]
+    states, notes = _overlay(observations, [_unknown_copy(s) for s in (PRIMARY, FAILOVER, REPORTING)])
+    assert states == {PRIMARY: 'VIOLATION', FAILOVER: 'UNRESOLVED', REPORTING: 'VIOLATION'}
+    assert sorted(n['topology'] for n in notes) == [PRIMARY, REPORTING]
+    # A replica's later safe word stays on that replica.
+    late = observations + [_scoped(FAILOVER, '2026-09-05T00:00:00Z', result='miss')]
+    assert _overlay(late, [_unknown_copy(s) for s in (PRIMARY, FAILOVER, REPORTING)])[0][PRIMARY] == 'VIOLATION'
+
+
+def test_rev2_rollup_keeps_one_finding_for_two_violating_copies():
+    observations = [_scoped(PRIMARY, '2026-08-28T00:00:00Z'), _scoped(FAILOVER, '2026-08-29T00:00:00Z')]
+    ctx, fctx, res = _ctx(observations), FlowContext(observations), resolution()
+    out, _ = overlay(ctx, fctx, {'decisions': [_unknown_copy(PRIMARY), _unknown_copy(FAILOVER)]}, res,
+                     subject_from(res), {})
+    resources = rollup(out)
+    assert len(resources) == 1 and resources[0]['compliance'] == 'VIOLATION'
+
+
+def test_rev2_logical_reading_never_invents_a_copy():
+    states, notes = _overlay([_scoped('service', '2026-08-30T00:00:00Z')], [_unknown_copy(PRIMARY)])
+    assert states == {PRIMARY: 'UNRESOLVED'}
+    assert [(n['topology'], n['to']) for n in notes] == [('service', None)]
+    assert 'no copy state invented' in notes[0]['unapplied']
+
+
+def test_rev2_guard_rejects_a_citation_from_another_copy():
+    row = _row()                                            # a search_documents_primary row
+    assert _check(row, {}, scope=PRIMARY).accepted
+    verdict = _check(row, {}, scope=FAILOVER)
+    assert not verdict.accepted and 'describes copy' in verdict.reason
+
+
+@pytest.mark.parametrize('fields', [
+    {'event': 'analytics_lookup_completed', 'rows': '1', 'http_status': '200'},
+    {'event': 'analytics_lookup_completed', 'rows': '1', 'http_status': '500'},
+    {'event': 'analytics_lookup_completed', 'rows': 'one', 'http_status': '200'},
+    {'event': 'analytics_lookup_started', 'rows': '1'},
+    {'event': 'profile_query_completed', 'rows': '1', 'status': 'success', 'worker_status': 'failed'},
+])
+def test_rev2_lookup_events_are_not_presence_evidence(fields):
+    # The generic *_lookup_completed rule was removed after the ablation: no schema documents it.
+    o = log_obs('ev_lk', '', 'search_service', 'search_1', dict(fields, correlation_key=EMAIL),
+                '2026-08-30T00:00:00Z')
+    assert read_record(o, 'search_service', 'search_1') is None
+    assert latest_risk(_risk([o])) is None
+
+
+def test_rev2_future_only_check_is_documented():
+    unknown = decision('search_service', 'search_1', state='UNKNOWN', compliance='UNRESOLVED',
+                       reason='M4 state is unresolved')
+    row, diagnostics = synth([unknown])
+    assert not any(s['operation'].startswith('REPORT_') for s in row['steps_json'])
+    [record] = diagnostics['future_only']
+    assert record['system_id'] == 'search_service' and record['resource_id'] == 'search_1'
+    assert record['operation'] == 'VERIFY_RECORD_ABSENT' and record['current_state_known'] is False
+    assert record['rule_id'] == 'rule_03' and record['required_treatment'] == DELETE
+    assert record['identity_sources'] and record['omitted'] and record['strict_contract']
+
+
+def test_rev2_strict_validator_stays_strict(full_run):
+    from synthesis.reports import analyse
+    rows, diagnostics, _ = full_run
+    requests, evidence = load_context(DATASET, 'full')
+    strict = validate_rows(rows, requests, evidence)
+    unproven = analyse(rows, diagnostics)
+    assert not strict.valid
+    assert {e.split(':')[0] for e in strict.errors} == {c['case_id'] for c in unproven}
+    assert len(unproven) == 80 and len(strict.errors) == 120
+    shape = validate_rows([{'case_id': rows[0]['case_id'], 'deletion_status': 'INCOMPLETE', 'steps_json': []}],
+                          {rows[0]['case_id']: requests[rows[0]['case_id']]}, evidence)
+    assert not shape.valid

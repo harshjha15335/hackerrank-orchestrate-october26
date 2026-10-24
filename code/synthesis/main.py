@@ -141,7 +141,10 @@ def summary(rows, diagnostics, guard):
             'incomplete_empty': sum(1 for r in rows if r['deletion_status'] == 'INCOMPLETE' and not r['steps_json']),
             'unresolved_items': sum(len(d.get('unresolved', ())) for d in diagnostics.values()),
             'cases_with_unresolved': sum(bool(d.get('unresolved')) for d in diagnostics.values()),
-            'risk_overlay_copies': sum(len(d.get('risk_overlay', ())) for d in diagnostics.values()),
+            'risk_overlay_copies': sum(n['to'] == 'VIOLATION' for d in diagnostics.values()
+                                       for n in d.get('risk_overlay', ())),
+            'risk_overlay_unapplied': sum(n['to'] is None for d in diagnostics.values()
+                                          for n in d.get('risk_overlay', ())),
             'referenced_sources': sum(len(d.get('referenced_sources', ())) for d in diagnostics.values()),
             'dependency_reorders': sum(len((d.get('dependency_report') or {}).get('applied', ()))
                                        for d in diagnostics.values()),

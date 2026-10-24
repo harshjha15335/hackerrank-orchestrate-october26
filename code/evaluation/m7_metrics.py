@@ -78,12 +78,17 @@ def evaluate(dataset: Path, cache: Path | None = None):
     gold = read_output(dataset / 'sample_output.csv')
     gold_by = {r['case_id']: r for r in gold}
     requests, evidence = load_context(dataset, 'sample')
-    validation = validate_rows(rows, requests, evidence, allow_unproven_incomplete=True)
+    strict = validate_rows(rows, requests, evidence)
+    diagnostic = validate_rows(rows, requests, evidence, nonstandard_allow_unproven_incomplete=True)
     m6_cases = {c['case_id']: c for c in m6_run(dataset, sample=True, cache=cache)['cases']}
     ordered = sorted(gold_by)
     splits = {'dev': ordered[:22], 'holdout': ordered[22:], 'all': ordered}
     pred_by = {r['case_id']: r for r in rows}
-    report = {'m7_1_serialization': serialization_fixture(gold), 'validator_errors': validation.errors,
+    report = {'m7_1_serialization': serialization_fixture(gold), 
+              # Only the strict result may be cited for submission validity.
+              'validator_strict_errors': strict.errors,
+              'validator_diagnostic_nonstandard_errors': diagnostic.errors,
+              'future_only_checks': sum(len(d.get('future_only', ())) for d in diagnostics.values()),
               'splits': {}, 'misses': {}, 'extras': {}, 'status_mismatches': {}}
     for split, ids in splits.items():
         p, g = [pred_by[i] for i in ids], [gold_by[i] for i in ids]

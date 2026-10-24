@@ -8,8 +8,7 @@ non-claim reading may show risk, but only a source read may prove safety.
 This module applies the same rule to records, without changing M4 states or
 M5 decisions:
 
-* owning-service telemetry: ``index_query_completed result=hit``, a completed
-  ``*_lookup_completed``/``*_query_completed`` with ``rows=1``, an export
+* owning-service telemetry: ``index_query_completed result=hit``, an export
   ``available=true`` check, a ``*_pii_scan`` / ``analytics_identity_scan``
   with ``detector=direct_identifier`` and a matched value;
 * inventory listings (handover lines, ``record_type``/``result`` records,
@@ -23,6 +22,17 @@ admissible same-file trace that does), and only if it passes the M4/M5
 temporal gate. NOT_FOUND, ANONYMIZED, ``result=miss`` and ``available=false``
 are kept as later "safe-word" readings that cancel an older risk but never
 prove compliance. A same-time disagreement cancels too.
+
+Physical scope (Rev 2). Every reading keeps the physical scope M4 gives its
+observation (``state.engine.physical_scope``: the SQL table, the JSON/log
+topology, or ``service`` for the logical service-level record). Risk and
+safe words are resolved per scope, and a reading changes only the M4 copy of
+the same scope. A primary-table hit never marks a failover or reporting copy,
+and a safe word from one replica never cancels risk on another. Telemetry and
+inventory listings carry no topology, so they describe the logical
+service-level record and apply only to M4's ``service`` copy. When M4 has no
+copy of a reading's scope, the reading is reported as unapplied and no copy
+state is invented.
 """
 from __future__ import annotations
 
@@ -33,7 +43,7 @@ from flow.evidence import admissible, observed_time, process_kind
 from ingest.evidence import parse_time
 from policy.conditions import identity_claims
 from policy.engine import COMPLIANT, DEFERRED, TEMPLATES, UNRESOLVED, VIOLATION, PolicyDecision, decide_copy
-from state.engine import parse_source_bool, system_for
+from state.engine import parse_source_bool, physical_scope, system_for
 
 PRESENT, EXPOSED = 'PRESENT', 'EXPOSED'
 RISK_WORDS = {'FOUND': PRESENT, 'PRESENT': PRESENT, 'IDENTIFIABLE': EXPOSED}
@@ -56,6 +66,7 @@ class RecordReading:
     basis: str
     attribution: str
     matched_email: bool = False
+    scope: str = 'service'   # M4 physical scope of the observation
 
     def as_dict(self):
         return asdict(self)
@@ -78,13 +89,6 @@ def read_record(o, system: str, resource: str):
             value = raw.get('matched_value')
             if raw.get('detector') == 'direct_identifier' and isinstance(value, str) and value.strip():
                 return 'risk', EXPOSED, 'telemetry', f'{event} matched a direct identifier', '@' in value
-            return None
-        if isinstance(event, str) and event.endswith(('_lookup_completed', '_query_completed')) and 'rows' in raw:
-            # A completed lookup by the owning service is a row-count readback
-            # that M4's fixed readback vocabulary does not list.
-            rows = str(raw.get('rows')).strip()
-            if rows == '1': return 'risk', PRESENT, 'telemetry', f'{event} rows=1', False
-            if rows == '0': return 'safe_word', 'NOT_RISK', 'telemetry', f'{event} rows=0', False
             return None
         if event in AVAILABILITY_EVENTS:
             available = parse_source_bool(raw.get('available'))
@@ -123,8 +127,16 @@ def readings(ctx, fctx, system, resource, resolution, subject, extra=()):
         if owner not in ('direct', 'trace'): continue
         direction, state, source, basis, email = hit
         found.append(RecordReading(o.evidence_id, o.locator, observed_time(o), direction, state, source,
-                                   basis, owner, email))
+                                   basis, owner, email, physical_scope(o)))
     return sorted(found, key=lambda r: (parse_time(r.observed_at), r.evidence_id, r.locator))
+
+
+def by_scope(found):
+    """Readings grouped by physical scope, each group oldest first."""
+    groups = {}
+    for r in found:
+        groups.setdefault(r.scope, []).append(r)
+    return groups
 
 
 def latest_risk(found):
@@ -145,17 +157,6 @@ def _predicate(ctx, rule_id):
     return binding['predicate'] if binding else None
 
 
-def _later_safe_fact(decisions, risk):
-    """Another physical copy observed safe after the risk reading keeps the risk stale."""
-    point = parse_time(risk.observed_at)
-    for d in decisions:
-        if d['state_supported'] and d['observed_state'] in ('ABSENT', 'REDACTED', 'ANONYMIZED'):
-            # M4 captured_at is the latest possible time the safe state held.
-            if d.get('_observed_at') and parse_time(d['_observed_at']) > point:
-                return True
-    return False
-
-
 def overlay(ctx, fctx, policy, resolution, subject, observed_at):
     """Return (decisions, notes): M5 copy decisions with risk readings applied.
 
@@ -170,12 +171,18 @@ def overlay(ctx, fctx, policy, resolution, subject, observed_at):
     for (system, resource), copies in sorted(groups.items(), key=lambda kv: (kv[0][0] or '', kv[0][1] or '')):
         if not system or not resource or process_kind(system, resource):
             out.extend(copies); continue
-        found = readings(ctx, fctx, system, resource, resolution, subject)
-        risk = latest_risk(found)
+        scoped = by_scope(readings(ctx, fctx, system, resource, resolution, subject))
+        for scope in sorted(set(scoped) - {d['topology'] for d in copies}):
+            if latest_risk(scoped[scope]):
+                notes.append({'system_id': system, 'resource_id': resource, 'topology': scope, 'to': None,
+                              'unapplied': 'no M4 copy of this physical scope; no copy state invented',
+                              'reading': latest_risk(scoped[scope]).as_dict()})
         for d in copies:
             new = d
+            # Only a reading of this copy's own physical scope can change it.
+            risk = latest_risk(scoped.get(d['topology'], ()))
             if (risk and d['compliance'] == UNRESOLVED and d['observed_state'] == 'UNKNOWN'
-                    and not d['attribution_conflicts'] and not _later_safe_fact(copies, risk)):
+                    and not d['attribution_conflicts']):
                 action, why = None, None
                 if d['effective_action'] and d['condition_outcome'] in ('TRUE', 'FALSE'):
                     action = d['effective_action']
@@ -192,8 +199,8 @@ def overlay(ctx, fctx, policy, resolution, subject, observed_at):
                                _risk=risk.as_dict())
                     notes.append({'system_id': system, 'resource_id': resource, 'topology': d['topology'],
                                   'from': d['reason'], 'to': VIOLATION, 'action': action, 'reading': risk.as_dict()})
-            if found and not new.get('_risk'):
-                new = dict(new, _readings=[r.as_dict() for r in found])
+            if scoped.get(d['topology']) and not new.get('_risk'):
+                new = dict(new, _readings=[r.as_dict() for r in scoped[d['topology']]])
             out.append(new)
     return out, notes
 

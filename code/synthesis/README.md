@@ -38,9 +38,13 @@ every missed step.
      email.
 
    RETAIN records and the security-retention condition are never decided
-   here. A later NOT_FOUND, miss or `available=false` reading cancels the
-   risk, but it never proves compliance. M4 states and M5 decisions are not
-   modified.
+   here. Readings are keyed by physical scope (`state.engine.physical_scope`):
+   only a reading of a copy's own table or topology can change that copy. A
+   later NOT_FOUND, miss or `available=false` reading of the same copy
+   cancels the risk, but it never proves compliance. A reading of a scope
+   with no M4 copy is reported as unapplied and never invents a copy. Lookup
+   or query "completed" events are not presence evidence (no documented
+   schema; removed in Rev 2). M4 states and M5 decisions are not modified.
 4. **Plan and status** (`synthesizer.plan`, `synthesize`). See the module
    docstring. NOT_APPLICABLE gives `[]`. COMPLETE needs at least one resource
    or process, every copy COMPLIANT, every process proven safe, nothing
@@ -65,5 +69,5 @@ every missed step.
 An INCOMPLETE case can have nothing provable to report. That happens when the
 subject has no linked resource, or every gap is an undecided treatment. Such
 a case carries either no steps or only future verification steps. It never
-carries an invented finding. `validate_rows(..., allow_unproven_incomplete=True)`
+carries an invented finding. `validate_rows(..., nonstandard_allow_unproven_incomplete=True)`
 accepts that shape. Without the flag (the M0 default), such a case is an error.

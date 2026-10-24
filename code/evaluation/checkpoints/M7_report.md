@@ -185,3 +185,135 @@ output and 100% citation validity. M7-5 fails on sequence accuracy (dev 0.091, h
 meets 0.90 exactly. Per the checkpoint rules, a milestone with an unmet target is not marked PASS.
 The synthesizer is complete; the remaining gap is record coverage, which needs M8 screenshots,
 identity links and owner-level policy decisions.
+
+---
+
+# M7 Rev 2 (independent review corrections, 2026-10-24)
+
+The sections above are the reviewed M7 report and are kept unchanged. This section records the Rev 2
+corrections. The holdout (sample case_23 to case_32) is report-only and **not blind**: the sample
+answers were viewed during earlier milestones. Nothing in Rev 2 was tuned on it.
+
+## R1. Cross-copy risk contamination (fixed)
+- Each `RecordReading` now carries `scope = state.engine.physical_scope(observation)`. That is the
+  SQL table for snapshots and the observation topology (default `service`) otherwise, which is the
+  same key M4 and M5 use for copies.
+- `risk.overlay` groups readings with `by_scope`. A copy can change only from the latest reading of
+  **its own** scope. A safe word on one replica can no longer cancel risk on another, and a risky
+  primary can no longer promote a failover or reporting copy. The cross-scope `_later_safe_fact`
+  helper was removed.
+- A risk reading whose scope has no M4 copy is recorded as an unapplied note (`to: null`, "no copy
+  state invented"). It never creates a copy or a state.
+- M5's worst-copy rollup is unchanged, so two violating copies still give one finding per resource.
+- The citation guard compares `physical_scope(cited observation)` with the copy the step relies on,
+  before the system check. A citation from another copy is rejected.
+- Fixtures added in `code/synthesis/tests/test_synthesis.py`:
+  - two copies: a risky primary does not promote the failover;
+  - two copies: a later primary miss does not hide an earlier failover hit;
+  - three copies (primary, failover, reporting) with conflicting timestamps and states;
+  - rollup gives one finding for two violating copies;
+  - a logical reading never invents a copy;
+  - the guard rejects a citation from another copy.
+- On the 518 cases all 142 promotions were already same-scope (`service`: telemetry 93, inventory
+  49), so the bug was latent. The 518 output is **byte-identical** to the reviewed run
+  (sha256 `aeb5c135…6fd80e80`). There are 0 unapplied readings, and 806/806 citations are accepted
+  with the new scope check.
+
+## R2. `*_lookup_completed` rule (removed)
+No participant-facing schema documents `*_lookup_completed rows=N` as proof that a record is present.
+The rule was inferred from dev error analysis, so it was removed rather than hardened. Ablation:
+
+| run | dev step F1 | dev sequence | dev status | holdout F1 (report-only) | 518 output |
+|---|---|---|---|---|---|
+| with rule (reviewed) | 0.792 | 0.091 | 19/22 | 0.848 | sha256 aeb5c135… |
+| without rule (Rev 2) | 0.780 | 0.091 | 19/22 | 0.848 | identical bytes |
+
+The rule changed only one dev record (one analytics resource in one dev case) and nothing on the 518
+cases. It was sample-fitted, so it is dropped. Parametrized tests show that a lookup or query event
+is no longer presence evidence for any of these: HTTP 200 with rows=1, a failed HTTP status, a
+malformed row count, a started (incomplete) operation, or a conflicting worker status.
+
+## R3. Future-only verification (documented)
+- Every future-only check now carries a `future_only` record in the case diagnostics. The record
+  lists:
+  - the identity sources (`evidence:locator` plus attribution);
+  - the rule ID and the required treatment;
+  - the condition outcomes and the per-copy states;
+  - `current_state_known: false`;
+  - why the finding and remediation are omitted;
+  - its strict-contract status.
+- On the 518 cases there are **41** future-only checks, all `VERIFY_RECORD_ABSENT` for decided DELETE
+  records whose M4 state is UNKNOWN. In each, no admissible, subject-owned reading proves the record
+  present, so a REPORT_REMAINING_RECORD would be invented. M7 never emits one.
+- 30 of the 41 sit in cases that also have an evidenced finding, so those rows meet the strict shape.
+  The other 11 are in R4's rows.
+
+## R4. The 80 strict-validator rows
+- The strict validator is unchanged and stays the default. The permissive flag was renamed
+  `nonstandard_allow_unproven_incomplete`; it is documented as DIAGNOSTIC and NONSTANDARD and is never
+  used to claim submission validity. Both results are reported separately (`m7_metrics.py`,
+  `reports.py`).
+
+| data | strict M0 | diagnostic NONSTANDARD |
+|---|---|---|
+| 518 evaluation requests | **FAIL**: 120 errors in 80 rows | PASS, 0 errors |
+| 32 public samples | **FAIL**: 12 errors in 7 rows | PASS, 0 errors |
+
+- Per-case investigation: `code/evaluation/checkpoints/M7_INCOMPLETE_WITHOUT_FINDINGS.md`, generated
+  by `python3 code/synthesis/reports.py`.
+  - Shapes: 40 future-only, 30 with undecided treatments only, 10 with no linked resources.
+  - Unresolved causes: unknown conditional treatment 77, unknown state 11, process state unknown 4,
+    missing policy mapping 3.
+  - Citation rejections: 0. Unapplied risk readings: 0.
+- **A strict, source-grounded plan is not possible for any of the 80 rows.** A strict plan needs a
+  FINDING, and a FINDING needs an admissible citation that proves presence, exposure or an active
+  process at `audit_at`. None exists for these rows. Resource IDs are never inferred from numbering.
+- This remains an **unresolved conflict** between the strict plan shape and the evidence. It is left
+  visible, not hidden. The open owner decisions are the security-retention condition (77 of the
+  causes) and how M10 should serialize "uncertain" cases.
+
+## R5. Preserved behaviour
+- M0–M6 tests pass.
+- Canonical ordering is exact (M7-1 32/32, Kendall tau 1.0).
+- 806/806 citations are accepted.
+- Retained records and backups are never deleted (full-run test).
+- Security-retention UNKNOWN stays UNRESOLVED.
+- Attribution safeguards and quarantines are unchanged.
+- No organizer data and no hardcoded answers (the M0 leak grep passes).
+- `dataset/` and root `output.csv` are untouched. log.txt is append-only.
+
+## R6. Verification
+- `python3 -m pytest -q -p no:cacheprovider code`: **437 passed** (424 reviewed + 13 Rev 2).
+- Two 518 runs: byte-identical, sha256 `aeb5c13565bfeda694f8aa15bd80326b9a32f1cb791745b44da84c9acfd80e80`.
+
+| metric | reviewed M7 | Rev 2 | note |
+|---|---|---|---|
+| dev step precision / recall / F1 | — / — / 0.792 | 0.987 / 0.645 / **0.780** | lookup rule removed (R2) |
+| dev case (status) accuracy | 19/22 | 19/22 (0.864) | |
+| dev sequence accuracy | 0.091 | 0.091 | |
+| holdout F1 / status / sequence (report-only, not blind) | 0.848 / 9/10 / 0.000 | 0.848 / 9/10 / 0.000 | |
+| citations accepted / rejected (518) | 806 / 0 | 806 / 0 | the scope check is now included |
+| strict validator errors (518) | 120 in 80 rows | 120 in 80 rows | unresolved conflict (R4) |
+| INCOMPLETE rows without findings (518) | 80 | 80 | |
+| future-only checks (518) | not counted | 41 | |
+| risk promotions (518) | 142 | 142 (service/telemetry 93, service/inventory 49; 0 unapplied) | |
+| M4 UNKNOWN latest | 308 | 308 | |
+
+The only regression is dev F1 falling from 0.792 to 0.780 (one dev record). It comes entirely from
+removing the undocumented lookup rule, as the review asked.
+
+## R7. Gates
+| gate | result |
+|---|---|
+| M7-1 serialization and ordering | PASS |
+| M7-2 dependency ordering | PASS |
+| M7-3 citation guard (now with scope) | PASS |
+| M7-4 status and plan shape | PASS |
+| M7-5 targets (sequence ≥ 0.75, F1 ≥ 0.80) | **FAIL** |
+| M5-5 carried over (dev F1 ≥ 0.80) | **FAIL** (0.780) |
+| strict M0 plan shape on 518 | **FAIL**: unresolved conflict, awaiting owner decision |
+| Rev 2 fixes R1–R4 | PASS |
+| independent review | PENDING |
+
+Recommendation: **FAIL** at the milestone level. The Rev 2 corrections are complete. M7 is not
+merged, and M8–M10 are not started.

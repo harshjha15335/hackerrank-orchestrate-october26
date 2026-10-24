@@ -1747,3 +1747,25 @@ branch=feature/m7-step-synthesis
 repo_root=/home/claude/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T19:50:00Z] M7 Rev 2 review corrections (scope, lookup rule, strict)
+
+User Prompt (verbatim, secrets redacted):
+M7 Review — Hold the merge: HOLD — Correctness and output-contract issues. [Full "M7 Rev 2 Independent Review Corrections" prompt: 1 fix cross-copy risk contamination with physical scope, scope-checked citations and two/three-copy fixtures; 2 harden or justify the *_lookup_completed rule with an ablation; 3 document every future-only verification; 4 resolve the 80 strict-validator rows, keep the strict validator intact, label any permissive mode nonstandard; 5 preserve all correct work; 6 full verification and comparison with reviewed values; 7 append an M7 Rev 2 section, commit, push, verify the remote SHA, report gates and STOP. Do not merge M7 or start M8–M10; holdout is not blind.]
+
+Agent Response Summary:
+Risk readings are now keyed by physical scope, so a copy changes only from its own readings; readings of an unknown scope are reported unapplied, and the citation guard rejects a citation from another copy. The undocumented lookup rule was removed after an ablation (dev F1 0.792 -> 0.780; no effect on 518). Future-only checks carry documented diagnostics (41 on 518). The strict validator is unchanged and still fails 120 errors in 80 rows; the permissive mode is renamed nonstandard, and a generated report shows no strict, source-grounded plan exists for those rows. 437 tests pass; two 518 runs are byte-identical to the reviewed output.
+
+Actions:
+* code/synthesis/{risk,citations,synthesizer,main}.py, new reports.py, README.md, tests/test_synthesis.py (+13 tests)
+* code/evaluation/contract.py (nonstandard_allow_unproven_incomplete), m7_metrics.py, README.md
+* code/evaluation/checkpoints/M7_INCOMPLETE_WITHOUT_FINDINGS.md (generated), M7_report.md (Rev 2 section appended)
+* python3 -m pytest -q -p no:cacheprovider code; two python3 code/synthesis/main.py runs to /tmp
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=feature/m7-step-synthesis
+repo_root=/home/claude/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

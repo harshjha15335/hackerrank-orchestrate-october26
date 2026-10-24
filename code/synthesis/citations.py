@@ -7,7 +7,8 @@ re-reads the cited observation (evidence_id + locator) and checks, in order:
 2. its manifest/event time is at or before the case's audit_at;
 3. the observation passes the M4/M5 temporal gate (record and event time not
    after the cutoff or after capture) and is not M1-quarantined;
-4. it names the step's resource and belongs to the step's system;
+4. it names the step's resource, belongs to the step's system and describes
+   the physical copy (M4 scope) whose state the step relies on;
 5. it is not a workflow claim (activity rows, worker results);
 6. its own record names the subject and nobody else, or joins an admissible
    same-file trace that does; any foreign identifier rejects it;
@@ -24,7 +25,7 @@ from flow.engine import attribution
 from flow.evidence import admissible, read as read_process
 from ingest.evidence import parse_time
 from policy.conditions import exposed_fields, identity_claims
-from state.engine import _state_for_observation, field_values, system_for
+from state.engine import _state_for_observation, field_values, physical_scope, system_for
 
 from .risk import EXPOSED, read_record
 
@@ -93,6 +94,10 @@ class CitationGuard:
             return Verdict(False, 'observation is after the cutoff, after its capture, or quarantined')
         if o.resource_id != step['resource_id']:
             return Verdict(False, 'cited observation does not name the step resource')
+        if provenance.get('scope') and physical_scope(o) != provenance['scope']:
+            # The citation must describe the physical copy whose state it justifies.
+            return Verdict(False, f'cited observation describes copy {physical_scope(o)}, '
+                                  f'not {provenance["scope"]}')
         owner_system = system_for(o)
         if kind == 'risk' and o.raw_fields.get('system') == step['system_id']:
             owner_system = step['system_id']   # listing records name their system explicitly
