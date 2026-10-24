@@ -51,6 +51,8 @@ FIXTURES=[
     ("The phrase 'delete my account' appeared in a guide. I only want an export.",UNCERTAIN),
     ('Please delete marketing preferences only; keep my account.',NOT_APPLICABLE),
     ('Please delete my account and unsubscribe me from marketing emails.',DELETE),
+    ('Do not delete my invoices, but please delete my account.',DELETE),
+    ('Please delete my account, but do not delete my invoices.',DELETE),
     ('Please delete data belonging to my friend.',UNCERTAIN),
 ]
 

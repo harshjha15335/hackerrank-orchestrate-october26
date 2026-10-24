@@ -70,7 +70,12 @@ class IntentResult:
 def rule(text: str) -> IntentResult | None:
     value = clean(text)
     if not value: return IntentResult(UNCERTAIN, 'rules', True, 'empty_request')
-    if NEGATED.search(value): return IntentResult(NOT_APPLICABLE, 'rules', False, 'explicit_negation')
+    if NEGATED.search(value):
+        clauses = re.split(r'\b(?:but|however)\b|[;.]', value)
+        if not any(not NEGATED.search(clause) and re.search(
+                r'\b(?:please\s+)?(?:delete|erase|remove|close)\s+my\s+'
+                r'(?:account|personal data|data)\b', clause) for clause in clauses):
+            return IntentResult(NOT_APPLICABLE, 'rules', False, 'explicit_negation')
     if INJECTION.search(value): return None  # treat as untrusted data, not a command
     if QUOTED.search(value): return None
     # A past deletion mention cannot authorize a different request made now.
