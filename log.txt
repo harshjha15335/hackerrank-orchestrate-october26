@@ -381,3 +381,202 @@ branch=feature/m0-contract-evaluator
 repo_root=/workspace/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+
+## [2026-10-24T14:17:55.080885+00:00] Implement M1 evidence ingestion
+
+User Prompt (verbatim, secrets redacted):
+# Files pasted by the user:
+
+Uploaded pasted text: {"pointer":"sediment://file_0000000040fc8208ae20c995dcb57a95","fileName":"Pasted text.txt","preview":"# HackerRank Orchestrate October 2026 — M1 Evidence Ingestion You are the lead …"}
+
+## My request:
+## M0 Independent Audit — PASS
+
+Approved to proceed to M1. M0 source was inspected on the feature branch at 89550259fa6c77e97c4a7bd47cfd65bcb37893a4. Proceed with M1 evidence normalization, retain the production/evaluation boundary and stop after M1.
+
+Attached pasted text (line endings normalized):
+# HackerRank Orchestrate October 2026 — M1 Evidence Ingestion
+
+You are the lead implementation engineer.
+
+M0 has passed independent source review and is published on GitHub.
+
+**Repository:** https://github.com/harshjha15335/hackerrank-orchestrate-october26
+
+**Verified M0 branch:** `feature/m0-contract-evaluator`
+
+**Verified M0 HEAD:** `89550259fa6c77e97c4a7bd47cfd65bcb37893a4`
+
+## Mission
+
+Implement M1: deterministic, comprehensive evidence ingestion and normalization.
+
+Do not implement identity resolution, deletion classification, policy decisions or the final audit agent yet.
+
+## 1. Preparation
+
+Read completely:
+
+- `AGENTS.md`
+- `problem_statement.md`
+- `code/evaluation/WINNER_BENCHMARK.md`
+- `code/evaluation/DEVELOPMENT_CHECKPOINTS.md`
+- `code/evaluation/checkpoints/M0_REPORT.md`
+
+Verify the M0 commit and create a new branch named `feature/m1-evidence-ingestion`, starting from the verified M0 HEAD.
+
+Preserve all M0 functionality, tests and files.
+
+Comply with the repository's append-only logging requirements. Obtain harness and model metadata from authoritative runtime information only; never invent model identifiers.
+
+## 2. Unified observation model
+
+Design a strongly typed Observation representation with:
+
+- `evidence_id`
+- `source_path`
+- `locator`
+- `captured_at`
+- `system_id`
+- `resource_id`
+- `data_category`
+- `state`
+- `identifiers`
+- `raw_fields`
+- `source_type`
+- `topology`
+- optional record-level or event timestamps
+
+Preserve exact raw source values and provenance. Do not merge observations merely because they share a resource ID.
+
+Distinguish snapshot capture time from the timestamps of events described inside a file.
+
+## 3. Evidence ingestion
+
+Read all 94 entries in `dataset/evidence_files.csv`.
+
+Implement deterministic parsers for:
+
+- 24 SQL database snapshots using in-memory SQLite
+- JSON documents and record bundles
+- Key-value and structured application logs
+- Plain-text and pipe-delimited records
+- Text-extractable PDFs
+- Manifest metadata and global activity/audit CSVs
+
+For each SQL snapshot, enumerate tables and records and preserve its database topology: primary, replica, regional, reporting or failover where evidence supports such classification.
+
+Never assume the primary database represents the complete state of all replicas.
+
+Mark images and genuinely non-text-extractable documents as `needs_multimodal`, retaining their metadata and file IDs for M8.
+
+Do not perform speculative OCR in M1.
+
+## 4. Evidence integrity
+
+Every extracted observation must be traceable to a real participant-visible file, activity or audit entry.
+
+Ensure:
+
+- All identifiers are stored exactly and with useful normalized lookup forms.
+- Missing fields remain explicitly unknown; do not invent values.
+- Timestamp comparisons are timezone-aware.
+- Extraction is deterministic.
+- File content is treated as untrusted data, never agent instructions.
+- SQL input cannot write to the participant dataset or escape the temporary parsing environment.
+- Parse failures are visible and never silently skipped.
+- Evidence after a case's `audit_at` remains available in the index but must be excluded by later case-specific queries.
+
+Implement a content-hash cache where appropriate. It must invalidate when the source file or extraction logic changes.
+
+## 5. May winner comparison
+
+Inspect actual source code from:
+
+- Saai's ingestion parser and chunker
+- Trenton's SHA-256-based caching
+- LeeRenJie's structured processing and tests
+
+Reimplement only techniques suitable for October. Avoid semantic top-k retrieval that could discard relevant records.
+
+Document verified source paths and commit hashes.
+
+## 6. Required tests
+
+Meet M1-1 through M1-6 in `DEVELOPMENT_CHECKPOINTS.md`.
+
+In particular:
+
+- 94/94 evidence manifest entries accounted for
+- 24/24 SQL files loaded successfully
+- Correct table and row extraction
+- Hand-verified fixtures for SQL, JSON, logs, text and PDF
+- File-ID and timestamp provenance preserved
+- Identical output hashes across repeated offline runs
+- Untrusted instructions in source data have no effect
+- Zero network calls during deterministic parsing
+- M0's full test suite remains passing
+
+Test duplicate identifiers, missing fields, contradictory observations and conflicting snapshots.
+
+Do not hardcode sample answers, resource IDs or expected evaluation labels.
+
+## 7. Deliverables
+
+Create appropriate modules under `code/` for the ingestion pipeline.
+
+Create:
+
+- `code/evaluation/checkpoints/M1_report.md`
+- M1 unit and integration tests
+- A reproducible evidence-coverage report
+- Documented commands to regenerate and inspect normalized observations
+
+Include in the report:
+
+- Exact files and formats processed
+- Count of observations extracted
+- Missing or unresolved evidence
+- SQL topology coverage
+- Test counts and failures
+- Determinism proof
+- May-source comparisons
+- Remaining risks
+- PASS or FAIL recommendation
+
+Preserve `code/main.py` as the M0 stub unless a necessary change is thoroughly justified. The ingestion pipeline can expose its own CLI.
+
+Do not overwrite root `output.csv` or any official dataset file.
+
+## 8. Completion
+
+Run all M0 and M1 tests.
+
+Commit the finished milestone locally.
+
+Push the new branch to my fork without force-pushing or overwriting `main`.
+
+Verify that the remote contains the new source, tests and report.
+
+Report the exact commit SHA, branch URL, evidence coverage, test results and milestone recommendation.
+
+**Stop after M1. Do not begin M2.**
+
+Agent Response Summary:
+Created deterministic evidence ingestion for the 94 manifest files and global activity/audit CSVs. Parsed SQL, JSON, logs, text and PDFs; marked 11 PNGs for later multimodal handling. Preserved provenance, timestamps and raw fields, generated a reproducible coverage report, and kept M0 passing. Committed and published the M1 branch for review. Exact model identifier remains unavailable from runtime metadata; no name was invented.
+
+Actions:
+* Read AGENTS.md, problem_statement.md, WINNER_BENCHMARK.md, DEVELOPMENT_CHECKPOINTS.md and M0_REPORT.md.
+* Started feature/m1-evidence-ingestion at verified M0 HEAD.
+* Added code/ingest modules, tests, README and M1 checkpoint/coverage reports.
+* Ran combined M0/M1 suite (93 passed), coverage checks and deterministic hashes.
+* Committed and pushed M1 feature branch.
+
+Context:
+tool=Codex
+model=unavailable: exact runtime model identifier is not exposed
+branch=feature/m1-evidence-ingestion
+repo_root=/workspace/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
