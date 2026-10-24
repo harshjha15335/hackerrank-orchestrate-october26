@@ -317,3 +317,23 @@ removing the undocumented lookup rule, as the review asked.
 
 Recommendation: **FAIL** at the milestone level. The Rev 2 corrections are complete. M7 is not
 merged, and M8–M10 are not started.
+
+## R8. Owner decision on M7 Rev 2 (Harsh, 2026-10-24)
+- **Approved for merge** as a safety-reviewed integration baseline at `c589953`. Merge approval is not
+  submission approval: the current CSV is **not** declared submission-ready.
+- Gates carried forward: M7-5 **FAIL**, M5-5 **FAIL** (dev F1 0.780), strict M0 validation **FAIL**
+  (120 errors in 80 rows), final submission readiness **FAIL**.
+- The 80 INCOMPLETE rows keep their honest classification. No finding is manufactured to pass the
+  validator.
+  - A proven violation emits a finding, a remediation and a verification.
+  - A known treatment with an UNKNOWN current state stays INCOMPLETE. A future verification without a
+    finding is accepted as a provisional representation.
+  - No attributable resources: INCOMPLETE with no invented steps.
+  - The strict validator failure is preserved and disclosed. It is an internal validator, not
+    confirmed hidden-grader behaviour.
+- Security retention (rule_12, "within the supplied retention period"):
+  - A record is retained under this rule only if the supplied evidence shows the period covers
+    `audit_at`.
+  - A missing period stays UNKNOWN. No assumed period, no indefinite retention, no automatic deletion.
+  - The 77 unknown conditional treatments are items, not distinct cases. They are to be reassessed
+    after multimodal (M8) integration, removing only the uncertainty that real evidence resolves.
