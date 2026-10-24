@@ -81,6 +81,13 @@ def test_negative_sql_scope_requires_independent_resource_reference():
                             {'resource_id':'synthetic_missing','email':'a@example.test'},'json')
     assert index.absence_candidate('synthetic_file','customer_profiles','synthetic_missing',
                                    '2026-01-02T00:00:00Z',source_reference=reference)
+    candidate=index.absence_candidate('synthetic_file','customer_profiles','synthetic_missing',
+                                      '2026-01-02T00:00:00Z',source_reference=reference)
+    assert not hasattr(candidate,'user_id') and not hasattr(candidate,'state')
+    unrelated=evidence.make({**META,'file_id':'synthetic_unrelated'},'row:2',
+                            {'resource_id':'synthetic_missing','email':'other@example.test'},'json')
+    assert index.absence_candidate('synthetic_file','customer_profiles','synthetic_missing',
+                                   '2026-01-02T00:00:00Z',source_reference=unrelated)==candidate
     assert index.absence_candidate('synthetic_file','customer_profiles','synthetic_present',
                                    '2026-01-02T00:00:00Z',source_reference=present) is None
     assert index.scope('synthetic_file','customer_profiles','2026-01-01T23:59:59Z') is None

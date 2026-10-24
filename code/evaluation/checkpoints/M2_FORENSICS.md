@@ -1,6 +1,8 @@
 # M2 dev-sample miss forensics
 
+- Historical-only recount from current-email membership: 518 requests, 418 current matches, 100 historical-only.
 - Original cited-pair retrieval: 31/38.
+- Independent source-backed identity oracle: 31/31 retrieved.
 - Explicit SQL negative scopes: 3/3 discoverable; no user/resource association inferred.
 - Remaining unattributed positive/query records: 4.
 - Supported identity-linked pairs: all reached by exact or source-backed correlation.

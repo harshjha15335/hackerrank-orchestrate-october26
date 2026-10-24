@@ -31,10 +31,10 @@ Date: 2026-10-24. Base: `main` at
 | Gate | Result |
 |---|---|
 | M2-1 | 518/518 requests resolved; 0 ambiguous, 0 unresolved. Ambiguity is surfaced by a synthetic collision test. |
-| M2-2 | **100** historical-only request rows resolve. An independent recount finds 418/518 request emails in the current 850-row identity CSV and 100 absent from it but linked by audit history. The earlier checkpoint estimate of 95 is stale; ten historical cases were traced to email `old_value` transitions in tests. |
+| M2-2 | **100** historical-only request rows resolve. `historical_only_recount()` independently compares case-folded request emails to current identity emails: 418/518 current matches and 100 historical-only. Ten historical cases are traced to audit `old_value` transitions. The stale 95 estimate has been corrected in `DEVELOPMENT_CHECKPOINTS.md`. |
 | M2-3 | Synthetic tests cover successive email changes, case-insensitive email, digit-normalized phone and exact opaque hash; future values are excluded from earlier views. Original strings and audit IDs remain available. |
 | M2-4 original | **31/38 dev-sample cited evidence/resource pairs reachable (81.6%)**. The original 100% gate still fails. |
-| M2-4R revised | **31/31 source-backed identity-linked pairs retrieved**, 3/3 SQL negative scopes discoverable separately, four null-identifier records/queries explicitly unattributed; zero unsupported joins in adversarial fixtures. Pass under revised evidence-safe gate. |
+| M2-4R revised | **31/31 independently source-backed identity-linked pairs retrieved**, 3/3 SQL negative scopes discoverable separately, four null-identifier records/queries explicitly unattributed; zero unsupported joins in adversarial fixtures. Pass under revised evidence-safe gate. |
 | M2-5 | Five near-email decoys and a same-name second user yield zero false identity links. Records with multiple direct identities are labelled `mixed_context`. |
 | M2-6 | Two cases for the same subject at different cutoffs retain distinct current identity views. |
 
@@ -54,6 +54,15 @@ test measures all 38 citations and checks that every miss has an explicit
 negative-scope or unattributed classification. It does not assert that 31/38
 is a successful recall threshold.
 
+`code/evaluation/m2_oracle.py` establishes support from explicit source
+identifier fields, a uniquely identified PDF document, or an unambiguous
+shared trace. It inspects observations and identity history without calling
+`EvidenceIndex.find()` or reading postings. The oracle found 31 supported
+pairs; retrieval returned all 31, with zero unsupported identity hits. The
+three SQL scopes and four unattributed records account for the remaining
+citations. A mutation test clears valid postings and confirms the acceptance
+assertion fails, so reclassifying misses cannot make the test pass.
+
 `record_time > captured_at` now compares parsed aware datetimes. Synthetic
 positive and negative offset tests demonstrate both directions where string
 ordering would be wrong. The same two real-data discrepancies remain in the
@@ -68,7 +77,7 @@ context. Canonical observation hash:
 
 `/tmp/m0-venv/bin/python -m pytest -q -p no:cacheprovider
 code/evaluation/tests code/ingest/tests code/identity/tests`:
-**115 passed in 6.85s**, zero failures/skips. The original M0 and M1 suites
+**117 passed in 10.66s**, zero failures/skips. The original M0 and M1 suites
 passed within that run. Tests block socket connections, check exact case
 cutoffs, and compare repeated retrieval digests. The ingestion coverage report
 can be regenerated with `python3 code/ingest/coverage.py`.
@@ -100,3 +109,9 @@ negative-scope accounting, while prohibiting invented associations. Four
 null-identifier records/queries remain unattributed. M4 must assess snapshot
 completeness and authority before any ABSENT conclusion. The criterion change
 needs independent review before merge; M3 remains unstarted.
+
+`SnapshotIndex.absence_candidate()` returns only a scope object with file,
+table and capture time. It contains no user or confirmed state. Even a
+caller-supplied resource reference can belong to another customer; a test
+supplies one and confirms the candidate does not imply attribution. M4 must
+verify identity, source scope, timing and snapshot authority separately.

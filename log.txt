@@ -946,3 +946,26 @@ branch=feature/m2-identity-graph
 repo_root=/workspace/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+
+## [2026-10-24T15:21:34.279615+00:00] Strengthen M2 independent quality gate
+
+User Prompt (verbatim, secrets redacted):
+M2 Independent Audit — PASS WITH RISKS, merge temporarily on hold. Complete the final M2 review correction on feature/m2-identity-graph at c511e69668c159787d6a9d58f254cace563fda36. Build an independent source-grounded evaluation oracle for the 22 development cases, enforce every independently supportable identity-linked citation and all three SQL negative scopes, keep four unattributed citations diagnosed, retain original 31/38 FAIL, add a posting-deletion regression that fails the gate, document SnapshotIndex as candidate-only, correct the 95 historical-only estimate to a reproducible 100, rerun M0–M2, publish branch. Do not begin M3 or modify main.
+
+Agent Response Summary:
+Added an evaluation-only source oracle that checks explicit identifier fields, uniquely identified PDF records and unambiguous traces without using retrieval postings. It independently identifies 31 supported citations; all 31 are retrieved, three SQL negative scopes remain separate, and four records remain unattributed. A mutation test clearing valid postings fails the gate. Recounted 418 current-email and 100 historical-only request rows, documented SnapshotIndex as candidate-only, and retained original 31/38 FAIL. All 117 tests passed; main and M3 were left untouched.
+
+Actions:
+* Added code/evaluation/m2_oracle.py and strengthened code/evaluation/tests/test_m2_recall.py.
+* Updated code/evaluation/m2_forensics.py, M2_FORENSICS.md, M2_report.md and DEVELOPMENT_CHECKPOINTS.md.
+* Added candidate-only documentation and unrelated-reference test for SnapshotIndex.
+* Ran combined M0–M2 tests (117 passed), committed and pushed the M2 feature branch.
+
+Context:
+tool=Codex
+model=unavailable: exact runtime model identifier is not exposed
+branch=feature/m2-identity-graph
+repo_root=/workspace/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

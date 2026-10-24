@@ -6,6 +6,7 @@ from ingest.evidence import parse_time
 
 @dataclass(frozen=True)
 class SnapshotScope:
+    """A file/table/capture reference, without subject or state assertion."""
     evidence_id: str
     source_path: str
     table: str
@@ -13,6 +14,7 @@ class SnapshotScope:
 
 
 class SnapshotIndex:
+    """Produces scope candidates only; never confirms absence or attribution."""
     def __init__(self, observations, coverage):
         self.present = set()
         self.scopes = {}
@@ -37,8 +39,10 @@ class SnapshotIndex:
     def absence_candidate(self, evidence_id, table, resource_id, cutoff, *, source_reference=None):
         """Return scope only with an independent source-backed resource reference.
 
-        This checks neither completeness nor authority; M4 must establish both
-        before treating absence as a current-state assertion.
+        Even a supplied reference can belong to the wrong customer. This API
+        checks neither customer attribution, snapshot completeness, source
+        authority nor the correct audit-time state. M4 must establish all of
+        those before treating an absent row as a confirmed absence.
         """
         if not source_reference or source_reference.resource_id != resource_id:
             return None
