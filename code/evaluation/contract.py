@@ -95,8 +95,14 @@ def step_shape(step) -> bool:
 
 
 def validate_rows(rows: list[dict], requests: dict[str, datetime],
-                  evidence: dict[str, datetime]) -> ValidationResult:
-    """Validate all cases and structurally detectable plan coverage; never repairs output."""
+                  evidence: dict[str, datetime], allow_unproven_incomplete: bool = False) -> ValidationResult:
+    """Validate all cases and structurally detectable plan coverage; never repairs output.
+
+    With ``allow_unproven_incomplete`` (M7 production output), an INCOMPLETE
+    case whose only problem is unresolved uncertainty may carry no finding:
+    either no steps at all or future verification steps only. Any finding
+    still requires remediation and verification.
+    """
     result = ValidationResult(len(rows))
     errors = result.errors
     ids = [r['case_id'] for r in rows]
@@ -119,7 +125,7 @@ def validate_rows(rows: list[dict], requests: dict[str, datetime],
             continue
         if status == 'NOT_APPLICABLE' and steps:
             fail('NOT_APPLICABLE must have zero steps')
-        if status in {'COMPLETE', 'INCOMPLETE'} and not steps:
+        if status == 'COMPLETE' and not steps or status == 'INCOMPLETE' and not steps and not allow_unproven_incomplete:
             fail(f'{status} requires nonempty steps')
         keys = []
         typed = []
@@ -157,7 +163,10 @@ def validate_rows(rows: list[dict], requests: dict[str, datetime],
             fail('incorrect phase/operation/system_id/resource_id ordering')
         if status == 'INCOMPLETE':
             phases = {s['phase'] for s in typed}
-            if phases != set(OPERATIONS):
+            unproven = allow_unproven_incomplete and 'FINDING' not in phases
+            if unproven and 'REMEDIATION' in phases:
+                fail('remediation without an evidenced finding')
+            elif not unproven and phases != set(OPERATIONS):
                 fail('INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases')
             actual = {(s['operation'], s['system_id'], s['resource_id']) for s in typed}
             for step in typed:
