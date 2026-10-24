@@ -605,3 +605,177 @@ branch=feature/m1-evidence-ingestion
 repo_root=/workspace/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+
+## [2026-10-24T15:02:08.897511+00:00] M2 historical identity resolution
+
+User Prompt (verbatim, secrets redacted):
+M1 GitHub review — PASS WITH MINOR RISKS. M1 is merged in main at 644cb488c85e7082b6b49789edc8f8ba662905c5. Correct the timezone-aware discrepancy comparison before M2. Next milestone: M2 — Historical Identity Resolution.
+
+Attached pasted text (line endings normalized):
+# HackerRank Orchestrate October 2026 — M2 Identity Resolution
+
+You are implementing M2: Current and Historical Identity Graph.
+
+Repository:
+https://github.com/harshjha15335/hackerrank-orchestrate-october26
+
+Verified baseline: `main` at `644cb488c85e7082b6b49789edc8f8ba662905c5`
+
+## Mission
+
+For each of the 518 deletion requests, identify the correct user and retrieve all potentially relevant observations using current and historical identifiers.
+
+Implement M2 only. Do not start M3.
+
+## 1. Setup and verification
+
+Read `AGENTS.md`, `problem_statement.md`, `WINNER_BENCHMARK.md`, `DEVELOPMENT_CHECKPOINTS.md`, and the M0/M1 reports.
+
+Verify the baseline SHA, fetch the latest `main`, and create `feature/m2-identity-graph`.
+
+Preserve the existing test suites and append-only logs.
+
+## 2. Resolve a prerequisite M1 issue
+
+In `code/ingest/evidence.py`, discrepancy detection currently compares timestamp strings:
+
+`o.record_time > o.captured_at`
+
+Replace that comparison with timezone-aware datetime comparisons, using the existing timestamp parser.
+
+Add positive and negative timezone-offset tests where lexicographic and actual chronological order differ.
+
+Do not change legitimate dataset observations, manifest timestamps, or the two documented discrepancies.
+
+Update the relevant regression evidence.
+
+## 3. Build the identity graph
+
+Use:
+
+- `dataset/user_identities.csv`
+- `dataset/user_audit_log.csv`
+- `dataset/deletion_requests.csv`
+- M1 normalized observations
+
+The identity CSV supplies current values. The audit log records historical `old_value` and `new_value` transitions for `email`, `phone` and `email_hash`.
+
+Resolve a stable `user_id` for each request, including historical-email-only requests.
+
+Reconstruct identity attributes as of each case's `audit_at`. Do not accidentally introduce future identity changes into an earlier audit.
+
+Retain the complete attributable identifier history available by each cutoff so that older copies remain discoverable.
+
+Preserve original values alongside normalized forms.
+
+Handle case-insensitive emails, phone formatting and exact email-hash matching. Do not assume an undocumented hashing algorithm.
+
+Do not link two users because their names resemble each other, an email is nearly identical, or one identifier merely contains another as a substring.
+
+If identity resolution is genuinely ambiguous, flag it explicitly. Never guess a user ID.
+
+## 4. Build deterministic evidence retrieval
+
+Construct an inverted index:
+
+`normalized_identifier → observation references`
+
+Index at least:
+
+- Stable user IDs
+- Current and historical emails
+- Email hashes
+- Normalized phone numbers
+- Explicit subject references
+
+Every returned observation reference must retain its actual evidence ID, locator, resource ID, system, source, timestamp and raw provenance.
+
+Support case-specific retrieval with an inclusive `audit_at` cutoff.
+
+Avoid semantic top-k filtering, since even a single missed backup, replica or support record may invalidate the deletion audit.
+
+Protect against unrelated identifiers on the same log line being treated as proof of identity. Preserve source context and distinguish direct identity evidence from weaker correlations.
+
+Do not decide whether a resource is PRESENT or ABSENT. That belongs to M4.
+
+## 5. Required verification
+
+Meet every acceptance test M2-1 through M2-6 in `DEVELOPMENT_CHECKPOINTS.md`.
+
+Specifically:
+
+- Resolve all 518 requests, reporting unresolved and ambiguous cases separately.
+- Verify all 95 expected historical-only email matches, or explain any discrepancy found by independently recounting the dataset.
+- Trace at least ten historical-email matches to actual audit transitions.
+- Test email, phone and email-hash normalization.
+- Test at least five near-match or same-name decoys with zero false links.
+- Test duplicate-subject requests using different audit cutoffs, without merging their case results.
+- Test identity histories containing multiple successive changes.
+- Confirm no evidence captured after `audit_at` enters case-specific results.
+- Demonstrate 100% reachability of sample-cited resource/evidence pairs on the 22-case development split. Keep official sample answers accessible to evaluation tests only, never production code.
+- Run the full M0/M1 regression suite again.
+- Confirm deterministic repeatability and zero network calls.
+
+Use synthetic regression fixtures. Do not hardcode sample answer IDs or labels.
+
+If a sample-cited observation cannot be retrieved because M1 discarded important context, repair the relevant extraction or correlation logic transparently, with a regression test.
+
+## 6. May winner comparison
+
+Inspect the pinned May source implementations:
+
+Saai: `code/retrieval/kb_tool.py` and `code/retrieval/reader.py`, focusing on literal identifier search.
+
+Amogh: `code/classifier.py`, focusing on deterministic extraction techniques while acknowledging that company classification is not entity resolution.
+
+Explain which techniques transfer to October and which do not. Do not copy May source code.
+
+## 7. Deliverables
+
+Build appropriately separated identity, history and retrieval modules under `code/`.
+
+Provide a reproducible CLI capable of inspecting a single case and displaying the associated evidence references without making audit decisions.
+
+Create `code/evaluation/checkpoints/M2_report.md` with:
+
+- Case resolution coverage
+- Historical-only resolution coverage
+- Identifier normalization results
+- Retrieval recall on the development sample
+- False-match and ambiguity tests
+- Audit-time boundary checks
+- Regression test results
+- Determinism evidence
+- May-source comparisons
+- Known limitations and PASS/FAIL verdict
+
+Keep official datasets and root `output.csv` unchanged. Do not generate the final deletion classifications.
+
+## 8. Publish and stop
+
+Run all M0, M1 and M2 tests.
+
+Commit and push `feature/m2-identity-graph` to my GitHub fork.
+
+Verify the remote commit and report the exact SHA, passing tests, resolution results and checkpoint status.
+
+Stop before M3 so the implementation can undergo independent review.
+
+Agent Response Summary:
+Implemented cutoff-aware current/historical identity views and exact evidence indexing; all 518 cases resolve and an independent recount finds 100 historical-only request rows. Corrected the M1 timestamp comparison and preserved document-scoped PDF context. The dev sample reached only 31/38 cited resource/evidence pairs because seven citations lack an evidence-grounded identity join, so M2 is reported FAIL rather than claiming completion. M0/M1/M2 regression tests passed and no M3 work began.
+
+Actions:
+* Fetched main and started feature/m2-identity-graph from verified M1 HEAD.
+* Implemented identity graph, retrieval index, CLI, tests, and M2 report.
+* Repaired timezone discrepancy comparison and regenerated M1 coverage.
+* Ran combined tests and deterministic CLI checks.
+* Committed and published M2 feature branch for review.
+
+Context:
+tool=Codex
+model=unavailable: exact runtime model identifier is not exposed
+branch=feature/m2-identity-graph
+repo_root=/workspace/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

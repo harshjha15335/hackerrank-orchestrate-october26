@@ -10,7 +10,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from ingest.evidence import (ExtractionError, canonical_bytes, identifiers, ingest, make,
                              parse_json, parse_lines, parse_pdf, parse_sql, parse_time,
-                             source_digest, table_topology)
+                             record_after_capture, source_digest, table_topology)
 
 DATASET = Path(__file__).resolve().parents[3] / 'dataset'
 
@@ -165,6 +165,16 @@ def test_timestamp_and_missing_values():
     with pytest.raises(ExtractionError):parse_time('2026-01-01')
     o=make(meta('x'),'row:1',{'text':'ordinary'},'txt')
     assert o.resource_id is None and o.state is None and o.system_id is None
+
+
+def test_offset_aware_discrepancy_boundary():
+    # Lexicographic comparison gives the opposite answer in both cases.
+    assert record_after_capture('2026-01-01T23:30:00-02:00',
+                                '2026-01-02T00:00:00Z') is True
+    assert record_after_capture('2026-01-02T00:15:00+02:00',
+                                '2026-01-01T23:00:00Z') is False
+    assert record_after_capture('2026-01-02T00:00:00Z',
+                                '2026-01-02T01:00:00+01:00') is False
 
 
 def test_manifest_escape_rejected(tmp_path):

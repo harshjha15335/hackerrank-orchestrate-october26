@@ -34,6 +34,10 @@ def parse_time(value: str) -> datetime:
     return datetime.fromisoformat(value.replace('Z', '+00:00'))
 
 
+def record_after_capture(record_time: str, captured_at: str) -> bool:
+    return parse_time(record_time) > parse_time(captured_at)
+
+
 def normalized(value: str) -> str:
     if '@' in value:
         return value.casefold()
@@ -198,7 +202,14 @@ def parse_pdf(path, meta):
     except (OSError, subprocess.SubprocessError) as exc:
         raise ExtractionError(f'{meta["file_id"]}: pdftotext failed: {exc}') from exc
     if not run.stdout.strip(): return [], 'needs_multimodal'
-    return parse_lines(path, meta, 'pdf', run.stdout), 'parsed'
+    lines = parse_lines(path, meta, 'pdf', run.stdout)
+    # An explicit resource reference may occur on a different page or line
+    # from its identifiers. Keep a separate document-scoped observation, while
+    # retaining every original line and its locator for source inspection.
+    references = sorted(set(re.findall(r'\b(?:account|support|analytics|search|backup|data_flow|export)_\d+\b', run.stdout)))
+    for resource in references:
+        lines.append(make(meta, f'document:{resource}', {'resource_id': resource, 'text': run.stdout}, 'pdf'))
+    return lines, 'parsed'
 
 
 def source_digest(path):
@@ -260,7 +271,7 @@ def ingest(dataset: Path, cache: Path | None = None):
                          'topology': topology(path) if suffix == '.sql' else None,
                          'origin': meta['origin'], 'embedded_capture': internal_capture})
         for o in obs:
-            if o.record_time and o.record_time > o.captured_at:
+            if o.record_time and record_after_capture(o.record_time, o.captured_at):
                 discrepancies.append({'file_id': o.evidence_id, 'locator': o.locator,
                                       'reason': 'record_time_after_manifest_capture'})
     for filename, key, when in [('system_activity.csv', 'activity_id', 'event_time'),

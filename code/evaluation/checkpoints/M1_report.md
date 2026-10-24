@@ -76,6 +76,15 @@ Result after audit fix: **97 passed in 2.14s**, zero failures/skips
 The M1 suite blocks socket connections. M0's sample validator, scorer and
 full-size placeholder checks remain passing. `git diff --check` passed.
 
+M2 follow-up: discrepancy comparison now parses both timestamps as aware
+datetimes; offset tests cover both false positives and false negatives from
+string ordering. PDF ingestion now retains one document-scoped observation
+for an explicit resource reference when its identifier appears on another
+line. Current coverage is 8,570 observations (81 PDF), with the same two
+discrepancies. The original M1 counts above describe the reviewed M1 commit.
+Current canonical JSONL SHA-256 is
+`da9b491dce3119cd8b1d77ddf58604112773168a43e14993ef3551896d3e8dd0`.
+
 Alias audit: JSON resource records contain `system` and `record_type`; these
 now take precedence over inherited `data_store` and `collection`, while direct
 `system_id` and `data_category` and explicit parser overrides retain priority.

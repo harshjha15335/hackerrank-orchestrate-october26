@@ -3,9 +3,9 @@
 - Manifest entries: 94
 - Parsed files: 83
 - Awaiting M8 multimodal extraction: 11
-- Observations including activity and audit: 8569
-- Canonical JSONL SHA-256: `7d025bc5d5d3dfde509f963e04a592871de599b0af2396e30a885b35fb9b1cd0`
-- Source-type counts: `{'activity': 4011, 'audit': 306, 'json': 948, 'log': 2211, 'pdf': 80, 'sql': 969, 'txt': 44}`
+- Observations including activity and audit: 8570
+- Canonical JSONL SHA-256: `da9b491dce3119cd8b1d77ddf58604112773168a43e14993ef3551896d3e8dd0`
+- Source-type counts: `{'activity': 4011, 'audit': 306, 'json': 948, 'log': 2211, 'pdf': 81, 'sql': 969, 'txt': 44}`
 - SQL table rows: `{'backup_restore_entries': 10, 'connector_subscriptions': 25, 'customer_analytics_profiles': 41, 'customer_data_failover_replica': 16, 'customer_data_primary': 288, 'customer_data_read_replica': 144, 'customer_data_replica_ap_south': 87, 'customer_data_replica_eu_west': 87, 'customer_data_reporting_replica': 51, 'customer_exports': 8, 'customer_profiles': 8, 'customer_profiles_failover_replica': 4, 'customer_profiles_primary': 3, 'customer_search_documents': 53, 'search_documents_primary': 3, 'security_audit_records': 30, 'snapshot_scope': 78, 'support_records': 33}`
 - SQL topology rows: `{'failover': 20, 'primary': 580, 'regional': 174, 'replica': 144, 'reporting': 51}`
 - Timestamp discrepancies: 2
@@ -69,7 +69,7 @@
 | evidence_55 | `evidence/documents/security_retention_extract.pdf` | .pdf | parsed | 18 |
 | evidence_56 | `evidence/records/customer_analytics_report_20260907.json` | .json | parsed | 2 |
 | evidence_57 | `evidence/databases/customer_search_primary_20260910.sql` | .sql | parsed | 3 |
-| evidence_58 | `evidence/documents/delivery_correction_attachment.pdf` | .pdf | parsed | 25 |
+| evidence_58 | `evidence/documents/delivery_correction_attachment.pdf` | .pdf | parsed | 26 |
 | evidence_59 | `evidence/records/customer_export_jobs_20260914.json` | .json | parsed | 2 |
 | evidence_60 | `evidence/images/marketing_profile_console.png` | .png | needs_multimodal | 0 |
 | evidence_61 | `evidence/logs/support_replica.log` | .log | parsed | 10 |
