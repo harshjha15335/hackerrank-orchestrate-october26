@@ -13,10 +13,15 @@ This report is committed with the M1 implementation.
 - `code/ingest/main.py`: JSONL export and machine-readable coverage, with an
   explicit new output path. `code/ingest/coverage.py` generates the reproducible
   [94-entry coverage report](M1_COVERAGE.md).
-- `code/ingest/tests/test_evidence.py`: ten M1 tests, including hand-checked
+- `code/ingest/tests/test_evidence.py`: 14 M1 tests, including hand-checked
   synthetic SQL, JSON, log and pipe-text facts and a real text PDF fact, file
   inventory, SQL row counts, cache equality, time/provenance, contradictory
   snapshots, unknown fields, path escape and SQL attachment denial.
+- Follow-up audit correction: four additional regression cases cover the 105
+  `system`/`record_type` records in three participant-visible JSON files and
+  precedence over inherited metadata and explicit overrides. Raw values remain
+  in `raw_fields`; `result=FOUND` is retained as a claim, never inferred as
+  `state`.
 - `code/ingest/README.md`: exact commands and normalization contract.
   `code/main.py` remains the M0 stub and has no evaluation import.
 
@@ -47,9 +52,9 @@ Both are retained with their separate timestamps and flagged in coverage;
 M1 makes no assumption about which timestamp is authoritative for state.
 
 The canonical observation JSONL SHA-256 is
-`8d69c0b4dc573200ad89ad970f337e196b6124e6eed465b3030fb21152d0aeec`.
+`7d025bc5d5d3dfde509f963e04a592871de599b0af2396e30a885b35fb9b1cd0`.
 Two independent coverage runs produced the same report SHA-256,
-`e434096c2a97ef2580d20c78a28f92827164298a29f7bbd99c781c35e2202c30`.
+`c0d9f9c44ccd0fc5ab1c3fc41a289d5da2b1ec8694167e089f9ecb1d9eebf29f`.
 Cold and warm cache observations compare equal in the integration test.
 
 ## May reference comparison
@@ -66,9 +71,20 @@ repository was modified or retested for this milestone.
 ## Tests and known limits
 
 Command: `/tmp/m0-venv/bin/python -m pytest -q -p no:cacheprovider code/evaluation/tests code/ingest/tests`.
-Result: **93 passed in 1.77s**, zero failures/skips (83 M0, ten M1).
+Result after audit fix: **97 passed in 2.14s**, zero failures/skips
+(83 M0, 14 M1).
 The M1 suite blocks socket connections. M0's sample validator, scorer and
 full-size placeholder checks remain passing. `git diff --check` passed.
+
+Alias audit: JSON resource records contain `system` and `record_type`; these
+now take precedence over inherited `data_store` and `collection`, while direct
+`system_id` and `data_category` and explicit parser overrides retain priority.
+Key/value logs already use `service`, SQL rows use `origin_system` (and table
+topology), and pipe text has its own positional system/category fields.
+Activity rows carry both `source_system` and `target_system`; choosing one as
+the resource's normalized system would invent an attribution, so both stay in
+raw fields with `system_id` unknown. No `result`, `reported_result`, or HTTP
+status is promoted to current resource state.
 
 PDFs are represented by extracted text lines; interpreting layout, image-only
 PDFs and screenshots remains later work. JSON nested payloads retain both

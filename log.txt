@@ -580,3 +580,28 @@ branch=feature/m1-evidence-ingestion
 repo_root=/workspace/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+
+## [2026-10-24T14:27:17.016186+00:00] Correct M1 JSON metadata aliases
+
+User Prompt (verbatim, secrets redacted):
+The implementation is largely solid, and the reported 93 passing tests are encouraging. But the audit uncovered a normalization gap that could affect later milestones.
+
+M1 audit verdict: HOLD — Small fix required. JSON records use `system` and `record_type`, but normalized system_id and data_category are missing. Confirmed files: connector_configurations_20260812.json (39), customer_export_manifest_20260409.json (46), security_audit_ledger_20261001.json (20). Fix aliases and precedence, audit formats, add regression tests, preserve raw values and provenance, do not promote result=FOUND to current state, keep two timestamp discrepancies, rerun tests and hashes, update report, commit and push existing M1 branch. After tests and mappings pass, merge M1 into main. Do not begin M2 or modify official dataset files.
+
+Agent Response Summary:
+Mapped source system and record_type into normalized observations with direct fields and explicit overrides taking priority. Tested all 105 affected records and audited other formats without promoting activity claims to state. Re-ran M0/M1, regenerated coverage and hashes, published the fix, and merged the reviewed M0/M1 branch into main as authorized.
+
+Actions:
+* Audited JSON, SQL, logs and global activity metadata fields.
+* Updated code/ingest/evidence.py and participant-visible regression tests.
+* Ran 97 tests; regenerated M1_COVERAGE.md and updated M1_report.md.
+* Committed and pushed feature/m1-evidence-ingestion; merged into main.
+
+Context:
+tool=Codex
+model=unavailable: exact runtime model identifier is not exposed
+branch=feature/m1-evidence-ingestion
+repo_root=/workspace/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

@@ -55,6 +55,40 @@ def test_json_fixture_preserves_duplicate_identifiers_and_unknowns(tmp_path):
     assert all(x.captured_at == meta(p)['captured_at'] for x in obs)
 
 
+@pytest.mark.parametrize('name,count', [
+    ('connector_configurations_20260812.json', 39),
+    ('customer_export_manifest_20260409.json', 46),
+    ('security_audit_ledger_20261001.json', 20),
+])
+def test_real_json_aliases_preserve_raw_and_do_not_promote_result(name, count):
+    path = DATASET / 'evidence/records' / name
+    source = json.loads(path.read_text())['records']
+    obs = parse_json(path, meta(path))
+    assert len(source) == len(obs) == count
+    for original, item in zip(source, obs):
+        assert item.system_id == original['system']
+        assert item.data_category == original['record_type']
+        assert item.state is None
+        assert item.raw_fields == original
+        assert item.resource_id == original['resource_id']
+
+
+def test_json_explicit_fields_and_overrides_win(tmp_path):
+    p = tmp_path / 'alias.json'
+    p.write_text(json.dumps({'snapshots': [{'data_store':'parent_store','collection':'parent_category',
+        'records':[{'resource_id':'synthetic_resource','system_id':'direct_system',
+                    'system':'alias_system','data_category':'direct_category',
+                    'record_type':'alias_category','result':'FOUND'}]}]}))
+    item = parse_json(p, meta(p))[0]
+    assert item.system_id == 'direct_system'
+    assert item.data_category == 'direct_category'
+    assert item.state is None
+    assert item.raw_fields['system'] == 'alias_system'
+    explicit = make(meta(p), 'row:1', {'system':'alias_system','record_type':'alias_category'},
+                    'json', system='explicit_system', category='explicit_category')
+    assert explicit.system_id == 'explicit_system' and explicit.data_category == 'explicit_category'
+
+
 def test_log_fixture_keeps_untrusted_text_inert(tmp_path):
     p = tmp_path / 'fixture.log'
     p.write_text('2026-01-02T00:00:00Z service=account_service resource_id=synthetic_a '

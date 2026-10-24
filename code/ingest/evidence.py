@@ -82,8 +82,8 @@ def make(meta, locator, raw, kind, *, system=None, category=None, topology=None,
     for time in (record_time, event_time):
         if time is not None: parse_time(time)
     return Observation(meta['file_id'], meta['file_path'], locator, meta['captured_at'],
-                       system or raw.get('system_id') or raw.get('service') or raw.get('data_store'),
-                       raw.get('resource_id'), category or raw.get('data_category') or raw.get('collection'),
+                       system or raw.get('system_id') or raw.get('system') or raw.get('service') or raw.get('data_store'),
+                       raw.get('resource_id'), category or raw.get('data_category') or raw.get('record_type') or raw.get('collection'),
                        next((str(raw[k]) for k in ('state', 'status', 'account_status') if raw.get(k) is not None), None),
                        identifiers(raw), raw, kind, topology, record_time, event_time, meta.get('origin'))
 
@@ -142,15 +142,17 @@ def parse_json(path, meta):
     def walk(node, locator='$', inherited=None):
         inherited = dict(inherited or {})
         if isinstance(node, dict):
-            for k in ('system_id', 'data_store', 'collection', 'captured_at', 'observed_at'):
+            for k in ('system_id', 'system', 'data_store', 'collection', 'captured_at', 'observed_at'):
                 if isinstance(node.get(k), str): inherited[k] = node[k]
             if 'resource_id' in node:
                 when = next((node[k] for k in ('observed_at', 'updated_at', 'recorded_at')
                              if isinstance(node.get(k), str) and TIME.fullmatch(node[k])), None)
                 raw = dict(node)
                 out.append(make(meta, locator, raw, 'json',
-                                system=inherited.get('system_id') or inherited.get('data_store'),
-                                category=inherited.get('collection'), record_time=when))
+                                system=node.get('system_id') or node.get('system') or inherited.get('system_id')
+                                       or inherited.get('system') or inherited.get('data_store'),
+                                category=node.get('data_category') or node.get('record_type')
+                                         or inherited.get('collection'), record_time=when))
             for key, child in node.items():
                 if isinstance(child, (dict, list)):
                     child_context = dict(inherited)
