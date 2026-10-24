@@ -90,9 +90,9 @@ class FlowContext:
             if reading is None: continue
             system = o.raw_fields.get('target_system') if o.source_type == 'activity' else o.system_id
             self.process[(system, o.resource_id)].append((o, reading, _claims(o)))
-        # Identifiers named anywhere in a trace group, for identifier-free lines.
-        self.trace_claims = {key: frozenset().union(*(_claims(o) for o in group))
-                             for key, group in traces.items()}
+        # Same-file trace groups with each line's identifiers. Which lines may
+        # act as identity anchors depends on the case cutoff (trace_identity).
+        self.traces = {key: tuple((o, _claims(o)) for o in group) for key, group in traces.items()}
         self.destinations = {}
         for (system, resource), items in self.process.items():
             for o, _, _ in items:
@@ -105,14 +105,25 @@ def _claims(o: Observation) -> frozenset:
     return frozenset(identity_claims(o.raw_fields))
 
 
-def attribution(fctx: FlowContext, o: Observation, claims, subject: Subject) -> str:
+def trace_identity(fctx: FlowContext, o: Observation, cutoff: str) -> frozenset:
+    """Identifiers named by the admissible lines of o's exact same-file trace.
+
+    An anchor captured, emitted or recorded after the cutoff (or after its own
+    capture), or quarantined by M1, is not evidence at the cutoff: it can
+    neither establish nor contest ownership of another line in the trace.
+    """
+    trace = o.raw_fields.get('trace_id') if o.source_type == 'log' else None
+    group = fctx.traces.get((o.evidence_id, trace), ()) if trace else ()
+    return frozenset().union(*(claims for line, claims in group
+                               if admissible(line, cutoff, fctx.anomalies)))
+
+
+def attribution(fctx: FlowContext, o: Observation, claims, subject: Subject, cutoff: str) -> str:
     """direct / trace / foreign / none for one reading's own record."""
     verdict = subject.attribution(claims)
     if verdict == 'SUBJECT': return 'direct'
     if verdict == 'FOREIGN': return 'foreign'
-    trace = o.raw_fields.get('trace_id') if o.source_type == 'log' else None
-    group = fctx.trace_claims.get((o.evidence_id, trace)) if trace else None
-    if group and subject.attribution(group) == 'SUBJECT':
+    if subject.attribution(trace_identity(fctx, o, cutoff)) == 'SUBJECT':
         return 'trace'
     return 'none'
 
@@ -153,7 +164,7 @@ def assess(fctx: FlowContext, key, resolution, subject: Subject) -> Assessment |
             # Activity rows carry no subject identifier; they are claims only.
             if ok_time: claims.append(reading.as_dict())
             continue
-        attr = attribution(fctx, o, record_claims, subject)
+        attr = attribution(fctx, o, record_claims, subject, cutoff)
         entry = dict(reading.as_dict(), attribution=attr, admissible=ok_time)
         readings.append(entry)
         if not ok_time: continue

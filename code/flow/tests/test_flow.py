@@ -422,3 +422,95 @@ def test_no_sample_answer_identifiers_in_flow_source():
         text = path.read_text(encoding='utf-8')
         found = {i for i in ids if re.search(rf'\b{re.escape(i)}\b', text)}
         assert not found, (path, found)
+
+
+# --- trace anchors must be admissible at the cutoff (M6 safety correction) ---
+
+def heartbeat_trace(tmp_path, anchors, captured='2026-05-01T00:10:00Z', evidence='ev_log'):
+    """An identifier-free heartbeat at 00:00:01 plus anchor lines (time, email) in trace tr-1."""
+    text = (f'2026-05-01T00:00:01Z level=WARN service=integration_service trace_id=tr-1 resource_id={FLOW_ID} '
+            'event=connector_heartbeat enabled=true scheduler_registered=true\n')
+    for when, email in anchors:
+        text += (f'{when} level=DEBUG service=integration_service trace_id=tr-1 '
+                 f'event=connector_config_read_started subject_key="{email}"\n')
+    return log_lines(tmp_path, text, captured, evidence=evidence)
+
+
+def test_post_cutoff_trace_anchor_cannot_attribute_earlier_heartbeat(tmp_path):
+    # Heartbeat 05-01, file captured 05-04, anchor stamped 05-06 (after the 05-05 cutoff).
+    lines = heartbeat_trace(tmp_path, [('2026-05-06T00:00:00Z', EMAIL)], captured='2026-05-04T00:00:00Z')
+    assert run(lines, '2026-05-05T00:00:00Z') == {}
+    control = heartbeat_trace(tmp_path, [('2026-05-03T00:00:00Z', EMAIL)], captured='2026-05-04T00:00:00Z')
+    assert run(control, '2026-05-05T00:00:00Z')[FLOW_ID].attribution == 'trace'
+
+
+def test_trace_anchor_stamped_after_its_capture_is_not_evidence(tmp_path):
+    # Cutoff long after capture: only the anchor's own time exceeds the manifest capture.
+    lines = heartbeat_trace(tmp_path, [('2026-05-01T00:20:00Z', EMAIL)], captured='2026-05-01T00:10:00Z')
+    assert run(lines, '2026-06-01T00:00:00Z') == {}
+
+
+def test_quarantined_trace_anchor_cannot_attribute(tmp_path):
+    lines = heartbeat_trace(tmp_path, [('2026-05-01T00:00:00Z', EMAIL)])
+    anchor = next(l for l in lines if 'subject_key' in l.raw_fields)
+    ctx = FlowContext(lines, anomalies={(anchor.evidence_id, anchor.locator)})
+    assert assess_case(ctx, resolution('2026-06-01T00:00:00Z')) == []
+
+
+def test_inadmissible_foreign_anchor_keeps_valid_trace_attribution(tmp_path):
+    lines = heartbeat_trace(tmp_path, [('2026-05-01T00:00:00Z', EMAIL), ('2026-05-01T00:20:00Z', OTHER)])
+    a = run(lines, '2026-06-01T00:00:00Z')[FLOW_ID]
+    assert a.status == ACTIVE and a.attribution == 'trace'
+
+
+def test_admissible_subject_and_foreign_anchors_are_ambiguous(tmp_path):
+    lines = heartbeat_trace(tmp_path, [('2026-05-01T00:00:00Z', EMAIL), ('2026-05-01T00:00:02Z', OTHER)])
+    assert run(lines, '2026-06-01T00:00:00Z') == {}
+
+
+def test_trace_anchor_in_another_file_never_joins(tmp_path):
+    beat = heartbeat_trace(tmp_path, [], evidence='ev_beat')
+    anchor = heartbeat_trace(tmp_path, [('2026-05-01T00:00:00Z', EMAIL)], evidence='ev_anchor')
+    anchor = [l for l in anchor if 'subject_key' in l.raw_fields]
+    assert run(beat + anchor, '2026-06-01T00:00:00Z') == {}
+
+
+def identity_graph(tmp_path):
+    from identity.graph import IdentityGraph
+    (tmp_path / 'user_identities.csv').write_text(
+        'user_id,name,email,phone,email_hash,updated_at\n'
+        f'{SUBJECT},Synthetic Person,new.address@example.com,,,2026-07-01T00:00:00Z\n')
+    (tmp_path / 'user_audit_log.csv').write_text(
+        'audit_id,user_id,event_time,field_name,old_value,new_value\n'
+        f'audit_x,{SUBJECT},2026-05-15T00:00:00Z,email,{EMAIL},new.address@example.com\n')
+    return IdentityGraph(tmp_path)
+
+
+def graph_resolution(graph, cutoff, email):
+    return graph.resolve({'case_id': 'synthetic_case', 'email': email, 'audit_at': cutoff})
+
+
+def test_historical_email_at_cutoff_joins_trace(tmp_path):
+    graph = identity_graph(tmp_path)
+    lines = heartbeat_trace(tmp_path, [('2026-05-01T00:00:00Z', EMAIL)])
+    res = graph_resolution(graph, '2026-06-01T00:00:00Z', 'new.address@example.com')
+    found = assess_case(FlowContext(lines), res)
+    assert [(a.resource_id, a.attribution) for a in found] == [(FLOW_ID, 'trace')]
+
+
+def test_email_acquired_after_cutoff_does_not_join_trace(tmp_path):
+    graph = identity_graph(tmp_path)
+    lines = heartbeat_trace(tmp_path, [('2026-05-01T00:00:00Z', 'new.address@example.com')])
+    res = graph_resolution(graph, '2026-05-10T00:00:00Z', EMAIL)
+    assert res.status == 'resolved' and assess_case(FlowContext(lines), res) == []
+
+
+def test_participant_trace_attributions_are_unchanged(full_run, sample_run):
+    """Every participant trace attribution keeps at least one admissible subject anchor."""
+    for run_ in (full_run, sample_run):
+        traced = [(c, a) for c in run_['cases'] for a in c['flows'] + c['restores'] if a['attribution'] == 'trace']
+        assert traced
+        for case, a in traced:
+            d = a['deciding']
+            assert d['observed_at'] <= case['audit_at'] and d['captured_at'] <= case['audit_at']
+    assert sum(a['attribution'] == 'trace' for c in full_run['cases'] for a in c['flows'] + c['restores']) == 10

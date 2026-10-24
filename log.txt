@@ -1692,3 +1692,23 @@ branch=feature/m6-flow-restore-risks
 repo_root=/home/claude/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T18:20:00Z] M6 final safety correction: trace anchors at cutoff
+
+User Prompt (verbatim, secrets redacted):
+[Harsh's "M6 Independent Review — One correction required / HOLD — Temporal attribution safeguard" with the prompt "HackerRank Orchestrate October 2026 — M6 Final Safety Correction": make every trace identity anchor admissible at the case audit_at (capture, event/record time, quarantine, same-file exact trace, no admissible foreign identifiers, cutoff-time identity graph), keep valid joins when only an inadmissible foreign anchor exists, add the nine listed regressions, audit identity/retrieval.py trace expansion, rerun M0–M6, recompute counts and metrics, disclose the holdout-independence limitation, update M6_report.md, push the existing branch and stop for review. Full text is in the project thread.]
+
+Agent Response Summary:
+Trace attribution in code/flow now unions identifiers only from trace lines that pass the M4/M5 temporal gate at the case cutoff; M2's EvidenceIndex trace expansion had the same gap and now restricts anchors and ambiguity checks to admissible lines, with the M1 anomaly set passed in by the state, policy and flow CLIs. Added 9 flow and 4 retrieval regressions (378 tests pass). Against dfc34ba on 518 cases: 0 changed M4 states, M5 decisions or M6 assessments; 16 already-inadmissible diagnostic readings lost a 'trace' label. Metrics unchanged (dev 21/21, provisional dev F1 0.548; M5-5 unmet); holdout-independence limitation disclosed in M6_report.md.
+
+Actions:
+* Edited code/flow/engine.py, code/identity/retrieval.py, code/{state,policy,flow}/main.py, code/flow/tests/test_flow.py, code/identity/tests/test_correlation_safety.py, code/evaluation/checkpoints/M6_report.md.
+* Ran the full M0–M6 suite (378 passed), key-by-key M4/M5/M6 comparisons against a dfc34ba worktree, m6_metrics, reports.py (diagnostics unchanged) and two byte-identical 518-case flow runs; dataset/ and root output.csv untouched.
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=feature/m6-flow-restore-risks
+repo_root=/home/claude/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

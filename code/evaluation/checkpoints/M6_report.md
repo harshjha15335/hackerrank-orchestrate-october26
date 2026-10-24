@@ -107,12 +107,80 @@ appear in more than one case.
 - `derived_from_source_system` edges name only the upstream system. They are marked `system_level`,
   and M7 decides whether they may reorder steps. On this data no subject-linked record has such an
   edge, so the count is 0.
-- Holdout discipline: the full sample answer file was viewed once at the start to locate process
-  steps. No reading rule was added for a holdout-only pattern. All 12 holdout process steps are
-  decided by JSON field values, which M4 already read before M6.
+- Holdout independence is limited: the full sample answer file, holdout included, was viewed
+  once at the start to locate process steps. No reading rule was added for a holdout-only
+  pattern, and all 12 holdout process steps are decided by JSON field values, which M4 already
+  read before M6. Still, the holdout is not a blind test for M6, and its 12/12 should be read
+  as a consistency check rather than an independent estimate.
 
 ## 7. Recommendation: PASS
 Justification: M6-1, M6-2 and M6-3 pass, with dev recall 1.0 and no misses to explain. All 44 M6
 regressions pass, and the M0–M6 suite has 365 passing tests. M6 keeps provenance, ownership and
 temporal safety, and adds no change to earlier decisions. The original M5-5 target (0.80) is still
 unmet at provisional dev F1 0.548. M7 owns step synthesis, ordering and citations.
+
+---
+
+## Rev 2 – Trace-anchor cutoff correction (review of `dfc34ba`)
+
+### T1. Defect
+`FlowContext.trace_claims` merged the identifiers of every line in a same-file trace before the
+case cutoff was applied, and `attribution()` used that merged set to attribute identifier-free
+process readings. A trace anchor stamped after `audit_at`, stamped after its own manifest capture
+or quarantined by M1 could therefore establish ownership of an earlier heartbeat. An inadmissible
+foreign anchor could also contest a valid pre-cutoff association. M2's trace expansion in
+`identity/retrieval.py` had the same gap: it checked each emitted hit's capture time, but not the
+event/record times or quarantine status of the anchors or of the lines that make a group ambiguous.
+
+### T2. Fix
+- `code/flow/engine.py`: trace groups keep each line with its identifiers. The new
+  `trace_identity()` unions the identifiers of only those lines that pass the M4/M5 temporal gate at
+  the current case's cutoff: manifest capture ≤ `audit_at`, event and record time ≤ `audit_at` and
+  ≤ capture, and not M1-quarantined. `attribution()` uses it. Grouping is still exact
+  `(evidence_id, trace_id)`, ownership is still checked against the cutoff-time identity view, and
+  any admissible foreign identifier still rejects the join.
+- `code/identity/retrieval.py`: `EvidenceIndex` takes the M1 anomaly set. Before a trace group can
+  anchor, or be found ambiguous, it is reduced to its admissible lines at the cutoff.
+  `state/main.py`, `policy/main.py` and `flow/main.py` pass the anomaly set.
+
+### T3. Regressions (13 new)
+| # | Scenario | Test | Result |
+|---|---|---|---|
+| 1 | Earlier identifier-free heartbeat, anchor stamped after `audit_at` | `test_post_cutoff_trace_anchor_cannot_attribute_earlier_heartbeat` (+ pre-cutoff control) | no attribution |
+| 2 | Anchor stamped after its manifest capture | `test_trace_anchor_stamped_after_its_capture_is_not_evidence` | no attribution |
+| 3 | Quarantined anchor | `test_quarantined_trace_anchor_cannot_attribute` | no attribution |
+| 4 | Valid subject anchor + later inadmissible foreign anchor | `test_inadmissible_foreign_anchor_keeps_valid_trace_attribution` | association kept |
+| 5 | Admissible subject and foreign anchors in one trace | `test_admissible_subject_and_foreign_anchors_are_ambiguous` | rejected |
+| 6 | Same trace ID in another file | `test_trace_anchor_in_another_file_never_joins` (and the existing `test_same_trace_id_in_another_file_is_not_a_join`) | never joins |
+| 7 | Historical email valid at cutoff (real `IdentityGraph` over a fixture audit log) | `test_historical_email_at_cutoff_joins_trace` | joins |
+| 8 | Email acquired after cutoff | `test_email_acquired_after_cutoff_does_not_join_trace` | no join |
+| 9 | Participant trace attributions | `test_participant_trace_attributions_are_unchanged` (518 + 32) | 10 trace attributions, all deciding readings admissible |
+| M2 | Post-cutoff, after-capture and quarantined anchors; inadmissible foreign anchor does not block | 4 tests in `code/identity/tests/test_correlation_safety.py` | all hold |
+
+Full suite: `python3 -m pytest -q -p no:cacheprovider code` → **378 passed** (365 + 13).
+
+### T4. Effect on participant data
+Compared key by key against runs at `dfc34ba` on all 518 cases:
+- M4 latest states: 0 changed, 0 added, 0 removed (UNKNOWN stays 308).
+- M5 copy decisions: 0 changed.
+- M6 assessments: 0 changed status, attribution, deciding evidence or obligations. Flows are still
+  ACTIVE 112, DISABLED 31, UNKNOWN 2; restores are still RESTORE_ENABLED 25, RESTORE_BLOCKED 31,
+  UNKNOWN 2; attribution is still 193 direct and 10 trace.
+- 16 diagnostic readings changed their `attribution` label from `trace` to `none`. They are already
+  inadmissible readings (`admissible: false`, in files captured after that case's cutoff, e.g.
+  `evidence_06`, `evidence_44`), so they never decided anything. Their anchors are now inadmissible
+  too.
+- Dev flow/restore steps are still 21/21 and holdout 12/12. Provisional dev step F1 is still 0.548
+  and holdout 0.848, so M5-5 (0.80) is still unmet.
+- Determinism: two 518-case `flow/main.py` runs both give `18293be6…4909fa8b`. The digest differs
+  from Rev 1 only because of the 16 diagnostic labels above.
+
+As the review expected, the vulnerability was source-level. In this dataset an anchor's event time
+never falls between its file's capture and a case cutoff, so no case was affected.
+
+### T5. Recommendation: PASS (pending independent review)
+Every trace anchor that creates or contests ownership is now evidence at the case cutoff, and the
+13 regressions cover the requested scenarios. No decision on participant data changed, and the
+contract constraints still hold: no post-cutoff evidence, no claim promoted to proof, no DELETE on
+retained backups, and no sample gold in production code. `dataset/` is untouched and there is no
+root `output.csv`.

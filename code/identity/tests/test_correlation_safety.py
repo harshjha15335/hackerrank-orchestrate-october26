@@ -91,3 +91,51 @@ def test_negative_sql_scope_requires_independent_resource_reference():
     assert index.absence_candidate('synthetic_file','customer_profiles','synthetic_present',
                                    '2026-01-02T00:00:00Z',source_reference=present) is None
     assert index.scope('synthetic_file','customer_profiles','2026-01-01T23:59:59Z') is None
+
+
+# --- trace anchors must be evidence at the cutoff (M6 safety correction) -----
+
+LATE_META = {'file_id': 'synthetic_file', 'file_path': 'evidence/fixture', 'captured_at': '2026-01-05T00:00:00Z'}
+
+
+def trace_lines(anchor_time, *, meta=LATE_META, anchor_email='a@example.test'):
+    anchor = evidence.make(meta, 'line:2', {'trace_id': 'tr-1', 'lookup_key': anchor_email}, 'log',
+                           event_time=anchor_time)
+    member = evidence.make(meta, 'line:1', {'trace_id': 'tr-1', 'resource_id': 'synthetic_account'}, 'log',
+                           event_time='2026-01-01T00:00:00Z')
+    return anchor, member
+
+
+def resolved_at(cutoff):
+    return Resolution('synthetic_case', cutoff, 'user_A', ('user_A',), 'resolved', {},
+                      (IdentityValue('email', 'a@example.test', 'a@example.test', 'snapshot'),))
+
+
+def correlated(hits):
+    return [h.observation.locator for h in hits if h.strength == 'correlated']
+
+
+def test_post_cutoff_trace_anchor_does_not_correlate():
+    anchor, member = trace_lines('2026-01-06T00:00:00Z', meta={**LATE_META, 'captured_at': '2026-01-07T00:00:00Z'})
+    assert correlated(EvidenceIndex([anchor, member]).find(resolved_at('2026-01-07T00:00:00Z'))) == ['line:1']
+    assert correlated(EvidenceIndex([anchor, member]).find(resolved_at('2026-01-05T12:00:00Z'))) == []
+
+
+def test_trace_anchor_after_its_capture_does_not_correlate():
+    anchor, member = trace_lines('2026-01-06T00:00:00Z')
+    assert correlated(EvidenceIndex([anchor, member]).find(resolved_at('2026-02-01T00:00:00Z'))) == []
+
+
+def test_quarantined_trace_anchor_does_not_correlate():
+    anchor, member = trace_lines('2026-01-02T00:00:00Z')
+    index = EvidenceIndex([anchor, member], anomalies={(anchor.evidence_id, anchor.locator)})
+    assert correlated(index.find(resolved_at('2026-02-01T00:00:00Z'))) == []
+    assert correlated(EvidenceIndex([anchor, member]).find(resolved_at('2026-02-01T00:00:00Z'))) == ['line:1']
+
+
+def test_inadmissible_foreign_anchor_does_not_block_valid_join():
+    anchor, member = trace_lines('2026-01-02T00:00:00Z')
+    foreign = evidence.make(LATE_META, 'line:3', {'trace_id': 'tr-1', 'lookup_key': 'b@example.test'}, 'log',
+                            event_time='2026-01-06T00:00:00Z')
+    hits = EvidenceIndex([anchor, member, foreign]).find(resolved_at('2026-02-01T00:00:00Z'))
+    assert correlated(hits) == ['line:1']

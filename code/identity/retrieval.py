@@ -37,8 +37,9 @@ class Hit:
 
 
 class EvidenceIndex:
-    def __init__(self, observations: list[Observation]):
+    def __init__(self, observations: list[Observation], anomalies=frozenset()):
         self.observations = observations
+        self.anomalies = frozenset(anomalies)
         self.postings = {}
         self.trace_groups = defaultdict(set)
         for position, observation in enumerate(observations):
@@ -54,6 +55,15 @@ class EvidenceIndex:
                 key = norm(field, original)
                 self.postings.setdefault((field, key), {}).setdefault(position, set()).add('context')
 
+    def _anchor_admissible(self, position: int, cutoff) -> bool:
+        o = self.observations[position]
+        if parse_time(o.captured_at) > cutoff or (o.evidence_id, o.locator) in self.anomalies:
+            return False
+        for stamp in (o.record_time, o.event_time):
+            if stamp and (parse_time(stamp) > cutoff or parse_time(stamp) > parse_time(o.captured_at)):
+                return False
+        return True
+
     def find(self, resolution: Resolution) -> list[Hit]:
         if resolution.status != 'resolved': return []
         keys = {(v.field, v.normalized) for v in resolution.history if v.normalized}
@@ -66,7 +76,10 @@ class EvidenceIndex:
                 entry['strength'].update(strengths)
         # Only an explicit shared trace ID is a cross-line join. Distinct
         # customer identifiers within one trace make that group ambiguous.
+        # Only lines that are evidence at the cutoff may anchor or contest it.
+        cutoff = parse_time(resolution.audit_at)
         for group in self.trace_groups.values():
+            group = {p for p in group if self._anchor_admissible(p, cutoff)}
             identities = set()
             for position in group:
                 identities.update((f, v) for f, v in direct_identifiers(
@@ -80,7 +93,6 @@ class EvidenceIndex:
                 entry['matched'].update(matched)
                 if position not in anchors: entry['strength'].add('correlated')
         output = []
-        cutoff = parse_time(resolution.audit_at)
         for position in sorted(selected):
             observation = self.observations[position]
             if parse_time(observation.captured_at) > cutoff: continue

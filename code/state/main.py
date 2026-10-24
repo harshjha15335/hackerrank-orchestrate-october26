@@ -16,7 +16,9 @@ from state.engine import reconstruct
 def build(dataset: Path, cache: Path | None = None):
     graph = IdentityGraph(dataset)
     observations, coverage, discrepancies = ingest(dataset, cache)
-    return graph, EvidenceIndex(observations), SnapshotIndex(observations, coverage), discrepancies
+    anomalies = {(d['file_id'], d['locator']) for d in discrepancies
+                 if d['reason'] == 'record_time_after_manifest_capture'}
+    return graph, EvidenceIndex(observations, anomalies), SnapshotIndex(observations, coverage), discrepancies
 
 
 def run_case(case, graph, evidence, scopes, dataset, anomalies):
