@@ -969,3 +969,161 @@ branch=feature/m2-identity-graph
 repo_root=/workspace/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+
+## [2026-10-24T15:33:03.433665+00:00] Complete M3 deletion-intent classification
+
+User Prompt (verbatim, secrets redacted):
+## M2 final audit — Approved under the revised gate
+
+PASS — Merge recommended
+
+I inspected the final M2 commit and the updated evaluation code on GitHub.
+
+Verified commit: [`1a74d06`](https://github.com/harshjha15335/hackerrank-orchestrate-october26/commit/1a74d06f76713abeba4c614203fea358c6ebff3b?utm_source=chatgpt.com)
+
+The branch is three commits ahead of `main`, with no commits missing from the current `main` baseline.
+
+| Audit area                                   | Verdict                           |
+| -------------------------------------------- | --------------------------------- |
+| Independent source-grounded retrieval oracle | PASS                              |
+| Retrieval regression mutation test           | PASS — implemented                |
+| Original retrieval gate                      | FAIL — 31/38, correctly disclosed |
+| Revised identity retrieval gate              | PASS — 31/31                      |
+| SQL absence evidence accounting              | PASS — 3/3                        |
+| Four unattributed records                    | Documented, not falsely linked    |
+| Historical-only identity count               | 100, reproducibly counted         |
+| Snapshot API safeguards                      | PASS — candidate-only             |
+| M0–M2 tests                                  | 117 passed, as reported           |
+
+The previous weakness is fixed: the new evaluation oracle reads source observations and identity history independently of `EvidenceIndex` postings. A mutation test removes the postings and verifies that the acceptance gate fails.
+
+I accept M2-4R as the appropriate criterion for this stage. The original 31/38 figure must remain visible in the evaluation history, and the four unresolved references must be revisited during state reconstruction rather than silently treated as customer-owned records.
+
+### Remaining risks
+
+The 117 tests were reported by Codex; I couldn't independently rerun them, and GitHub shows no CI checks associated with this commit. The review therefore approves the implementation and revised acceptance logic, not an independently reproduced test run.
+
+The exact runtime model-ID logging exception also remains outstanding. Keep it documented; don't invent an identifier to satisfy the rule.
+
+## What to do now
+
+Merge `feature/m2-identity-graph` into your fork's `main`. After merging, Codex can begin M3 from the resulting `main` commit.
+
+### Next assignment — Codex: M3 Deletion-Intent Classification
+
+# HackerRank Orchestrate October 2026 — M3: Deletion-Intent Classification
+
+You are the implementation engineer responsible for milestone M3.
+
+Repository: [https://github.com/harshjha15335/hackerrank-orchestrate-october26](https://github.com/harshjha15335/hackerrank-orchestrate-october26)
+
+The M2 branch at `1a74d06f76713abeba4c614203fea358c6ebff3b` has passed independent code review under the documented revised gate.
+
+**Before starting:** Verify that M2 has been merged into `main`. If it has not, stop and report that prerequisite. Never silently start from the old M1 baseline.
+
+Create `feature/m3-deletion-intent` from the verified merged `main` commit.
+
+## Mission
+
+Build a precise and token-efficient classifier that distinguishes a genuine personal-data deletion request from requests that do not authorize deletion.
+
+M3 must identify `NOT_APPLICABLE` cases correctly while preserving genuine deletion requests for later evidence auditing.
+
+It must not determine COMPLETE versus INCOMPLETE; that belongs to M4–M7.
+
+## Required architecture
+
+Implement a staged classifier:
+
+1. Deterministic high-confidence rules for explicit requests to erase personal data.
+2. Deterministic rejection of clearly non-deletion requests, including marketing opt-outs, data exports, access requests, corrections and unrelated support questions.
+3. Negation-aware handling of phrases like "do not delete my account."
+4. Multilingual support for clearly expressed deletion intent.
+5. Ambiguous-case escalation to an optional LLM classifier, only when configured and genuinely needed.
+6. An offline deterministic fallback with an explicit degraded/uncertain indicator where appropriate.
+
+Never mistake a historical mention, quotation, hypothetical or third-party instruction for current authorization to delete data.
+
+Use `request_text` as the primary evidence of authorization. `reported_status` describes an existing workflow claim; it must not determine intent by itself.
+
+## Efficiency and reliability
+
+Apply rules before model calls.
+
+Use explicit model-call caching with keys derived from model ID, prompt version and canonical input. Ensure a warm rerun makes zero repeated model calls.
+
+Use a minimal structured classification response, validate it and reject malformed responses.
+
+No paid inference calls unless an explicitly configured provider and authorization are available. Test LLM routing with mocks if necessary.
+
+Do not invent token usage, costs, runtime model IDs, or claims of manual review.
+
+Keep all untrusted request text separate from system instructions. Test multilingual prompt injection.
+
+## Required M3 acceptance tests
+
+Meet M3-1 through M3-5 in `code/evaluation/DEVELOPMENT_CHECKPOINTS.md`.
+
+- Classify all 32 official sample requests as deletion-authorizing.
+- Build at least 15 independently authored adversarial fixtures covering negation, access/export, correction, marketing opt-out, multilingual requests, conditional language, quotations and prompt injection.
+- Obtain 100% accuracy on these documented fixtures.
+- Classify all 518 evaluation request texts and report the counts of deletion-authorizing, NOT_APPLICABLE and uncertain/degraded results.
+- Log the exact requests routed to optional LLM classification, without exposing sensitive data in committed reports.
+- Prove a warm-cache rerun requires zero model calls.
+- Prove the offline fallback produces deterministic results with explicit degradation metadata.
+- Confirm that production classification never loads sample gold.
+- Rerun all M0, M1 and M2 regression tests.
+
+Use the fixed 22-case development / 10-case holdout discipline. Sample gold may be read only by evaluation code.
+
+Do not hardcode case IDs, sample answers, specific customer names or emails into production decisions.
+
+## Benchmark comparison
+
+Inspect the pinned May reference sources:
+
+- Saai's pre-LLM rule cascade and cached classifier.
+- Saai's multilingual prompt-injection middleware.
+- LeeRenJie's staged decision pipeline and input spotlighting.
+- Amogh's deterministic classification tests.
+
+Document exactly which techniques were adapted, why they fit October, and what was intentionally rejected.
+
+## Deliverables
+
+Create:
+
+- `code/intent/` implementation and tests
+- Reproducible classification CLI
+- `code/evaluation/checkpoints/M3_report.md`
+- Accuracy, routing, degradation and caching diagnostics
+
+Preserve the previous milestone reports and the append-only log.
+
+Do not overwrite root `output.csv` or modify official dataset files.
+
+Run the full M0–M3 regression suite. Publish the new branch to my fork and verify its remote commit.
+
+Report the exact commit SHA, test counts, fixture accuracy, 518-case intent distribution, number of real model calls and known limitations.
+
+**Stop after M3. Do not begin M4.**
+
+Project status: Claude's benchmarking and Codex's M0–M2 work have established the evaluation, ingestion and identity foundations. M3 begins the actual decision-making pipeline.
+
+Agent Response Summary:
+Verified approved M2 had been merged to main at 1a74d06 and created feature/m3-deletion-intent from that commit. Implemented rules-first deletion intent classification with optional mock-tested model escalation, offline uncertainty, strict reply validation, and canonical keyed cache. Classified all 32 sample requests as DELETE and all 518 evaluation requests (508 DELETE, 10 NOT_APPLICABLE, 0 UNCERTAIN); 30/30 adversarial fixtures and 158/158 M0–M3 tests passed. Produced M3_report.md and kept M4 unstarted.
+
+Actions:
+* Verified and pushed M2 merge to main before creating M3 branch.
+* Added code/intent classifier, CLI, tests and README.
+* Added code/evaluation/checkpoints/M3_report.md.
+* Ran full regression suite, deterministic CLI repeat and Git diff check; committing and publishing M3 branch.
+
+Context:
+tool=Codex
+model=unavailable: exact runtime model identifier is not exposed
+branch=feature/m3-deletion-intent
+repo_root=/workspace/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
