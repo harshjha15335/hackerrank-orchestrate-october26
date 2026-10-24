@@ -1,0 +1,129 @@
+{
+  "_comment": "Binds each deletion_rules.csv condition, by SHA-256 of its whitespace-normalised casefolded wording, to a predicate in conditions.py. A changed or new condition has no binding and evaluates UNKNOWN. on_false states the consequence when the predicate is evidenced FALSE: TARGET_SATISFIED (the condition is the identifiability that the action removes), DEFAULT_ERASURE (an exemption from the authorised deletion does not apply), or UNRESOLVED (no supplied rule decides).",
+  "bindings": {
+    "b9510b53ec9edef7aa009874db61b054915c9d2830bada62e090f1150d13bbcc": {
+      "predicate": "shared_support_context",
+      "on_false": "DEFAULT_ERASURE"
+    },
+    "4414103712e5102e45ab95ae720e7ebadbae9a93b55fbb36eb67fa5d5f40ab30": {
+      "predicate": "attachment_subject_only",
+      "on_false": "UNRESOLVED"
+    },
+    "3fb4965b0990a9b096ea0b30230d18d7732492942b1caa0b0e04764db59cec76": {
+      "predicate": "still_attributable",
+      "on_false": "TARGET_SATISFIED"
+    },
+    "c40730a9420561545238a82f066b43e87b9c45453b79c769e97da5c573c81ef6": {
+      "predicate": "contains_email_address",
+      "on_false": "TARGET_SATISFIED"
+    },
+    "15b1290f981a83e93fbfb79e056794ae94cf7d350334c7d995f5c4409229b899": {
+      "predicate": "within_retention_period",
+      "on_false": "DEFAULT_ERASURE"
+    },
+    "c7c114bed6beed0f3aec2793f4ee38a33e76a84792bb4b0d2fcd3954d4f47c78": {
+      "predicate": "legal_hold_active",
+      "on_false": "DEFAULT_ERASURE"
+    },
+    "1012fb88e601a7fd3f2a16d0d3f2754f960cd2672947fb2a67208589bef629d9": {
+      "predicate": "restore_access_blockable",
+      "on_false": "UNRESOLVED"
+    },
+    "8b45eccefcf2f56b98be4229bfb509c279f30913e7a1921d252495e038b71226": {
+      "predicate": "deleted_account_reference_only",
+      "on_false": "UNRESOLVED"
+    }
+  },
+  "identifier_fields": [
+    "name",
+    "full_name",
+    "display_name",
+    "email",
+    "phone",
+    "email_hash",
+    "requester_name",
+    "requester_email",
+    "requester_phone",
+    "owner_email",
+    "owner_phone",
+    "customer_email",
+    "uploaded_by"
+  ],
+  "stable_reference_fields": [
+    "subject_reference",
+    "customer_reference",
+    "user_id"
+  ],
+  "permitted_fields": {
+    "ACCOUNT_TOMBSTONE": [
+      "subject_reference"
+    ],
+    "SUPPORT_MESSAGE": [
+      "subject_reference",
+      "customer_reference"
+    ],
+    "EMAIL_DELIVERY_LOG": [
+      "subject_reference",
+      "customer_reference",
+      "user_id"
+    ],
+    "ANALYTICS_PROFILE": [],
+    "PRODUCT_TELEMETRY": []
+  },
+  "redaction_markers": [
+    "[REDACTED]",
+    "REDACTED",
+    "***"
+  ],
+  "content_fields": [
+    "message_text",
+    "message_excerpt",
+    "text_body",
+    "body"
+  ],
+  "shared_context_patterns": [
+    "\\border\\b",
+    "\\bORD-\\d+\\b",
+    "\\bagent\\b",
+    "\\bsupport\\b",
+    "\\bdelivery\\b"
+  ],
+  "shared_context_fields": [
+    "ticket_id",
+    "order_reference",
+    "agent_id",
+    "assigned_agent"
+  ],
+  "attribute_fields": {
+    "analytics_content": [
+      "audience_cohort",
+      "metrics",
+      "recent_activity",
+      "reporting_window"
+    ],
+    "retention_until": [
+      "retention_until",
+      "retain_until"
+    ],
+    "hold_until": [
+      "retained_until"
+    ],
+    "hold_basis": [
+      "retention_reason",
+      "order_reference"
+    ],
+    "account_status": [
+      "account_status"
+    ],
+    "restore_flag": [
+      "restore_allowed"
+    ]
+  },
+  "query_context_fields": [
+    "lookup_key",
+    "lookup_value",
+    "correlation_key",
+    "matched_value",
+    "query"
+  ]
+}

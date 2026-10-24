@@ -1,0 +1,55 @@
+{
+  "_comment": "Observed-signal to policy-category mapping. Category names must exist in deletion_rules.csv at runtime; actions and conditions live only in the CSV. Signals are ranked: explicit source label > collection/table > record fields > readback event > system+resource prefix. Conflicting candidates at the winning rank leave the resource unmapped.",
+  "process_categories": {
+    "DATA_FLOW": "flow/process state is planned by M6, not by a data-category rule"
+  },
+  "collections": {
+    "customer_profiles": "USER_PROFILE",
+    "customer_search_documents": "SEARCH_INDEX_ENTRY",
+    "customer_analytics_profiles": "ANALYTICS_PROFILE",
+    "customer_analytics_reports": "ANALYTICS_PROFILE",
+    "support_conversations": "SUPPORT_MESSAGE",
+    "ticket_attachments": "SUPPORT_ATTACHMENT",
+    "customer_exports": "USER_EXPORT",
+    "customer_export_jobs": "USER_EXPORT",
+    "security_audit_events": "SECURITY_AUDIT_LOG",
+    "security_audit_records": "SECURITY_AUDIT_LOG",
+    "retained_order_records": "LEGAL_HOLD_RECORD",
+    "backup_catalog": "BACKUP_ARCHIVE",
+    "backup_restore_entries": "BACKUP_ARCHIVE",
+    "deleted_customer_references": "ACCOUNT_TOMBSTONE",
+    "connector_configurations": "DATA_FLOW",
+    "connector_subscriptions": "DATA_FLOW"
+  },
+  "field_signals": [
+    {"fields": ["email_opt_in", "marketing_consent", "campaign_segment"], "category": "MARKETING_PROFILE"},
+    {"fields": ["message_text", "message_excerpt"], "systems": ["support_platform"], "category": "SUPPORT_MESSAGE"},
+    {"fields": ["file_name", "uploaded_by"], "systems": ["support_platform"], "category": "SUPPORT_ATTACHMENT"},
+    {"fields": ["restore_allowed"], "category": "BACKUP_ARCHIVE"},
+    {"fields": ["retained_until"], "systems": ["legal_service"], "category": "LEGAL_HOLD_RECORD"},
+    {"fields": ["enabled", "connector_name"], "systems": ["integration_service"], "category": "DATA_FLOW"}
+  ],
+  "event_signals": {
+    "profile_lookup_completed": "USER_PROFILE",
+    "analytics_profile_read_completed": "ANALYTICS_PROFILE",
+    "support_ticket_read_completed": "SUPPORT_MESSAGE",
+    "audit_record_read_completed": "SECURITY_AUDIT_LOG",
+    "connector_config_read_completed": "DATA_FLOW",
+    "restore_policy_read_completed": "BACKUP_ARCHIVE"
+  },
+  "resource_prefixes": {
+    "account_service": {"account_": "USER_PROFILE"},
+    "search_service": {"search_": "SEARCH_INDEX_ENTRY"},
+    "analytics_platform": {"analytics_": "ANALYTICS_PROFILE"},
+    "export_service": {"export_": "USER_EXPORT"},
+    "security_service": {"audit_record_": "SECURITY_AUDIT_LOG"},
+    "backup_service": {"backup_": "BACKUP_ARCHIVE"},
+    "legal_service": {"legal_hold_": "LEGAL_HOLD_RECORD"},
+    "identity_service": {"tombstone_": "ACCOUNT_TOMBSTONE"},
+    "integration_service": {"data_flow_": "DATA_FLOW"},
+    "cache_service": {"cache_": "CACHE_ENTRY"},
+    "notification_service": {"email_delivery_": "EMAIL_DELIVERY_LOG"},
+    "marketing_platform": {"marketing_": "MARKETING_PROFILE"},
+    "telemetry_service": {"telemetry_": "PRODUCT_TELEMETRY"}
+  }
+}

@@ -1584,3 +1584,78 @@ branch=feature/m4-state-reconstruction
 repo_root=/workspace/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-24T16:19:30Z] SESSION START
+
+tool=Claude Code
+model=claude-opus-5-5
+Repo Root: /home/claude/hackerrank-orchestrate-october26
+Branch: feature/m5-policy-engine
+Worktree: main
+Parent Agent: none
+Language: py
+Time Remaining: not configured
+
+## [2026-10-24T17:05:00Z] Implement M5 policy engine on top of merged M4
+
+User Prompt (verbatim, secrets redacted):
+no i want u to do this task
+[Task specification relayed with the message: "Continue HackerRank Orchestrate — M5 Policy Engine" (recover work, implement M5 using all 15 rules in dataset/deletion_rules.csv, classify the 365 UNKNOWN states, test M5-1..M5-5 plus the M0–M5 regression, write M5_report.md and the UNKNOWN root-cause and condition-coverage reports, commit and push feature/m5-policy-engine, stop after M5.]
+
+Agent Response Summary:
+Verified remote main at 8ba83559 and created feature/m5-policy-engine from it; Codex's unpublished local M5 work was not reachable, so M5 was built fresh without changing M0–M4. Added code/policy: runtime CSV rule loader, declarative category map, eight three-valued condition predicates bound by condition-wording hash, a compliance engine with free-text exposure checks, tombstone/backup/retention handling, an UNKNOWN root-cause classifier and an inspection CLI. M5-1..M5-4 pass; dev step F1 is 0.329 against the 0.80 target (M5-5 target FAIL) because most expected resources are unlinked or UNKNOWN upstream. Full M0–M5 suite: 277 passed.
+
+Actions:
+* Added code/policy/{rules,categories,conditions,engine,unknowns,main,reports}.py, category_map.json, condition_bindings.json, README.md, tests/test_policy.py.
+* Added code/evaluation/m5_metrics.py (evaluation-only provisional metrics) and checkpoints M5_report.md, M5_UNKNOWN_ROOT_CAUSES.md, M5_CONDITION_COVERAGE.md.
+* Ran the full M0–M5 pytest suite, two deterministic 518-case policy runs, the report generator and the dev metrics script; dataset/ and root output.csv untouched.
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=feature/m5-policy-engine
+repo_root=/home/claude/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
+
+## [2026-10-24T17:40:00Z] Apply M5 independent-review corrections
+
+User Prompt (verbatim, secrets redacted):
+[Independent review of commit 0570185 "M5 Independent Review — Significant progress, but not merge-ready", with the correction prompt "M5 Independent Review — Upstream Evidence and Attribution Correction": fix M5 cross-customer evidence attribution in _dossier()/_identity_conflict(), repair the M1 pipe-log parser defect for evidence_48, investigate the 96 missing field-level M4 states with narrowly justified rules, keep security-retention UNKNOWN, rerun M0–M5 and regenerate reports and metrics, push the existing M5 branch and stop for review. Full text is in the project thread.]
+
+Agent Response Summary:
+Same-ID observations now count only when every identifier they name belongs to the subject's cutoff-time identity view; mixed-context assertions and foreign document blocks are excluded (15 tests; no participant decision changed). The M1 parser now handles time|level|service|trace|event|key=value logs, turning the 38 malformed assertions into 34 real copies (20 supported, 14 claims). Two narrow M4 rules make the 96 field-level gaps supported without changing any previously supported state. UNKNOWN 365 -> 245; dev step F1 0.329 -> 0.373, still below the 0.80 target; security retention left UNKNOWN as decided.
+
+Actions:
+* Edited code/policy/{conditions,engine}.py, code/ingest/evidence.py, code/state/engine.py and their tests; README addenda for policy and state.
+* Regenerated M5 root-cause and coverage reports (rev 1 copies preserved as *_rev1.md), appended Rev 2 to M5_report.md and an addendum to M4_report.md.
+* Ran the full M0–M5 suite (301 passed), deterministic 518-case policy/state runs, M4 baseline and M5 dev metrics; dataset/ and root output.csv untouched.
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=feature/m5-policy-engine
+repo_root=/home/claude/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
+
+## [2026-10-24T19:10:00Z] Close M5 attribution and temporal-evidence gaps (Rev 3)
+
+User Prompt (verbatim, secrets redacted):
+[Independent review "M5 Rev 2 — Independent GitHub Review — HOLD — One final safety correction": apply the all-identifier check to already-linked M2/M4 observations (contradictory evidence kept and decision UNRESOLVED, never COMPLIANT); exclude quarantined and post-cutoff evidence (captured_at > audit_at, record/event time after cutoff or capture, M1 anomalies) from both _dossier loops and all evaluators, with a favourable-retention quarantine regression and both real M1 anomalies; do not regress Rev 2; run M0–M5, regenerate reports and metrics, report changed real-data decisions; commit and push the existing branch; stop for review, no M6. Full text is in the project thread.]
+
+Agent Response Summary:
+Linked observations now pass the same temporal admissibility and attribution checks as extra same-resource records. A linked record naming another person's identifier is kept as an attribution conflict and forces the copy to UNRESOLVED; mixed-context links are treated the same; identifier-free linked records are used only through an explicit correlated trace join. Quarantined, post-cutoff and late-record evidence never reaches a dossier or evaluator. On the 518 cases no real decision changed (0 FOREIGN linked records; 2 time-inadmissible records were already UNKNOWN); reports and metrics are identical to Rev 2. Dev step F1 stays 0.373 (M5-5 FAIL, unmet target).
+
+Actions:
+* Edited code/policy/{engine,categories,main}.py, README and tests (86 policy tests, incl. contradictory-link, mixed-context, quarantine-retention and both participant anomalies).
+* Appended Rev 3 (T1–T5) to M5_report.md; regenerated reports byte-identical to Rev 2, rev 1 copies preserved.
+* Ran the full M0–M5 suite (312 passed); dataset/ and root output.csv untouched.
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=feature/m5-policy-engine
+repo_root=/home/claude/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
