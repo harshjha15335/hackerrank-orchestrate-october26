@@ -86,3 +86,12 @@ step position with expected/actual objects (including null for absent steps).
 JSON object-key order and whitespace are ignored; arrays and string values
 remain exact. There is no fuzzy matching, case folding, distribution quota,
 inference judge, or automatic output repair.
+
+## M6 metrics
+
+`python3 code/evaluation/m6_metrics.py` scores flow/restore steps
+(`REPORT_ACTIVE_DATA_FLOW`, `DISABLE_DATA_FLOW`, `VERIFY_DATA_FLOW_DISABLED`,
+`REPORT_RESTORE_RISK`, `BLOCK_RESTORE`, `VERIFY_RESTORE_BLOCKED`) per split and
+explains each missed or extra expected obligation from the M6 assessment. It
+also scores a provisional M5+M6 steps_json (operation-table order, no M7
+citation guard) before and after M6. Holdout numbers are report-only.

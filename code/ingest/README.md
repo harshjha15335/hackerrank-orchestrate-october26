@@ -33,3 +33,17 @@ source contents and do not replace it. The coverage report lists detected
 disagreements. Later case-specific queries must exclude observations whose
 capture is after the case's `audit_at`; M1 intentionally retains them all.
 Raw evidence text is stored as data and never executed as instructions.
+
+## M6 addendum: log envelopes (parser `m1-v3`)
+
+Four participant log layouts carried the same fields as key=value logs but
+were not split into them: JSON-object lines (`<time> {"severity":..}`),
+bracket lines (`<time> [LEVEL] [service] [trace] event: k="v"`), RFC 5424
+syslog lines (`<time> <pri>1 host service trace - - k="v"`) and function
+runtime lines (`requestId=.. function=.. message="k=\"v\" .."`). They now
+normalise to `event_time`, `level`, `service`, `trace_id`, `event` and the
+key/value fields. Envelope fields are never overridden by message content,
+and only `tr-*` / `rb-*` tokens become a `trace_id` (a collector name in the
+trace slot is not a join key). On the 518-case run this added 123 new
+subject-linked physical copies and changed no existing M4 state or M5
+decision; the 32 samples are unaffected.
