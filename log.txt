@@ -1943,6 +1943,253 @@ repo_root=/home/claude/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
 
+
+========================================================================
+SUBMISSION TRANSCRIPT READER'S INDEX — EDITORIAL APPENDIX
+========================================================================
+This appendix is a review aid prepared from supplied artifacts. It is NOT
+an AI coding-agent session, user prompt, new exchange, benchmark winner
+transcript, or a substitute for the original chronological log above.
+The entire original log is retained byte-for-byte before this appendix.
+
+PROJECT: HackerRank Orchestrate October 2026 — Ghost Data Still Exists
+SUBMISSION TYPE: AI chat transcript (one UTF-8 plain-text log.txt file)
+AUTHORITATIVE CONVERSATION HISTORY: preceding original log entries
+SOURCE FILE: uploaded log(5).txt
+ORIGINAL LOG SHA-256: 5c54252c2534044f83f3604fa9f0d211fe3bd488313436f80742e58fcb7dadb7
+ORIGINAL LOG: 1944 lines; 29 documented task exchanges
+
+=== A. WHO RECEIVED THE AI INSTRUCTIONS? ===
+
+Tool / role              Logged task exchanges   Model recorded
+Claude Code              16                      claude-opus-5-5
+Codex                    13                      Exact model not exposed by runtime
+Gemini                   0                       No execution session established
+ChatGPT                  Not separately logged   Used for planning/review in
+                                                surrounding conversation
+
+These are counts from the original log, not claims about total prompts ever
+sent to those services. Each entry's Context tool= field is decisive.
+One planned mention of Gemini for screenshot extraction was never recorded
+as a Gemini execution. Actual M8 screenshot work in the log was attributed
+to Claude Code, using manually transcribed fixtures, with 0 runtime vision
+API calls. Do not relabel that work as Gemini.
+
+The May 2026 comparison used publicly readable AGENTS.md logging templates
+and source-code audits of Saai, Trenton, LeeRenJie, and Amogh. Their private
+chat transcripts were not published in those GitHub repositories. This
+submission therefore reuses the documented logging discipline, not any
+fabricated winner conversation or copied transcript text.
+
+=== B. ENGINEERING DECISIONS, ALTERNATIVES, AND VERIFIED OUTCOMES ===
+
+[01] Scope and architecture — Claude Code, May source benchmark
+  Decision: Adopt staged, source-grounded retrieval, typed outputs, caching,
+  and conservative citations where applicable, while recognizing May's
+  support-ticket task differs from October's historical deletion audit.
+  Verification: Referenced four pinned May repositories and logged tested
+  reference-unit suites; winner ranking not independently confirmed.
+
+[02] Contract ownership — Codex, M0
+  Decision: Correct the initially mistaken six-field instruction to the
+  official seven-field JSON step contract.
+  Verification: Added rejection tests for six- and eight-field variants;
+  established independent strict validation and sample scorer.
+
+[03] Input provenance — Codex, M1
+  Decision: Normalize 94 supplied evidence-manifest files while preserving
+  exact file IDs, source timestamps, and SQL replica boundaries.
+  Verification: Corrected JSON system/record_type aliases and timezone
+  comparisons after review; kept ingestion deterministic.
+
+[04] Ownership versus retrieval recall — Codex, M2
+  Decision: Reject unsafe cross-service array-position joins and global
+  PDF co-location; separate identity-bearing records from authoritative
+  negative SQL scopes.
+  Verification: Retained the original 31/38 retrieval failure while
+  documenting a justified revised gate of 31/31 attributable links and
+  3/3 negative SQL scopes; four references remained unattributed.
+
+[05] Intent without unnecessary model cost — Codex, M3
+  Decision: Rule-first multilingual deletion intent; optional mock-tested
+  LLM fallback only for ambiguity.
+  Verification: Logged 508 deletion-authorizing and 10 NOT_APPLICABLE
+  evaluation requests; zero actual inference calls for these requests.
+
+[06] Temporal source truth — Codex, M4
+  Decision: Worker SUCCESS is a claim, not an absence proof. Interpret
+  completed, resource-scoped connector/restore readbacks, but never map
+  malformed/null booleans to disabled or blocked.
+  Verification: Regressions for event validity, time cutoffs and conflicts.
+
+[07] Policy uncertainty — Claude Code, M5
+  Decision: Apply deletion_rules.csv conditions with three-valued logic;
+  do not invent security-retention periods or customer identity facts.
+  Verification: Repaired source parsing, temporal admissibility, and
+  cross-customer attribution; retained truthful failed F1 gates.
+
+[08] Flow/restore safety — Claude Code, M6
+  Decision: Inventory can show risk, not prove safety; explicit source
+  proof and cutoff-safe trace anchors are required.
+  Verification: Regression tests preserved actual physical-copy isolation
+  and excluded inadmissible trace anchors.
+
+[09] Remediation synthesis — Claude Code, M7
+  Decision: Build ordered FINDING/REMEDIATION/VERIFICATION operations with
+  citations, and remove a speculative lookup rule despite lower dev F1.
+  Verification: Strict schema failures were disclosed, not hidden by an
+  alternate permissive validator.
+
+[10] Screenshot quarantine — Claude Code, M8
+  Decision: Manually verified PNG facts may establish presence or risk
+  only when capture/result times are admissible.
+  Verification: Re-audited 11 PNGs, reverted two future-rendered findings,
+  and prevented quarantined screenshots from establishing ownership.
+
+[11] Independent safety challenge — Codex audit → Claude Code fixes
+  Decision: Revert support_001 attachment misclassification even though it
+  lowered public F1. Block false compliant anonymization from nested
+  linkage IDs and block M4 state attributed via another customer's phone.
+  Verification: Reported 600 passing tests for the prior packaged baseline;
+  those exact tests do NOT certify the later relaxed build.
+
+[12] Rule 12 owner choice — owner prompt → Claude Code
+  Decision: Treat an observed SECURITY_AUDIT_LOG lacking a known retention
+  period as RETAIN in the absence of a category DELETE rule, rather than
+  assume deletion; record this as an interpretation choice, not a newly
+  observed retention period.
+  Verification: The latest log reports movement from 114 errors/77 rows
+  to 42 errors/33 rows, dev step F1 0.780→0.8155, exact 2/22→4/22.
+  A fallback bundle was packaged.
+
+[13] Relaxed experiment — owner-requested, source RELAXED_BUILD.md
+  Decision: Add temporal workflow-claim account linking (2-hour window)
+  plus a non-destructive Rule 05 REDACT choice without conversation content.
+  These choices are inference assumptions, not proven user ownership or
+  observed shared support context. They may improve measured coverage but
+  weaken the original conservative source-proof discipline.
+  Verification claimed in attached RELAXED_BUILD.md: dev step F1 .8598,
+  7/22 exact sequences, 21/22 status, 27 strict errors in 20 rows;
+  962/962 citations accepted; probe counts zero; deterministic. The
+  full pytest suite was NOT rerun and these gains were NOT independently
+  validated against hidden answers. This later experiment was described
+  by the supplied report but is not a full agent exchange in the original
+  log; no such conversation is fabricated here.
+
+=== C. RECORDED EXCHANGE INDEX (SOURCE-ORDER, EXACT RECIPIENTS) ===
+
+The original log has independent agent sessions with partially overlapping
+timestamps. Source order is preserved instead of re-sorting and relabeling
+conversations. "Addressed to" means the executing tool recorded in the
+entry, not the person/model that drafted the prompt.
+
+01. [2026-10-24T13:38:36Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    Winner benchmark audit of May 2026 repos vs October  (original log line 12)
+02. [2026-10-24T13:44:54Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    Attach personal fork and push benchmark branch  (original log line 98)
+03. [2026-10-24]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    M0 output validation and evaluation implementation  (original log line 135)
+04. [2026-10-24]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    Apply benchmark location and schema clarifications  (original log line 294)
+05. [2026-10-24T00:00:00Z]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    Publish M0 for independent review  (original log line 337)
+06. [2026-10-24T14:17:55.080885+00:00]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    Implement M1 evidence ingestion  (original log line 386)
+07. [2026-10-24T14:27:17.016186+00:00]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    Correct M1 JSON metadata aliases  (original log line 585)
+08. [2026-10-24T15:02:08.897511+00:00]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    M2 historical identity resolution  (original log line 610)
+09. [2026-10-24T15:12:45.761452+00:00]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    M2 retrieval safety correction  (original log line 784)
+10. [2026-10-24T15:21:34.279615+00:00]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    Strengthen M2 independent quality gate  (original log line 951)
+11. [2026-10-24T15:33:03.433665+00:00]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    Complete M3 deletion-intent classification  (original log line 974)
+12. [2026-10-24T15:39:52.009867+00:00]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    M4 prerequisite check: M3 not merged  (original log line 1132)
+13. [2026-10-24T15:44:03.123863+00:00]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    M3 pull-request merge blocked by GitHub API access  (original log line 1384)
+14. [2026-10-24T15:51:30.595520+00:00]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    Merge M3 and implement M4 state reconstruction  (original log line 1408)
+15. [2026-10-24T16:02:55.609560+00:00]  Addressed to: Codex; Model: unavailable: exact runtime model identifier is not exposed
+    Correct M4 completed readbacks and boolean validation  (original log line 1432)
+16. [2026-10-24T17:05:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    Implement M5 policy engine on top of merged M4  (original log line 1599)
+17. [2026-10-24T17:40:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    Apply M5 independent-review corrections  (original log line 1621)
+18. [2026-10-24T19:10:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    Close M5 attribution and temporal-evidence gaps (Rev 3)  (original log line 1642)
+19. [2026-10-24T18:40:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    Merge approved M5 and implement M6 flow/restore risks  (original log line 1674)
+20. [2026-10-24T18:20:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    M6 final safety correction: trace anchors at cutoff  (original log line 1696)
+21. [2026-10-24T18:45:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    M7 step synthesis, ordering and citation guard  (original log line 1727)
+22. [2026-10-24T19:50:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    M7 Rev 2 review corrections (scope, lookup rule, strict)  (original log line 1751)
+23. [2026-10-24T20:00:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    Merge approved M7 Rev 2 and record owner decisions  (original log line 1773)
+24. [2026-10-24T20:35:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    M8 multimodal visual evidence extraction  (original log line 1804)
+25. [2026-10-24T22:30:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    M8 Rev 2: visual re-audit and temporal-provenance fix  (original log line 1827)
+26. [2026-10-25T09:30:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    M8 Rev 2 final: inadmissible screenshots link no resources  (original log line 1849)
+27. [2026-10-25T11:30:00Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    Pre-M9 audit remediation (F-02, F-03, unmapped supports, recall, strict cases, F-05, F-06)  (original log line 1881)
+28. [2026-10-25T11:07:17Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    Final safety fixes, evaluation reports and submission packaging  (original log line 1903)
+29. [2026-10-25T11:54:40Z]  Addressed to: Claude Code; Model: claude-opus-5-5
+    Final mega sprint: Rule 12 owner decision build  (original log line 1925)
+
+=== D. NEW ARTIFACTS AND INTEGRITY CHECKS ===
+
+Files reviewed for this appendix:
+  log(5).txt       Original conversation history, preserved above
+  code(4).zip      Current user-uploaded source package
+  output(4).csv    Current user-uploaded prediction file
+  RELAXED_BUILD.md User-uploaded experiment and metric handoff
+
+  Source log SHA-256:  5c54252c2534044f83f3604fa9f0d211fe3bd488313436f80742e58fcb7dadb7
+  Code ZIP SHA-256:    4308d1068dac6ac99af74e2737d84198afb95dac3e590f0fa2ffdceb440669a1
+  CSV SHA-256:         2f08a2f88c2985e31df2d1f0313bf834e97bc4194e3011a0aebaebd34a0e0258
+  ZIP usage-report CSV SHA-256: 252b026188daea2fe4b72a5bcbaaefe4dbd98c991bc40b53ecbedd4727352e3c
+
+CSV inspection (independent structural scan of the uploaded CSV):
+  518 data rows, unique case IDs, sorted by case_id; 2,511 steps.
+  20 INCOMPLETE cases lack all three required phases:
+    7 rows have no steps; 13 have steps but missing phases.
+  This supports the RELAXED_BUILD.md count of 20 affected cases; the
+  exact 27-error total remains a reported result, not an independently
+  rerun full strict-validator result from this appendix.
+
+CONSISTENCY CHECK — RESOLVED (2026-10-25T12:20Z):
+  The earlier mismatch (ZIP reports describing the Rule-12-only build) was
+  fixed. evaluation/evaluation_report.md and evaluation/usage_report.md were
+  regenerated for the relaxed build and code.zip was rebuilt
+  (SHA-256 7f07f5adece42a1f80bd32b0078b5658a18ab71cb40ebf5824bd20a3fcebe4e3).
+  Both reports now reference output.csv SHA-256
+  2f08a2f88c2985e31df2d1f0313bf834e97bc4194e3011a0aebaebd34a0e0258
+  (strict validator 27 errors / 20 rows, dev F1 0.8598, 7/22 exact).
+  A clean run from the extracted ZIP (env -i python3 -I code/main.py with
+  dataset/ copied in) reproduced output.csv byte-for-byte.
+
+=== E. FINAL DISCLOSURE ===
+
+This document records real development choices: alternatives were audited,
+unsafe shortcuts were reverted, tests were run, weaknesses were disclosed,
+and a later less-conservative experiment was clearly labelled.
+It does not claim the private May winners' transcripts, unread ChatGPT
+messages, Gemini calls, unexposed Codex model ID, hidden-grader performance,
+or a completed HackerRank platform upload.
+
+Runtime inference is reported as 0 calls, 0 tokens and $0 in the supplied
+usage report; development assistance by Claude Code and Codex is distinct.
+Where the source log contains a RELAYED specification rather than a full
+verbatim prompt, the transcript leaves that original notation unchanged.
+This index is a reviewer-created summary, NOT a new agent conversation.
+========================================================================
+
 ## [2026-10-25T12:17:05Z] Relaxed joins build, last rule attempt, transcript format check
 
 User Prompt (verbatim, secrets redacted):
@@ -1955,6 +2202,27 @@ Actions:
 * Added code/state/relaxed.py; edited code/synthesis/{main,citations}.py, code/policy/conditions.py, condition_bindings.json
 * Ran pre_m9_metrics.py and code/main.py; built /mnt/project-files/submission/relaxed/code.zip; clean run reproduced output.csv
 * Validated the log.txt entry structure
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=experiment/relaxed-joins
+repo_root=/home/claude/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none
+
+## [2026-10-25T12:20:54Z] Synchronize relaxed bundle reports and consolidate the transcript
+
+User Prompt (verbatim, secrets redacted):
+(relayed by the project coordinator from Harsh, with an attached consolidated log) "I've created one consolidated AI Chat Transcript in HackerRank's required `log.txt` format ... Important issue with your latest submission files: Your uploaded `output(4).csv` and the reports inside `code(4).zip` do not reference the same output hash. ... fix and give the log fully again"
+
+Agent Response Summary:
+Regenerated evaluation/evaluation_report.md (new section 0 listing the three owner decisions and the per-build table, refreshed scores, strict list of 20 rows) and evaluation/usage_report.md for the relaxed build, rebuilt submission/relaxed/code.zip and confirmed a clean run from it reproduces output.csv 2f08a2f8... byte-for-byte. Took Harsh's consolidated log as the base, marked its consistency warning resolved, and appended the turn entries that were missing from it plus this one.
+
+Actions:
+* Edited evaluation/evaluation_report.md, evaluation/usage_report.md; rebuilt /mnt/project-files/submission/relaxed/code.zip
+* Clean-run reproduction of output.csv from the extracted zip
+* Wrote /mnt/project-files/submission/relaxed/log.txt and the root log.txt
 
 Context:
 tool=Claude Code
