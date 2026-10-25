@@ -125,5 +125,29 @@
     "correlation_key",
     "matched_value",
     "query"
-  ]
+  ],
+  "anonymization": {
+    "_comment": "F-02 (pre-M9). Rule 07/08 'still attributable' is FALSE only when an ANONYMIZE_RECORD operation on the same system/resource (a claim) is independently corroborated by a later source read whose identifier columns are removed, with no indirect identifier and no later copy naming the subject. Explicitly null identifier columns alone are DIRECT_REMOVED (UNKNOWN). Indirect identifiers re-link (TRUE) only when their value co-occurs with the subject's direct identifiers in another admissible record.",
+    "operation_types": [
+      "ANONYMIZE_RECORD"
+    ],
+    "reported_results": [
+      "SUCCESS"
+    ],
+    "indirect_identifier_fields": [
+      "correlation_key",
+      "device_id",
+      "session_id",
+      "ip_address",
+      "cookie_id",
+      "anonymous_id",
+      "advertising_id",
+      "external_id",
+      "source_resource_id",
+      "order_reference",
+      "postal_code",
+      "shipping_address",
+      "date_of_birth"
+    ]
+  }
 }

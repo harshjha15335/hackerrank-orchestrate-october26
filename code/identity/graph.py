@@ -48,6 +48,23 @@ class IdentityGraph:
                 if r['field_name'] in FIELDS: self.audit[r['user_id']].append(r)
         for events in self.audit.values():
             events.sort(key=lambda r: (parse_time(r['event_time']), r['audit_id']))
+        # Every user that has ever held an identifier (snapshot or either side
+        # of an audited change). Exclusivity is judged over all time, so an
+        # identifier reassigned between people is never single-owner proof.
+        self.holders = {}
+        for user_id, user in self.users.items():
+            self.holders.setdefault(('user_id', user_id), set()).add(user_id)
+            for field in FIELDS:
+                if user[field]: self.holders.setdefault((field, norm(field, user[field])), set()).add(user_id)
+            for change in self.audit[user_id]:
+                for key in ('old_value', 'new_value'):
+                    if change[key]:
+                        self.holders.setdefault((change['field_name'], norm(change['field_name'], change[key])),
+                                                set()).add(user_id)
+
+    def owners(self, field: str, value: str) -> frozenset[str]:
+        """Users that have ever held this normalised identifier (empty if none)."""
+        return frozenset(self.holders.get((field, value), ()))
 
     def at(self, user_id: str, cutoff: str):
         point = parse_time(cutoff)

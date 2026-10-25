@@ -16,7 +16,7 @@ from ingest.evidence import parse_time
 from state.engine import field_values, system_for
 
 from .categories import classify, load_map
-from .conditions import (FALSE, TRUE, UNKNOWN, Dossier, Record, evaluate, exposed_fields,
+from .conditions import (FALSE, TRUE, UNKNOWN, Dossier, Record, anonymization_state, evaluate, exposed_fields,
                          explicit_identifier_nulls, identity_claims, load_config, subject_from)
 from .rules import PolicyTable, load_rules
 
@@ -87,8 +87,18 @@ class Context:
         self.by_locator = {(o.evidence_id, o.locator): o for o in observations}
         self.by_resource = defaultdict(list)
         self.documents = defaultdict(list)
+        self.operations = defaultdict(list)    # resource -> activity rows (claims)
+        self.indirect_values = defaultdict(list)
+        indirect = self.config.get('anonymization', {}).get('indirect_identifier_fields', ())
         for o in observations:
+            if o.source_type == 'activity' and o.resource_id:
+                self.operations[o.resource_id].append(o)
             if o.source_type in ('activity', 'audit'): continue
+            values = field_values(o.raw_fields)
+            for name in indirect:
+                value = values.get(name)
+                if isinstance(value, (str, int)) and str(value).strip():
+                    self.indirect_values[str(value).strip()].append(o)
             if o.resource_id: self.by_resource[o.resource_id].append(o)
             if o.source_type == 'pdf' and o.locator.startswith('line:'):
                 self.documents[o.evidence_id].append(o)
@@ -159,10 +169,34 @@ def _dossier(ctx, latest, assertions, resolution, subject, category):
         texts = [l.raw_fields.get('text', '') for l in sorted(lines, key=lambda l: int(l.locator.split(':')[1]))]
         if any(latest['resource_id'] in t for t in texts):
             documents.append((evidence_id, texts))
+    operations = tuple(sorted(
+        (a.evidence_id, a.raw_fields.get('event_type'), a.raw_fields.get('target_system'),
+         a.raw_fields.get('reported_result'), a.event_time)
+        for a in ctx.operations.get(latest['resource_id'], ())
+        if a.raw_fields.get('target_system') == latest['system_id'] and a.event_time
+        and parse_time(a.event_time) <= cutoff))
+    link_keys = frozenset()
+    if current and latest['supported']:
+        link_keys = frozenset(_link_keys(ctx, current, subject, cutoff))
     dossier = Dossier(category or '', latest['state'], resolution.audit_at, subject,
                       _record(current, True) if current and latest['supported'] else None,
-                      [_record(o, linked) for o, linked in observations], documents, latest['resource_id'])
+                      [_record(o, linked) for o, linked in observations], documents, latest['resource_id'],
+                      operations, link_keys)
     return dossier, [o for o, _ in observations], tuple(sorted(conflicts))
+
+
+def _link_keys(ctx, current, subject, cutoff):
+    """Indirect identifier values of ``current`` that another admissible record
+    names together with this subject's own identifiers (re-identification keys)."""
+    values = field_values(current.raw_fields)
+    for name in ctx.config.get('anonymization', {}).get('indirect_identifier_fields', ()):
+        value = values.get(name)
+        if not isinstance(value, (str, int)) or not str(value).strip(): continue
+        for o in ctx.indirect_values.get(str(value).strip(), ()):
+            if (o.evidence_id, o.locator) == (current.evidence_id, current.locator): continue
+            if _admissible_time(ctx, o, cutoff) and _attribution(o, subject) == 'SUBJECT':
+                yield str(value).strip()
+                break
 
 
 def _comply(action, state, exposure, dossier, config):
@@ -184,6 +218,14 @@ def _comply(action, state, exposure, dossier, config):
         return UNRESOLVED, 'record whose context must be retained is absent', ()
     if exposure:
         return VIOLATION, 'identifiers still exposed: ' + ','.join(exposure), template
+    if action == 'ANONYMIZE':
+        # F-02: removed identifier columns are not irreversible unlinking.
+        state, why, _ = anonymization_state(dossier, config)
+        if state in ('DIRECT_EXPOSED', 'INDIRECT_LINKED'):
+            return VIOLATION, f'record still linkable to the subject: {why}', template
+        if state == 'ANONYMIZATION_EVIDENCED':
+            return COMPLIANT, 'anonymization operation corroborated by a later source read', verify
+        return UNRESOLVED, f'no evidence of irreversible anonymization ({state})', ()
     current = dossier.current
     if current and (explicit_identifier_nulls(current.fields, config) or
                     any(str(v).strip() in config['redaction_markers'] for v in current.fields.values())):

@@ -232,6 +232,7 @@ def _visual_state(o: Observation):
 
 
 def attribution_for(hit: Hit, resolution: Resolution) -> str:
+    if hit.owner_conflict and hit.strength == 'mixed_context': return 'mixed_context'
     if hit.strength != 'mixed_context': return hit.strength
     identities = direct_identifiers(hit.observation.raw_fields)
     allowed = {(v.field, v.normalized) for v in resolution.history}
@@ -295,6 +296,18 @@ def latest(assertions: Iterable[StateAssertion]) -> list[StateAssertion]:
                              explanation='conflicting direct states at equal observation time')
         output.append(replace(winner, conflicts=contradictory))
     return output
+
+
+def table_system(table: str) -> str | None:
+    """Owning system of a snapshot table copy (an absence names no row to read it from)."""
+    if table.startswith('customer_profiles_'): return 'account_service'
+    for prefix, system in TABLE_ALIASES.items():
+        if table == prefix or table.startswith(prefix + '_'): return system
+    return TABLE_SYSTEM.get(table)
+
+
+def authoritative_sql_scope(scope, dataset: Path) -> bool:
+    return _authoritative_sql_scope(scope, dataset)
 
 
 def _authoritative_sql_scope(scope, dataset: Path) -> bool:

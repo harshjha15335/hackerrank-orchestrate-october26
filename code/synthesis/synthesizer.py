@@ -64,6 +64,9 @@ def _provenance(resource, finding=False):
             'category': resource['category'],
             'redaction_observed': bool(copy and copy['compliance'] == 'COMPLIANT'
                                        and copy['effective_action'] in ('REDACT', 'ANONYMIZE')),
+            # F-02: only M5's corroborated anonymization (never null columns alone).
+            'anonymization_proven': bool(copy and copy['compliance'] == 'COMPLIANT'
+                                         and copy['effective_action'] == 'ANONYMIZE'),
             'm2_correlated': bool(copy and copy.get('_attribution') == 'correlated')}
 
 

@@ -54,7 +54,7 @@ def run_all(dataset: Path, sample=False, cache: Path | None = None):
     observations, coverage, discrepancies = ingest(dataset, cache)
     anomalies = {(d['file_id'], d['locator']) for d in discrepancies
                  if d['reason'] == 'record_time_after_manifest_capture'}
-    evidence, scopes = EvidenceIndex(observations, anomalies), SnapshotIndex(observations, coverage)
+    evidence, scopes = EvidenceIndex(observations, anomalies, graph), SnapshotIndex(observations, coverage)
     ctx = Context(observations, dataset / 'deletion_rules.csv', anomalies=anomalies)
     fctx = FlowContext(observations, anomalies)
     indexes = index_activity(fctx.activity)

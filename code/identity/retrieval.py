@@ -34,12 +34,18 @@ class Hit:
     observation: Observation
     matched: tuple[tuple[str, str], ...]
     strength: str
+    # F-03: an identifier on the record that the identity graph does not tie
+    # exclusively to the resolved subject (another holder, or no known holder).
+    owner_conflict: bool = False
 
 
 class EvidenceIndex:
-    def __init__(self, observations: list[Observation], anomalies=frozenset()):
+    def __init__(self, observations: list[Observation], anomalies=frozenset(), graph=None):
         self.observations = observations
         self.anomalies = frozenset(anomalies)
+        # Without the identity graph, ownership cannot be resolved and any two
+        # distinct customer identifiers in a trace keep it ambiguous (M2 rule).
+        self.graph = graph
         self.postings = {}
         self.trace_groups = defaultdict(set)
         for position, observation in enumerate(observations):
@@ -64,6 +70,15 @@ class EvidenceIndex:
                 return False
         return True
 
+    def _exclusive(self, identities, keys, user_id) -> bool:
+        """Every identifier is this subject's at the cutoff and nobody else's ever."""
+        return all(item in keys and self.graph.owners(*item) == {user_id} for item in identities)
+
+    def _single_subject(self, identities, keys, user_id) -> bool:
+        if self.graph is None:
+            return len({i for i in identities if i[0] in ('email', 'user_id')}) <= 1
+        return self._exclusive(identities, keys, user_id)
+
     def find(self, resolution: Resolution) -> list[Hit]:
         return self._find(resolution)[0]
 
@@ -83,17 +98,19 @@ class EvidenceIndex:
                 entry = selected.setdefault(position, {'matched': set(), 'strength': set()})
                 entry['matched'].add(key)
                 entry['strength'].update(strengths)
-        # Only an explicit shared trace ID is a cross-line join. Distinct
-        # customer identifiers within one trace make that group ambiguous.
+        # Only an explicit shared trace ID is a cross-line join. The group is
+        # joinable only if it names one resolved subject: with the identity
+        # graph, every identifier must be this subject's at the cutoff and held
+        # by nobody else (F-03: email + user_id of one person is one identity);
+        # without it, distinct customer identifiers make the group ambiguous.
         # Only lines that are evidence at the cutoff may anchor or contest it.
         cutoff = parse_time(resolution.audit_at)
         for group in self.trace_groups.values():
             group = {p for p in group if self._anchor_admissible(p, cutoff)}
             identities = set()
             for position in group:
-                identities.update((f, v) for f, v in direct_identifiers(
-                    self.observations[position].raw_fields) if f in ('email', 'user_id'))
-            if len(identities) > 1: continue
+                identities.update(direct_identifiers(self.observations[position].raw_fields))
+            if not self._single_subject(identities, keys, resolution.user_id): continue
             anchors = [position for position in group if position in selected]
             if not anchors: continue
             matched = set().union(*(selected[p]['matched'] for p in anchors))
@@ -104,18 +121,21 @@ class EvidenceIndex:
         output, excluded = [], []
         for position in sorted(selected):
             observation = self.observations[position]
-            if parse_time(observation.captured_at) > cutoff: continue
+            future = parse_time(observation.captured_at) > cutoff
+            # F-06: a future-captured screenshot is still reported (excluded), other sources are not.
+            if future and observation.source_type != 'image': continue
             entry = selected[position]
             strength = ('direct' if 'direct' in entry['strength'] else
                         'context' if 'context' in entry['strength'] else 'correlated')
-            identities_on_record = {value for field, value in direct_identifiers(observation.raw_fields)
-                                    if field in ('email', 'user_id')}
+            on_record = direct_identifiers(observation.raw_fields)
+            identities_on_record = {value for field, value in on_record if field in ('email', 'user_id')}
             if len(identities_on_record) > 1:
                 strength = 'mixed_context'
-            hit = Hit(observation, tuple(sorted(entry['matched'])), strength)
+            conflict = self.graph is not None and not self._exclusive(on_record, keys, resolution.user_id)
+            hit = Hit(observation, tuple(sorted(entry['matched'])), strength, conflict)
             # M8: an inadmissible screenshot row cannot establish that the subject
             # has this resource; another admissible observation must do that.
-            if observation.source_type == 'image' and not self._anchor_admissible(position, cutoff):
+            if observation.source_type == 'image' and (future or not self._anchor_admissible(position, cutoff)):
                 excluded.append(hit)
                 continue
             output.append(hit)

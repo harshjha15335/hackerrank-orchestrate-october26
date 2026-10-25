@@ -110,14 +110,16 @@ CASES = [
      None, UNRESOLVED, []),
     ('ANALYTICS_PROFILE', TRUE, {'email': SUBJECT_EMAIL, 'audience_cohort': 'x'}, 'analytics_platform',
      'analytics_9', 'PRESENT', None, VIOLATION, ['REPORT_EXPOSED_PII', 'ANONYMIZE_RECORD', 'VERIFY_RECORD_ANONYMIZED']),
-    ('ANALYTICS_PROFILE', FALSE, {'email': None, 'phone': None, 'customer_reference': None, 'audience_cohort': 'x'},
-     'analytics_platform', 'analytics_9', 'PRESENT', None, COMPLIANT, ['VERIFY_RECORD_ANONYMIZED']),
+    # F-02 (pre-M9): explicitly null identifier columns are not irreversible
+    # anonymization; FALSE needs a corroborated operation (test_anonymization.py).
+    ('ANALYTICS_PROFILE', UNKNOWN, {'email': None, 'phone': None, 'customer_reference': None, 'audience_cohort': 'x'},
+     'analytics_platform', 'analytics_9', 'PRESENT', None, UNRESOLVED, []),
     ('ANALYTICS_PROFILE', UNKNOWN, {'audience_cohort': 'x'}, 'analytics_platform', 'analytics_9', 'PRESENT',
      None, UNRESOLVED, []),
     ('PRODUCT_TELEMETRY', TRUE, {'user_id': SUBJECT, 'metrics': {'clicks': 3}}, 'telemetry_service', 'telemetry_9',
      'PRESENT', None, VIOLATION, ['REPORT_EXPOSED_PII', 'ANONYMIZE_RECORD', 'VERIFY_RECORD_ANONYMIZED']),
-    ('PRODUCT_TELEMETRY', FALSE, {'user_id': None, 'email': None, 'metrics': {'clicks': 3}}, 'telemetry_service',
-     'telemetry_9', 'PRESENT', None, COMPLIANT, ['VERIFY_RECORD_ANONYMIZED']),
+    ('PRODUCT_TELEMETRY', UNKNOWN, {'user_id': None, 'email': None, 'metrics': {'clicks': 3}}, 'telemetry_service',
+     'telemetry_9', 'PRESENT', None, UNRESOLVED, []),
     ('PRODUCT_TELEMETRY', UNKNOWN, {'device': 'x'}, 'telemetry_service', 'telemetry_9', 'PRESENT', None,
      UNRESOLVED, []),
     ('EMAIL_DELIVERY_LOG', TRUE, {'recipient': SUBJECT_EMAIL, 'status': 'sent'}, 'notification_service',
@@ -159,6 +161,9 @@ CASES = [
 # names another person is a contradictory attribution and stays UNRESOLVED first
 # (test_attachment_shared_with_another_person).
 PREDICATE_ONLY = [('SUPPORT_ATTACHMENT', FALSE)]
+# Reached only with a corroborating ANONYMIZE_RECORD operation row
+# (policy/tests/test_anonymization.py::test_corroborated_operation_is_anonymized).
+PREDICATE_ONLY += [('ANALYTICS_PROFILE', FALSE), ('PRODUCT_TELEMETRY', FALSE)]
 COVERAGE = sorted({(c[0], c[1]) for c in CASES} | set(PREDICATE_ONLY))
 
 

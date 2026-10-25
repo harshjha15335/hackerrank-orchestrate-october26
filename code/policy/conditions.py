@@ -112,6 +112,12 @@ class Dossier:
     records: list[Record]          # every same-resource field set, latest first
     documents: list[tuple[str, list[str]]] = field(default_factory=list)
     resource_id: str | None = None
+    # (activity_id, event_type, target_system, reported_result, event_time) on this
+    # system/resource, admissible at audit_at: operation claims, never state proof.
+    operations: tuple[tuple[str, str, str, str, str], ...] = ()
+    # Values that co-occur with this subject's direct identifiers in an
+    # admissible record (candidate re-identification keys).
+    link_keys: frozenset[str] = frozenset()
 
 
 @dataclass(frozen=True)
@@ -200,22 +206,97 @@ def attachment_subject_only(d: Dossier, config: dict) -> ConditionResult:
     return ConditionResult(UNKNOWN, 'attachment ownership not observed')
 
 
-def still_attributable(d: Dossier, config: dict) -> ConditionResult:
+def _removed(fields: dict, config: dict) -> tuple[int, int]:
+    """(explicitly removed, still populated) direct identifier / stable reference columns."""
+    names = set(config['identifier_fields']) | set(config['stable_reference_fields'])
+    markers = set(config['redaction_markers'])
+    removed = populated = 0
+    for name, value in fields.items():
+        if name not in names: continue
+        if not _nonnull(value) or str(value).strip() in markers: removed += 1
+        else: populated += 1
+    return removed, populated
+
+
+def _indirect(fields: dict, config: dict) -> list[tuple[str, str]]:
+    """Populated indirect identifiers (quasi-identifiers / linkage keys) on a record."""
+    names = config['anonymization']['indirect_identifier_fields']
+    return [(n, str(fields[n]).strip()) for n in names if n in fields and _nonnull(fields[n])
+            and str(fields[n]).strip() not in config['redaction_markers']]
+
+
+def anonymization_state(d: Dossier, config: dict) -> tuple[str, str, tuple[str, ...]]:
+    """Classify the state-establishing copy for Rule 07/08 (F-02).
+
+    Returns (state, reason, citations) with state one of:
+
+    * DIRECT_EXPOSED: a direct identifier or stable reference is still populated.
+    * INDIRECT_LINKED: an indirect identifier whose value co-occurs with this
+      subject's direct identifiers in another admissible record (a link key).
+    * INDIRECT_PRESENT: an indirect identifier remains; whether it re-links is not shown.
+    * DIRECT_REMOVED: identifier columns explicitly emptied, no indirect identifier,
+      but no independent evidence of an irreversible anonymization operation.
+    * NOT_DISPLAYED: no identifier columns shown at all (absence is not removal).
+    * ANONYMIZATION_EVIDENCED: identifiers removed, no indirect identifier or
+      later identifying copy, and an ANONYMIZE_RECORD operation on this system
+      and resource that the source read independently post-dates.
+    * UNRESOLVED: no state-establishing field set.
+
+    Explicitly null identifier columns alone are DIRECT_REMOVED, never
+    anonymized: the record keeps its resource key, which earlier copies and
+    backups may still join to the subject (pseudonymisation, not anonymity).
+    """
+    r = d.current
+    if r is None:
+        return 'UNRESOLVED', 'no field-level evidence of identifiers or their removal', ()
     permitted = tuple(config['permitted_fields'].get(d.category, ()))
-    content = config['attribute_fields']['analytics_content']
+    exposed = exposed_fields(r.fields, d.subject, config, permitted)
+    if exposed:
+        return 'DIRECT_EXPOSED', 'linkable via ' + ','.join(exposed), _cite(r)
+    indirect = _indirect(r.fields, config)
+    linked = [n for n, v in indirect if d.link_keys and v in d.link_keys]
+    if linked:
+        return ('INDIRECT_LINKED', 'linkable via indirect identifier(s) ' + ','.join(linked) +
+                ' that co-occur with the subject\'s identifiers in another record', _cite(r))
+    if indirect:
+        return ('INDIRECT_PRESENT', 'indirect identifier(s) ' + ','.join(n for n, _ in indirect) +
+                ' remain; re-identification neither shown nor excluded', _cite(r))
+    removed, _ = _removed(r.fields, config)
+    if not removed:
+        return 'NOT_DISPLAYED', 'no direct identifier displayed; absence of a column is not removal', _cite(r)
+    observed = parse_time(r.captured_at)
+    later = [x for x in d.records if x is not r and (x.evidence_id, x.locator) != (r.evidence_id, r.locator)
+             and parse_time(x.captured_at) >= observed
+             and exposed_fields(x.fields, d.subject, config, permitted)]
+    if later:
+        return ('DIRECT_REMOVED', 'resource key still joined to subject identifiers in a copy observed '
+                'at or after this one', _cite(r) + _cite(later[0]))
+    accepted = set(config['anonymization']['operation_types'])
+    ops = [o for o in d.operations if o[1] in accepted and o[3] in config['anonymization']['reported_results']
+           and parse_time(o[4]) <= observed]
+    if not ops:
+        return ('DIRECT_REMOVED', 'identifier columns explicitly null, but no anonymization operation that '
+                'the source read post-dates; null columns are not proof of irreversible unlinking', _cite(r))
+    newest = max(ops, key=lambda o: (parse_time(o[4]), o[0]))
+    # Records naming the subject observed after the operation re-link the key.
+    relinked = [x for x in d.records if parse_time(x.captured_at) > parse_time(newest[4])
+                and exposed_fields(x.fields, d.subject, config, permitted)]
+    if relinked:
+        return ('DIRECT_REMOVED', 'a copy naming the subject was observed after the anonymization operation',
+                _cite(r) + _cite(relinked[0]))
+    return ('ANONYMIZATION_EVIDENCED', f'{newest[1]} {newest[0]} at {newest[4]} followed by a source read '
+            'with identifier columns removed and no indirect identifier', _cite(r) + (newest[0],))
+
+
+ANONYMIZATION_OUTCOME = {'DIRECT_EXPOSED': TRUE, 'INDIRECT_LINKED': TRUE, 'INDIRECT_PRESENT': UNKNOWN,
+                         'DIRECT_REMOVED': UNKNOWN, 'NOT_DISPLAYED': UNKNOWN, 'UNRESOLVED': UNKNOWN,
+                         'ANONYMIZATION_EVIDENCED': FALSE}
+
+
+def still_attributable(d: Dossier, config: dict) -> ConditionResult:
     # Only the state-establishing field set counts: older copies predate treatment.
-    current = [d.current] if d.current else []
-    for r in current:
-        exposed = exposed_fields(r.fields, d.subject, config, permitted)
-        if exposed:
-            return ConditionResult(TRUE, 'linkable via ' + ','.join(exposed), _cite(r))
-    # Anonymity needs positive evidence: retained analytic content alongside
-    # explicitly null identifier columns, not merely missing fields.
-    for r in current:
-        if (any(_nonnull(v) for v in _values(r, content)) and
-                explicit_identifier_nulls(r.fields, config) >= 2):
-            return ConditionResult(FALSE, 'analytic content retained with explicit null identifiers', _cite(r))
-    return ConditionResult(UNKNOWN, 'no field-level evidence of identifiers or their removal')
+    state, reason, cited = anonymization_state(d, config)
+    return ConditionResult(ANONYMIZATION_OUTCOME[state], f'{state}: {reason}', cited)
 
 
 def contains_email_address(d: Dossier, config: dict) -> ConditionResult:

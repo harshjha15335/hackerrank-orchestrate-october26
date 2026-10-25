@@ -8,7 +8,7 @@ from pathlib import Path
 from state.engine import field_values
 
 CONFIG = Path(__file__).with_name('category_map.json')
-RANKS = ('explicit_label', 'collection', 'record_fields', 'readback_event', 'resource_prefix')
+RANKS = ('explicit_label', 'collection', 'record_fields', 'readback_event', 'scan_event', 'resource_prefix')
 
 
 def load_map(path: Path = CONFIG) -> dict:
@@ -37,6 +37,11 @@ def _signals(o, system_id, resource_id, known, cmap):
             out.append(('record_fields', signal['category']))
     if raw.get('event') in cmap['event_signals']:
         out.append(('readback_event', cmap['event_signals'][raw['event']]))
+    scan = cmap.get('scan_event_signals', {}).get(raw.get('event'))
+    # Only the owning service's own scan of this resource names its content kind.
+    if (scan and o.source_type == 'log' and system_id in scan['systems'] and raw.get('service') == system_id
+            and raw.get('resource_id') == resource_id):
+        out.append(('scan_event', scan['category']))
     return out
 
 

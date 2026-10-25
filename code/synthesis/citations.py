@@ -25,7 +25,8 @@ from flow.engine import attribution
 from flow.evidence import admissible, read as read_process
 from ingest.evidence import parse_time
 from policy.conditions import exposed_fields, identity_claims
-from state.engine import _state_for_observation, field_values, physical_scope, system_for
+from state.engine import (_state_for_observation, authoritative_sql_scope, field_values, physical_scope,
+                          system_for, table_system)
 
 from .risk import EXPOSED, read_record
 
@@ -56,9 +57,17 @@ class Verdict:
 
 
 class CitationGuard:
-    def __init__(self, observations, context_times, anomalies, fctx, scopes, config=None):
+    def __init__(self, observations, context_times, anomalies, fctx, scopes, config=None,
+                 snapshots=None, dataset=None):
         self.config = config
         self.by_locator = {(o.evidence_id, o.locator): o for o in observations}
+        self.sql_rows = {}
+        for o in observations:
+            if o.source_type == 'sql' and o.resource_id:
+                self.sql_rows.setdefault((o.evidence_id, o.resource_id), []).append(o)
+        # F-05: table completeness is re-verified from the snapshot itself.
+        self.snapshots = snapshots           # identity.snapshots.SnapshotIndex
+        self.dataset = dataset
         self.context_times = context_times   # evidence/activity/audit ID -> datetime
         self.anomalies = frozenset(anomalies)
         self.fctx = fctx
@@ -84,7 +93,7 @@ class CitationGuard:
             return Verdict(False, 'evidence captured after audit_at')
         locator, kind = provenance['locator'], provenance['kind']
         if kind == 'm4' and ':no-row:' in locator:
-            return self._absence(step, locator, citation)
+            return self._absence(step, locator, citation, provenance, resolution, subject)
         o = self.by_locator.get((citation, locator))
         if o is None:
             return Verdict(False, 'cited locator not found in evidence')
@@ -131,6 +140,9 @@ class CitationGuard:
         if (step['operation'] == 'VERIFY_RECORD_REDACTED' and state == 'PRESENT'
                 and not provenance.get('redaction_observed')):
             return Verdict(False, 'identifier removal was not observed in the cited record')
+        if step['operation'] == 'VERIFY_RECORD_ANONYMIZED' and not provenance.get('anonymization_proven'):
+            # F-02: a row without identifier values is not proof of irreversible unlinking.
+            return Verdict(False, 'irreversible anonymization was not evidenced for the cited record')
         if step['operation'] == 'REPORT_EXPOSED_PII' and kind == 'm4':
             permitted = tuple(self.config['permitted_fields'].get(provenance.get('category') or '', ()))
             exposed = exposed_fields(field_values(o.raw_fields), subject, self.config, permitted)
@@ -138,7 +150,14 @@ class CitationGuard:
                 return Verdict(False, 'cited record shows no exposed subject identifier')
         return Verdict(True, f'{kind} {state} via {owner} attribution')
 
-    def _absence(self, step, locator, citation) -> Verdict:
+    def _absence(self, step, locator, citation, provenance, resolution, subject) -> Verdict:
+        """A point-in-time absence is re-proved, never taken from the caller's table name (F-05).
+
+        The cited table must be the step's physical copy, owned by the step's
+        system, admissible at audit_at, a verified complete point-in-time
+        snapshot, and must omit a resource that another table of the same
+        snapshot independently attributes to the subject.
+        """
         table, _, resource = locator.split(':', 2)
         if resource != step['resource_id']:
             return Verdict(False, 'absence scope names another resource')
@@ -146,7 +165,23 @@ class CitationGuard:
             return Verdict(False, 'table-scope absence supports only VERIFY_RECORD_ABSENT')
         if table not in self.scopes.get(citation, ()):
             return Verdict(False, 'cited snapshot has no such table scope')
-        if any(o.resource_id == resource for (e, _), o in self.by_locator.items()
-               if e == citation and o.locator.startswith(table + '[')):
+        if provenance.get('scope') != table:
+            return Verdict(False, f'absence of table {table} does not describe copy {provenance.get("scope")}')
+        if table_system(table) != step['system_id']:
+            return Verdict(False, f'table {table} does not belong to {step["system_id"]}')
+        if any(o.locator.startswith(table + '[') for o in self.sql_rows.get((citation, resource), ())):
             return Verdict(False, 'cited table still contains the resource')
+        if self.snapshots is None or self.dataset is None:
+            return Verdict(False, 'table completeness cannot be verified')
+        scope = self.snapshots.scope(citation, table, resolution.audit_at)
+        if scope is None:
+            return Verdict(False, 'table scope is not admissible at audit_at')
+        if not authoritative_sql_scope(scope, self.dataset):
+            return Verdict(False, 'table is not a verified complete point-in-time snapshot')
+        references = [o for o in self.sql_rows.get((citation, resource), ())
+                      if not o.locator.startswith(table + '[') and system_for(o) == step['system_id']
+                      and admissible(o, resolution.audit_at, self.anomalies)
+                      and subject.attribution(identity_claims(field_values(o.raw_fields))) == 'SUBJECT']
+        if not references:
+            return Verdict(False, 'resource is not independently attributed to the subject in this snapshot')
         return Verdict(True, 'complete point-in-time table omits the independently attributed resource')

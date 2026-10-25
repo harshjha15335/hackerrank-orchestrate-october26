@@ -25,7 +25,7 @@ from flow.engine import FlowContext, assess_case
 from identity.graph import IdentityGraph
 from identity.retrieval import EvidenceIndex
 from identity.snapshots import SnapshotIndex
-from ingest.evidence import ingest
+from ingest.evidence import ingest, parse_time
 from intent.classifier import IntentClassifier
 from policy.conditions import subject_from
 from policy.engine import Context, decide_case
@@ -55,7 +55,7 @@ class Pipeline:
             discrepancies = discrepancies + self.visual.discrepancies
         self.anomalies = {(d['file_id'], d['locator']) for d in discrepancies
                           if d['reason'] in QUARANTINE_REASONS}
-        self.evidence = EvidenceIndex(observations, self.anomalies)
+        self.evidence = EvidenceIndex(observations, self.anomalies, self.graph)
         self.scopes = SnapshotIndex(observations, coverage)
         self.ctx = Context(observations, self.dataset / 'deletion_rules.csv', anomalies=self.anomalies)
         self.fctx = FlowContext(observations, self.anomalies)
@@ -68,7 +68,8 @@ class Pipeline:
         tables = defaultdict(set)
         for c in coverage:
             tables[c['file_id']].update((c.get('tables') or {}).keys())
-        self.guard = CitationGuard(observations, times, self.anomalies, self.fctx, tables, self.ctx.config)
+        self.guard = CitationGuard(observations, times, self.anomalies, self.fctx, tables, self.ctx.config,
+                                   self.scopes, self.dataset)
 
     def requests(self):
         return sorted(self.graph.requests(self.sample), key=lambda r: r['case_id'])
@@ -108,9 +109,14 @@ class Pipeline:
             diagnostics['excluded_visual'] = [
                 {'evidence_id': h.observation.evidence_id, 'locator': h.observation.locator,
                  'resource_id': h.observation.resource_id,
-                 'reason': 'quarantined' if (h.observation.evidence_id, h.observation.locator) in self.anomalies
-                 else 'captured or timed after audit_at or after its capture'} for h in excluded]
+                 'reason': self._excluded_reason(h.observation, resolution.audit_at)} for h in excluded]
         return row, diagnostics, {'resolution': resolution.status, 'user_id': resolution.user_id}
+
+
+    def _excluded_reason(self, o, audit_at):
+        if (o.evidence_id, o.locator) in self.anomalies: return 'quarantined'
+        if parse_time(o.captured_at) > parse_time(audit_at): return 'captured after audit_at'
+        return 'record or event time after audit_at or after its capture'
 
 
 def run(dataset: Path, sample=False, cache: Path | None = None, visual=True, vision_cache: Path | None = None):

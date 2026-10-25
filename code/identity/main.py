@@ -22,7 +22,7 @@ def main():
     if case is None: parser.error('case_id not found in selected request file')
     resolution = graph.resolve(case)
     observations, _, _ = ingest(args.dataset)
-    hits = EvidenceIndex(observations).find(resolution)
+    hits = EvidenceIndex(observations, graph=graph).find(resolution)
     print(json.dumps({'case_id': case['case_id'], 'resolution': asdict(resolution),
                       'evidence': [{'evidence_id': h.observation.evidence_id,
                                     'locator': h.observation.locator,

@@ -37,6 +37,10 @@
     "connector_config_read_completed": "DATA_FLOW",
     "restore_policy_read_completed": "BACKUP_ARCHIVE"
   },
+  "_scan_comment": "Owning-service content scans name the kind of content they scanned (pre-M9 Phase 3). A support_platform message_pii_scan scans the record's message, so the record is a support message; it ranks below readback events and above resource prefixes. attachment_pii_scan is deliberately absent: its file field names a file attached to the scanned support record (which other evidence shows as a conversation), so it does not classify the record itself.",
+  "scan_event_signals": {
+    "message_pii_scan": {"systems": ["support_platform"], "category": "SUPPORT_MESSAGE"}
+  },
   "resource_prefixes": {
     "account_service": {"account_": "USER_PROFILE"},
     "search_service": {"search_": "SEARCH_INDEX_ENTRY"},
