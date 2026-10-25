@@ -1,8 +1,8 @@
 {
  "full": {
   "citations": {
-   "accepted": 809,
-   "checked": 809,
+   "accepted": 885,
+   "checked": 885,
    "rejected": 0,
    "rejection_reasons": {}
   },
@@ -40,12 +40,12 @@
     }
    ]
   },
-  "incomplete_empty": 37,
-  "incomplete_without_findings": 40,
+  "incomplete_empty": 9,
+  "incomplete_without_findings": 24,
   "incomplete_without_findings_by_shape": {
-   "future-only checks": 40,
+   "future-only checks": 24,
    "no linked resources": 6,
-   "undecided treatments only": 31
+   "undecided treatments only": 3
   },
   "linked_resources": 1252,
   "m4_unknown_latest": 310,
@@ -65,19 +65,19 @@
    "equals_m8_final": false,
    "identical": true,
    "m8_final_reference": "a45cdcf0f2ca24b51c193ba9e39b208744fbc6d4914c2201e19e1f99a3ac44df",
-   "no_visual_ablation": "b001e0901fdafeb54a9a48a480cfe65f8d62a77c1e409bbfa8287c37da69effc",
+   "no_visual_ablation": "44b02147326cc0ba393033f0fd26439f83e20941375fe7a4783af598f4c6cab8",
    "no_visual_equals_m7_prefix": false,
-   "run_1": "9d4e1aae861d26215d7aa19f9b28947fc0ef12d0744c247bf59801f9da406e0e",
-   "run_2": "9d4e1aae861d26215d7aa19f9b28947fc0ef12d0744c247bf59801f9da406e0e"
+   "run_1": "252b026188daea2fe4b72a5bcbaaefe4dbd98c991bc40b53ecbedd4727352e3c",
+   "run_2": "252b026188daea2fe4b72a5bcbaaefe4dbd98c991bc40b53ecbedd4727352e3c"
   },
   "status": {
-   "COMPLETE": 88,
-   "INCOMPLETE": 420,
+   "COMPLETE": 132,
+   "INCOMPLETE": 376,
    "NOT_APPLICABLE": 10
   },
   "strict_invalid_audit_partition": {
    "no admissibly linked subject-owned resource": 6,
-   "unresolved treatment, state or process evidence": 71
+   "unresolved treatment, state or process evidence": 27
   },
   "strict_invalid_blockers": {
    "class 4: no admissibly linked subject-owned resource or process": 6,
@@ -85,94 +85,10 @@
    "class 4: rule_05: conversation content not observed (shared-context condition undecidable)": 19,
    "class 4: rule_14: no explicit restore control observed": 4,
    "class 4: treatment decided; no admissible reading of the current state": 10,
-   "class 5: rule_12: no supplied retention period covering audit_at": 61,
+   "class 5: rule_12: no supplied retention period covering audit_at": 10,
    "class 5: rule_13: no supplied active legal hold with a basis": 1
   },
   "strict_invalid_cases": {
-   "case_103": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_9522"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_107": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_7572"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_108": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_1469"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_111": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_8933"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_112": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_4082"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 3
-   },
    "case_135": {
     "blockers": [
      {
@@ -217,89 +133,6 @@
     "status": "INCOMPLETE",
     "steps": 1
    },
-   "case_155": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_4199"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 3
-   },
-   "case_157": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_8821"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_162": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_6362"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_204": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_2736"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 3
-   },
-   "case_206": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_9878"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
    "case_233": {
     "blockers": [
      {
@@ -332,57 +165,6 @@
     "status": "INCOMPLETE",
     "steps": 4
    },
-   "case_253": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_2927"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_257": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_7193"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_260": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_1876"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
    "case_264": {
     "blockers": [
      {
@@ -392,56 +174,18 @@
       "resource": "backup_service/backup_3250"
      },
      {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_6711"
-     },
-     {
       "class": 4,
       "kind": "rule_05: conversation content not observed (shared-context condition undecidable)",
       "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
       "resource": "support_platform/support_9996"
      }
     ],
-    "class": 5,
+    "class": 4,
     "errors": [
      "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
     ],
     "status": "INCOMPLETE",
-    "steps": 3
-   },
-   "case_265": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_6378"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 1
-   },
-   "case_267": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_6621"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 1
+    "steps": 4
    },
    "case_292": {
     "blockers": [
@@ -458,56 +202,6 @@
     ],
     "status": "INCOMPLETE",
     "steps": 4
-   },
-   "case_304": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_4759"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_308": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_3221"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 3
-   },
-   "case_309": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_1945"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
    },
    "case_324": {
     "blockers": [
@@ -590,56 +284,6 @@
     ],
     "status": "INCOMPLETE",
     "steps": 0
-   },
-   "case_354": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_9286"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_362": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_8638"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_369": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_337"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 1
    },
    "case_383": {
     "blockers": [
@@ -737,57 +381,6 @@
     "status": "INCOMPLETE",
     "steps": 1
    },
-   "case_403": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_4733"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_408": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_4216"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_409": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_2559"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
    "case_41": {
     "blockers": [
      {
@@ -834,40 +427,6 @@
     "status": "INCOMPLETE",
     "steps": 1
    },
-   "case_411": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_4330"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_412": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_5637"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
    "case_44": {
     "blockers": [
      {
@@ -883,130 +442,6 @@
     ],
     "status": "INCOMPLETE",
     "steps": 4
-   },
-   "case_45": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_001"
-     },
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_002"
-     },
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_004"
-     },
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_005"
-     },
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_006"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 1
-   },
-   "case_456": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_8176"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_457": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_1171"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_458": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_6750"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_462": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_641"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_480": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_7742"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 3
    },
    "case_484": {
     "blockers": [
@@ -1042,23 +477,6 @@
     "status": "INCOMPLETE",
     "steps": 0
    },
-   "case_506": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_1361"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
    "case_51": {
     "blockers": [
      {
@@ -1074,39 +492,6 @@
     ],
     "status": "INCOMPLETE",
     "steps": 4
-   },
-   "case_512": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_4219"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_516": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_3777"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 1
    },
    "case_52": {
     "blockers": [
@@ -1128,49 +513,21 @@
    "case_520": {
     "blockers": [
      {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_9504"
-     },
-     {
       "class": 4,
       "kind": "rule_05: conversation content not observed (shared-context condition undecidable)",
       "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
       "resource": "support_platform/support_9251"
      }
     ],
-    "class": 5,
+    "class": 4,
     "errors": [
      "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
     ],
     "status": "INCOMPLETE",
-    "steps": 1
-   },
-   "case_521": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_3567"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 1
+    "steps": 2
    },
    "case_522": {
     "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_5513"
-     },
      {
       "class": 4,
       "kind": "rule_05: conversation content not observed (shared-context condition undecidable)",
@@ -1178,76 +535,12 @@
       "resource": "support_platform/support_8538"
      }
     ],
-    "class": 5,
+    "class": 4,
     "errors": [
      "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
     ],
     "status": "INCOMPLETE",
-    "steps": 1
-   },
-   "case_543": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_6244"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 1
-   },
-   "case_545": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_5041"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 1
-   },
-   "case_547": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_7352"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 1
-   },
-   "case_549": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_1491"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 1
+    "steps": 2
    },
    "case_55": {
     "blockers": [
@@ -1265,73 +558,6 @@
      }
     ],
     "class": 4,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_57": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_7219"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 3
-   },
-   "case_58": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_8465"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_59": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_962"
-     }
-    ],
-    "class": 5,
-    "errors": [
-     "INCOMPLETE requires nonempty steps",
-     "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
-    ],
-    "status": "INCOMPLETE",
-    "steps": 0
-   },
-   "case_60": {
-    "blockers": [
-     {
-      "class": 5,
-      "kind": "rule_12: no supplied retention period covering audit_at",
-      "reason": "required treatment undecided: condition is UNKNOWN at audit_at",
-      "resource": "security_service/audit_record_629"
-     }
-    ],
-    "class": 5,
     "errors": [
      "INCOMPLETE requires nonempty steps",
      "INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases"
@@ -1534,19 +760,19 @@
    }
   },
   "strict_invalid_cause_classes": {
-   "4": 20,
-   "5": 57
+   "4": 23,
+   "5": 10
   },
   "strict_validator": {
-   "errors": 114,
-   "rows": 77,
+   "errors": 42,
+   "rows": 33,
    "valid": false
   },
   "unknown_treatment_items": {
-   "all_cases": 284,
-   "in_no_finding_rows": 85
+   "all_cases": 123,
+   "in_no_finding_rows": 34
   },
-  "unresolved_items": 334
+  "unresolved_items": 173
  },
  "sample": {
   "extras": {
@@ -1561,13 +787,12 @@
   },
   "miss_causes": {
    "dev: linked: missing policy mapping": 3,
-   "dev: linked: unknown conditional treatment": 18,
+   "dev: linked: unknown conditional treatment": 12,
    "dev: linked: unknown state": 2,
    "dev: unlinked: mentioned only in evidence captured after audit_at": 2,
    "dev: unlinked: mentioned only in workflow activity rows (claims)": 8,
    "dev: unlinked: no participant evidence mentions the resource": 3,
    "dev: unlinked: only identifier-free records (positional or naming joins are not ownership)": 7,
-   "holdout: linked: unknown conditional treatment": 2,
    "holdout: unlinked: mentioned only in evidence captured after audit_at": 4,
    "holdout: unlinked: mentioned only in workflow activity rows (claims)": 5,
    "holdout: unlinked: only identifier-free records (positional or naming joins are not ownership)": 8
@@ -1789,15 +1014,6 @@
       "analytics_platform",
       "analytics_9914"
      ]
-    },
-    {
-     "cause": "linked: unknown conditional treatment",
-     "step": [
-      "VERIFICATION",
-      "VERIFY_RECORD_PRESENT",
-      "security_service",
-      "audit_record_2945"
-     ]
     }
    ],
    "case_13": [
@@ -1819,39 +1035,6 @@
       "VERIFY_RECORD_PRESENT",
       "security_service",
       "audit_record_987"
-     ]
-    }
-   ],
-   "case_15": [
-    {
-     "cause": "linked: unknown conditional treatment",
-     "step": [
-      "VERIFICATION",
-      "VERIFY_RECORD_PRESENT",
-      "security_service",
-      "audit_record_1596"
-     ]
-    }
-   ],
-   "case_16": [
-    {
-     "cause": "linked: unknown conditional treatment",
-     "step": [
-      "VERIFICATION",
-      "VERIFY_RECORD_PRESENT",
-      "security_service",
-      "audit_record_9528"
-     ]
-    }
-   ],
-   "case_17": [
-    {
-     "cause": "linked: unknown conditional treatment",
-     "step": [
-      "VERIFICATION",
-      "VERIFY_RECORD_PRESENT",
-      "security_service",
-      "audit_record_1797"
      ]
     }
    ],
@@ -1925,15 +1108,6 @@
      "cause": "linked: unknown conditional treatment",
      "step": [
       "VERIFICATION",
-      "VERIFY_RECORD_PRESENT",
-      "security_service",
-      "audit_record_6793"
-     ]
-    },
-    {
-     "cause": "linked: unknown conditional treatment",
-     "step": [
-      "VERIFICATION",
       "VERIFY_RECORD_REDACTED",
       "support_platform",
       "support_9553"
@@ -1988,15 +1162,6 @@
       "VERIFY_RECORD_ABSENT",
       "account_service",
       "account_4990"
-     ]
-    },
-    {
-     "cause": "linked: unknown conditional treatment",
-     "step": [
-      "VERIFICATION",
-      "VERIFY_RECORD_PRESENT",
-      "security_service",
-      "audit_record_3482"
      ]
     }
    ],
@@ -2160,15 +1325,6 @@
       "account_service",
       "account_4857"
      ]
-    },
-    {
-     "cause": "linked: unknown conditional treatment",
-     "step": [
-      "VERIFICATION",
-      "VERIFY_RECORD_PRESENT",
-      "security_service",
-      "audit_record_6909"
-     ]
     }
    ],
    "case_32": [
@@ -2180,15 +1336,6 @@
       "account_service",
       "account_8858"
      ]
-    },
-    {
-     "cause": "linked: unknown conditional treatment",
-     "step": [
-      "VERIFICATION",
-      "VERIFY_RECORD_PRESENT",
-      "security_service",
-      "audit_record_7068"
-     ]
     }
    ]
   },
@@ -2199,11 +1346,11 @@
    "dev: REMEDIATION REDACT_RECORD": 3,
    "dev: VERIFICATION VERIFY_RECORD_ABSENT": 13,
    "dev: VERIFICATION VERIFY_RECORD_ANONYMIZED": 3,
-   "dev: VERIFICATION VERIFY_RECORD_PRESENT": 12,
+   "dev: VERIFICATION VERIFY_RECORD_PRESENT": 6,
    "dev: VERIFICATION VERIFY_RECORD_REDACTED": 3,
    "holdout: VERIFICATION VERIFY_RECORD_ABSENT": 9,
    "holdout: VERIFICATION VERIFY_RECORD_ANONYMIZED": 4,
-   "holdout: VERIFICATION VERIFY_RECORD_PRESENT": 6
+   "holdout: VERIFICATION VERIFY_RECORD_PRESENT": 4
   },
   "status_mismatches": {
    "case_01": [
@@ -2217,146 +1364,142 @@
    "case_04": [
     "COMPLETE",
     "INCOMPLETE"
-   ],
-   "case_31": [
-    "COMPLETE",
-    "INCOMPLETE"
    ]
   },
   "with_visual": {
    "all": {
-    "case_exact_match": 0.0625,
-    "evidence_validity_rate": "51/51",
-    "field_accuracy": 0.94,
-    "matched_field_accuracy": {
-     "evidence_id": 0.9924,
-     "operation": 1.0,
-     "phase": 1.0,
-     "resource_id": 1.0,
-     "state": 1.0,
-     "step_no": 0.5878,
-     "system_id": 1.0
-    },
-    "normalised_kendall_tau": 1.0,
-    "sequence_accuracy": 0.0625,
-    "status_accuracy": 0.875,
-    "status_correct": "28/32",
-    "step_f1": 0.8062,
-    "step_precision": 0.9924,
-    "step_recall": 0.6788,
-    "steps": "matched 131, predicted 132, gold 193"
-   },
-   "dev": {
-    "case_exact_match": 0.0909,
-    "evidence_validity_rate": "25/25",
-    "field_accuracy": 0.9469,
+    "case_exact_match": 0.125,
+    "evidence_validity_rate": "53/53",
+    "field_accuracy": 0.9383,
     "matched_field_accuracy": {
      "evidence_id": 1.0,
      "operation": 1.0,
      "phase": 1.0,
      "resource_id": 1.0,
      "state": 1.0,
-     "step_no": 0.6282,
+     "step_no": 0.5683,
      "system_id": 1.0
     },
     "normalised_kendall_tau": 1.0,
-    "sequence_accuracy": 0.0909,
-    "status_accuracy": 0.8636,
-    "status_correct": "19/22",
-    "step_f1": 0.78,
-    "step_precision": 0.9873,
-    "step_recall": 0.6446,
-    "steps": "matched 78, predicted 79, gold 121"
+    "sequence_accuracy": 0.125,
+    "status_accuracy": 0.9062,
+    "status_correct": "29/32",
+    "step_f1": 0.8348,
+    "step_precision": 0.9929,
+    "step_recall": 0.7202,
+    "steps": "matched 139, predicted 140, gold 193"
    },
-   "holdout": {
-    "case_exact_match": 0.0,
-    "evidence_validity_rate": "26/26",
-    "field_accuracy": 0.9299,
+   "dev": {
+    "case_exact_match": 0.1818,
+    "evidence_validity_rate": "25/25",
+    "field_accuracy": 0.9439,
     "matched_field_accuracy": {
-     "evidence_id": 0.9811,
+     "evidence_id": 1.0,
      "operation": 1.0,
      "phase": 1.0,
      "resource_id": 1.0,
      "state": 1.0,
-     "step_no": 0.5283,
+     "step_no": 0.6071,
+     "system_id": 1.0
+    },
+    "normalised_kendall_tau": 1.0,
+    "sequence_accuracy": 0.1818,
+    "status_accuracy": 0.8636,
+    "status_correct": "19/22",
+    "step_f1": 0.8155,
+    "step_precision": 0.9882,
+    "step_recall": 0.6942,
+    "steps": "matched 84, predicted 85, gold 121"
+   },
+   "holdout": {
+    "case_exact_match": 0.0,
+    "evidence_validity_rate": "28/28",
+    "field_accuracy": 0.9299,
+    "matched_field_accuracy": {
+     "evidence_id": 1.0,
+     "operation": 1.0,
+     "phase": 1.0,
+     "resource_id": 1.0,
+     "state": 1.0,
+     "step_no": 0.5091,
      "system_id": 1.0
     },
     "normalised_kendall_tau": 1.0,
     "sequence_accuracy": 0.0,
-    "status_accuracy": 0.9,
-    "status_correct": "9/10",
-    "step_f1": 0.848,
+    "status_accuracy": 1.0,
+    "status_correct": "10/10",
+    "step_f1": 0.8661,
     "step_precision": 1.0,
-    "step_recall": 0.7361,
-    "steps": "matched 53, predicted 53, gold 72"
+    "step_recall": 0.7639,
+    "steps": "matched 55, predicted 55, gold 72"
    }
   },
   "without_visual": {
    "all": {
-    "case_exact_match": 0.0625,
-    "evidence_validity_rate": "51/51",
-    "field_accuracy": 0.94,
-    "matched_field_accuracy": {
-     "evidence_id": 0.9924,
-     "operation": 1.0,
-     "phase": 1.0,
-     "resource_id": 1.0,
-     "state": 1.0,
-     "step_no": 0.5878,
-     "system_id": 1.0
-    },
-    "normalised_kendall_tau": 1.0,
-    "sequence_accuracy": 0.0625,
-    "status_accuracy": 0.875,
-    "status_correct": "28/32",
-    "step_f1": 0.8062,
-    "step_precision": 0.9924,
-    "step_recall": 0.6788,
-    "steps": "matched 131, predicted 132, gold 193"
-   },
-   "dev": {
-    "case_exact_match": 0.0909,
-    "evidence_validity_rate": "25/25",
-    "field_accuracy": 0.9469,
+    "case_exact_match": 0.125,
+    "evidence_validity_rate": "53/53",
+    "field_accuracy": 0.9383,
     "matched_field_accuracy": {
      "evidence_id": 1.0,
      "operation": 1.0,
      "phase": 1.0,
      "resource_id": 1.0,
      "state": 1.0,
-     "step_no": 0.6282,
+     "step_no": 0.5683,
      "system_id": 1.0
     },
     "normalised_kendall_tau": 1.0,
-    "sequence_accuracy": 0.0909,
-    "status_accuracy": 0.8636,
-    "status_correct": "19/22",
-    "step_f1": 0.78,
-    "step_precision": 0.9873,
-    "step_recall": 0.6446,
-    "steps": "matched 78, predicted 79, gold 121"
+    "sequence_accuracy": 0.125,
+    "status_accuracy": 0.9062,
+    "status_correct": "29/32",
+    "step_f1": 0.8348,
+    "step_precision": 0.9929,
+    "step_recall": 0.7202,
+    "steps": "matched 139, predicted 140, gold 193"
    },
-   "holdout": {
-    "case_exact_match": 0.0,
-    "evidence_validity_rate": "26/26",
-    "field_accuracy": 0.9299,
+   "dev": {
+    "case_exact_match": 0.1818,
+    "evidence_validity_rate": "25/25",
+    "field_accuracy": 0.9439,
     "matched_field_accuracy": {
-     "evidence_id": 0.9811,
+     "evidence_id": 1.0,
      "operation": 1.0,
      "phase": 1.0,
      "resource_id": 1.0,
      "state": 1.0,
-     "step_no": 0.5283,
+     "step_no": 0.6071,
+     "system_id": 1.0
+    },
+    "normalised_kendall_tau": 1.0,
+    "sequence_accuracy": 0.1818,
+    "status_accuracy": 0.8636,
+    "status_correct": "19/22",
+    "step_f1": 0.8155,
+    "step_precision": 0.9882,
+    "step_recall": 0.6942,
+    "steps": "matched 84, predicted 85, gold 121"
+   },
+   "holdout": {
+    "case_exact_match": 0.0,
+    "evidence_validity_rate": "28/28",
+    "field_accuracy": 0.9299,
+    "matched_field_accuracy": {
+     "evidence_id": 1.0,
+     "operation": 1.0,
+     "phase": 1.0,
+     "resource_id": 1.0,
+     "state": 1.0,
+     "step_no": 0.5091,
      "system_id": 1.0
     },
     "normalised_kendall_tau": 1.0,
     "sequence_accuracy": 0.0,
-    "status_accuracy": 0.9,
-    "status_correct": "9/10",
-    "step_f1": 0.848,
+    "status_accuracy": 1.0,
+    "status_correct": "10/10",
+    "step_f1": 0.8661,
     "step_precision": 1.0,
-    "step_recall": 0.7361,
-    "steps": "matched 53, predicted 53, gold 72"
+    "step_recall": 0.7639,
+    "steps": "matched 55, predicted 55, gold 72"
    }
   }
  },

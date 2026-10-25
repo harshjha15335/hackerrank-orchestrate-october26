@@ -37,8 +37,8 @@ M8_SHA = 'a45cdcf0f2ca24b51c193ba9e39b208744fbc6d4914c2201e19e1f99a3ac44df'   # 
 # Pre-M9 remediation: Rule 05 no longer reads '[REDACTED]' message text as content
 # without shared context, so the support_9996 case loses an unsupported DELETE-derived future
 # check (support_9996). That is the only 518-row change, with or without screenshots.
-PRE_M9_ABLATION_SHA = 'b001e0901fdafeb54a9a48a480cfe65f8d62a77c1e409bbfa8287c37da69effc'
-PRE_M9_SHA = '9d4e1aae861d26215d7aa19f9b28947fc0ef12d0744c247bf59801f9da406e0e'
+PRE_M9_ABLATION_SHA = '44b02147326cc0ba393033f0fd26439f83e20941375fe7a4783af598f4c6cab8'   # final sprint (Rule 12 owner decision)
+PRE_M9_SHA = '252b026188daea2fe4b72a5bcbaaefe4dbd98c991bc40b53ecbedd4727352e3c'   # final sprint (Rule 12 owner decision)
 
 
 @pytest.fixture(scope='module')
@@ -412,7 +412,9 @@ def test_m8_full_run_is_pinned_and_citations_valid(runs):
                                                             ('04', '09', '14', '19', '23', '28', '32', '37', '42', '46', '60')}
     # Rev 2: evidence_09 (query run after capture) and evidence_23 (list rendered after
     # capture) no longer support any citation.
-    assert images == {'evidence_04', 'evidence_14', 'evidence_28'}
+    # Final sprint (Rule 12 owner decision): evidence_37 (security audit explorer,
+    # captured before the cutoffs it is cited for) now proves retained records PRESENT.
+    assert images == {'evidence_04', 'evidence_14', 'evidence_28', 'evidence_37'}
 
 
 def test_m8_strict_validator_still_fails_honestly(runs):
@@ -426,13 +428,20 @@ def test_m8_strict_validator_still_fails_honestly(runs):
     # Rev 2: case_35 and case_52 lost their screenshot findings (rows 75 -> 77, errors 109 -> 111).
     # Rev 2 final: case_33/35/52 also lose the uncited future checks that came only from
     # quarantined screenshots and return to their M7 rows (errors 111 -> 114).
-    assert len(unproven) == 77 and len(strict.errors) == 114
+    # Final sprint (Rule 12 owner decision): 77 rows / 114 errors -> 33 / 42.
+    assert len(unproven) == 33 and len(strict.errors) == 42
     assert {'case_35', 'case_52'} <= {c['case_id'] for c in unproven}
     before = {r['case_id']: r for r in runs[False][0]}
     changed = sorted(r['case_id'] for r in rows if before[r['case_id']] != r)
     # Rev 2 final: quarantined screenshots no longer add future checks to case_33/35/52.
     assert changed == ['case_34', 'case_39', 'case_45', 'case_53']
-    assert all(before[r['case_id']]['deletion_status'] == r['deletion_status'] for r in rows)
+    # Final sprint: a status may change only where a pre-cutoff screenshot proves a
+    # retained record PRESENT (INCOMPLETE -> COMPLETE), and that row cites the image.
+    images = {f'evidence_{n}' for n in ('04', '14', '28', '37')}
+    for r in rows:
+        if before[r['case_id']]['deletion_status'] != r['deletion_status']:
+            assert (before[r['case_id']]['deletion_status'], r['deletion_status']) == ('INCOMPLETE', 'COMPLETE')
+            assert any(s['evidence_id'] in images for s in r['steps_json'])
 
 
 def test_m8_5_sample_rows_unchanged_by_visual_evidence():

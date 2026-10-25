@@ -407,6 +407,15 @@ def within_retention_period(d: Dossier, config: dict) -> ConditionResult:
         until, citation = found
         outcome = TRUE if until >= cutoff else FALSE
         return ConditionResult(outcome, f'document retain-until {until.isoformat()}', (citation,))
+    # No period is supplied for this record. Owner policy decision (final sprint):
+    # deletion_rules.csv gives SECURITY_AUDIT_LOG no DELETE (or any other) rule, so
+    # the policy never authorizes removing an observed security audit record; with
+    # 'retain_observed_without_period' it is preserved (RETAIN, verified PRESENT).
+    # No retention period is invented: an expired period above stays FALSE, and
+    # a record with no admissible field evidence stays UNKNOWN.
+    if config.get('retention_without_period') == 'retain_observed_without_period' and d.current is not None:
+        return ConditionResult(TRUE, 'no supplied retention period; the policy has no deletion basis for this '
+                               'category, so the observed record is preserved', _cite(d.current))
     return ConditionResult(UNKNOWN, 'no supplied retention period for this record')
 
 

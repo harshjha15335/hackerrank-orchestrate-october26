@@ -60,8 +60,17 @@ def obs(fields, system, resource, *, category=None, kind='json', evidence='synth
                        None, (), dict(fields, resource_id=resource), kind, None, record_time, None, 'synthetic')
 
 
+# Policy fixtures use Rule 12 to exercise period admissibility (cutoff, other
+# copies, other customers), so they run Rule 12 in the 'unknown' owner mode;
+# the shipped 'retain_observed_without_period' mode is covered by
+# test_rule12_without_period.py, which passes the real configuration.
+from policy.conditions import load_config as _load_config
+FIXTURE_BINDINGS = dict(_load_config(), retention_without_period='unknown')
+
+
 def decide(fields, system, resource, state, *, category=None, rules=RULES, extra=(), kind='json',
            cutoff=T, bindings=None, attribution='correlated', anomalies=frozenset()):
+    bindings = FIXTURE_BINDINGS if bindings is None else bindings
     # Policy fixtures model a record linked to the subject by an explicit trace
     # join; attribution tests pass the strength under test.
     o = obs(fields, system, resource, category=category, kind=kind)
@@ -295,7 +304,7 @@ def test_m5_3_tombstone_fixture_from_snapshot_bundle():
         res = Resolution('synthetic_case', T, reference, (reference,), 'resolved',
                          {'email': record['email']}, history)
         o = obs({k: v for k, v in record.items() if k != 'resource_id'}, 'identity_service', record['resource_id'])
-        ctx = Context([o], RULES)
+        ctx = Context([o], RULES, bindings=FIXTURE_BINDINGS)
         state = 'PRESENT' if record in exposed else 'REDACTED'
         latest = {'system_id': 'identity_service', 'resource_id': record['resource_id'], 'topology': 'service',
                   'state': state, 'supported': True, 'explanation': 'fixture', 'evidence_id': o.evidence_id,
@@ -484,7 +493,7 @@ def test_historical_identifiers_respect_audit_cutoff():
     history = resolution().history + (IdentityValue('email', old_email, old_email, 'synthetic_audit'),)
     with_history = Resolution('synthetic_case', T, SUBJECT, (SUBJECT,), 'resolved', {'email': SUBJECT_EMAIL}, history)
     term = retention_term({'customer_email': old_email})
-    ctx = Context([obs({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9'), term], RULES)
+    ctx = Context([obs({'subject_reference': SUBJECT}, 'security_service', 'audit_record_9'), term], RULES, bindings=FIXTURE_BINDINGS)
     latest = {'system_id': 'security_service', 'resource_id': 'audit_record_9', 'topology': 'service',
               'state': 'PRESENT', 'supported': True, 'explanation': 'synthetic',
               'evidence_id': 'synthetic_evidence', 'locator': '$.records[0]'}
@@ -558,11 +567,11 @@ def test_linked_record_with_historical_identifier_is_used():
     latest = {'system_id': AUDIT[0], 'resource_id': AUDIT[1], 'topology': 'service', 'state': 'PRESENT',
               'supported': True, 'explanation': 'synthetic', 'evidence_id': o.evidence_id, 'locator': o.locator,
               'attribution': 'direct'}
-    d = decide_copy(Context([o], RULES), latest, [latest], res, subject_from(res))
+    d = decide_copy(Context([o], RULES, bindings=FIXTURE_BINDINGS), latest, [latest], res, subject_from(res))
     assert (d.condition_outcome, d.compliance, d.attribution_conflicts) == (TRUE, COMPLIANT, ())
     # Without that history the same record names a stranger.
     plain = resolution()
-    d = decide_copy(Context([o], RULES), latest, [latest], plain, subject_from(plain))
+    d = decide_copy(Context([o], RULES, bindings=FIXTURE_BINDINGS), latest, [latest], plain, subject_from(plain))
     assert d.compliance == UNRESOLVED and d.attribution_conflicts
 
 
@@ -592,7 +601,7 @@ def test_late_source_times_are_inadmissible(record_time, event_time):
                         {'resource_id': AUDIT[1], 'subject_reference': SUBJECT, **FAVOURABLE}, 'json', None,
                         record_time, event_time)
         base = obs({'subject_reference': SUBJECT}, *AUDIT)
-        ctx = Context([base, o], RULES)
+        ctx = Context([base, o], RULES, bindings=FIXTURE_BINDINGS)
         latest = {'system_id': AUDIT[0], 'resource_id': AUDIT[1], 'topology': 'service', 'state': 'PRESENT',
                   'supported': True, 'explanation': 'synthetic', 'evidence_id': base.evidence_id,
                   'locator': base.locator, 'attribution': 'direct'}
@@ -610,7 +619,7 @@ def test_post_cutoff_capture_is_inadmissible_even_when_linked():
               'supported': True, 'explanation': 'synthetic', 'evidence_id': base.evidence_id,
               'locator': base.locator, 'attribution': 'direct'}
     res = resolution()
-    d = decide_copy(Context([base, late], RULES), latest,
+    d = decide_copy(Context([base, late], RULES, bindings=FIXTURE_BINDINGS), latest,
                     [latest, dict(latest, evidence_id=late.evidence_id, locator=late.locator)], res, subject_from(res))
     assert d.condition_outcome == UNKNOWN
 
