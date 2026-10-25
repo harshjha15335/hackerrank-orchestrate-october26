@@ -1845,3 +1845,24 @@ branch=feature/m8-visual-evidence
 repo_root=/home/claude/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-25T09:30:00Z] M8 Rev 2 final: inadmissible screenshots link no resources
+
+User Prompt (verbatim, secrets redacted):
+(relayed by the project coordinator from Harsh) "## M8 Rev 2 — Independent Review / HOLD — One remaining integration issue ... # M8 Rev 2 — Final Temporal Attribution Safeguard ... A screenshot record quarantined because its result set was rendered after manifest capture must not independently establish subject-resource ownership for the audited state. ... STOP for review. Do not merge or start M9/M10."
+
+Agent Response Summary:
+EvidenceIndex.find() no longer returns screenshot rows that fail the existing anchor-admissibility test (quarantined, captured or timed after audit_at or after capture); they are kept as excluded_visual diagnostics. Non-image behaviour and the --no-visual hash are unchanged. case_33/35/52 return to their M7 rows; the accepted case_34/39/53 findings are unchanged. Strict errors 111 -> 114 (77 rows), reported as measured.
+
+Actions:
+* Edited code/identity/retrieval.py, code/synthesis/main.py, code/vision/tests/test_vision.py (+6 tests)
+* Ran pytest (509 passed), synthesis twice (a45cdcf0..., identical), --no-visual (aeb5c135...), m8_metrics -> code/evaluation/checkpoints/M8_REV2_FINAL_METRICS.json
+* Appended final correction section to M8_report.md
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=feature/m8-visual-evidence
+repo_root=/home/claude/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

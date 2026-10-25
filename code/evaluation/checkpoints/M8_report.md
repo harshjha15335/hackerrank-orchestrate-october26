@@ -223,3 +223,75 @@ The two removed findings lower the strict-validator result, and they stay remove
   - Live vision inference, which remains untested.
 
 M9/M10 have not been started.
+
+---
+
+## M8 Rev 2 final correction – inadmissible screenshots link no resources (appended 2026-10-25)
+
+Reviewed commit `8a609c1`. Owner decisions applied unchanged:
+- case_34, case_39 and case_53 keep their findings. For case_53, no time zone is invented either way.
+- case_35 and case_52 stay without findings.
+
+**Issue.** `EvidenceIndex.find()` still returned quarantined screenshot rows as direct matches. M4 then made them UNKNOWN, and M7 emitted future-only checks for resources whose only link to the subject was that inadmissible row. Examples:
+- `search_428` in case_35.
+- `export_1260` in case_33 and case_52.
+
+**Fix (`code/identity/retrieval.py`, `code/synthesis/main.py`).**
+- A screenshot (`source_type='image'`) row that fails the existing anchor-admissibility test is no longer returned by `find()`. That test fails for a quarantined row, one captured after `audit_at`, or one whose record or event time is after `audit_at` or after its own capture.
+- Such rows are available through `EvidenceIndex.excluded_visual()` and are recorded per case as `diagnostics['excluded_visual']`, with evidence ID, locator, resource and reason. The image data, discrepancies and anomaly list are unchanged.
+- A resource linked by any admissible observation is still found through that observation.
+- Non-image observations are untouched, so M0–M7 behaviour and the `--no-visual` hash are unchanged (M1-quarantined rows such as those behind case_135 and case_383 keep their earlier treatment).
+
+**Effect.**
+- case_33, case_35 and case_52 return byte-for-byte to their M7 rows.
+- case_50's quarantined analytics row no longer links `analytics_7438`; its output row was already unchanged.
+
+| Metric | M7 (`--no-visual`) | Rev 2 (`8a609c1`) | **Rev 2 final** |
+|---|---|---|---|
+| tests (full suite) | 437 | 503 | **509** |
+| rows changed vs M7 | – | 7 | **4** (case_34, 39, 45, 53) |
+| evidenced screenshot findings | – | 3 | **3** (unchanged) |
+| strict validator | 120 / 80 rows | 111 / 77 | **114 / 77** |
+| nonstandard validator | 0 | 0 | **0** |
+| INCOMPLETE rows without a finding | 80 | 77 | **77** |
+| screenshot citations accepted | – | 3/3 | **3/3** |
+| all citations accepted | 806/806 | 809/809 | **809/809** |
+| M4 UNKNOWN latest states | 308 | 314 | **310** |
+| unresolved items | 327 | 338 | **334** |
+| unknown conditional-treatment items (no-finding rows / all) | 77 / 262 | 83 / 269 | **82 / 268**; 0 baseline items decided |
+| dev F1 / holdout F1 | 0.780 / 0.848 | 0.780 / 0.848 | **0.780 / 0.848**; 0 sample rows change |
+| output sha256 | `aeb5c135…` | `ab8a5801…` | **`a45cdcf0…`** (two runs identical) |
+
+Three strict errors come back because case_33, case_35 and case_52 lose the uncited checks that came only from quarantined screenshots. The fix stays, and the number is reported as measured.
+
+**80-row reassessment:**
+- 3 have an evidenced finding.
+- 40 have future-only checks.
+- 31 have undecided treatments only.
+- 6 have no linked resources: case_33, 35, 50, 52, 61 and 63.
+
+**New adversarial tests (`code/vision/tests/test_vision.py`):**
+- a quarantined image as the sole link, by `event_time` or by the anomaly list alone;
+- a corroborated resource, which stays found through the admissible copy only;
+- screenshot events captured or recorded after `audit_at`, which link nothing;
+- a valid image before capture and audit, which links and reads PRESENT;
+- a foreign-customer image, which links nothing;
+- case_33, case_35 and case_52 end to end: M7 rows, provenance kept, and the three accepted findings intact.
+
+**Commands:**
+- `python3 -m pytest -q -p no:cacheprovider code`: 509 passed.
+- `python3 code/synthesis/main.py --output X`, run twice: `a45cdcf0f2ca24b51c193ba9e39b208744fbc6d4914c2201e19e1f99a3ac44df` both times.
+- `--no-visual`: `aeb5c135…`, matching M7.
+- `python3 code/evaluation/m8_metrics.py > code/evaluation/checkpoints/M8_REV2_FINAL_METRICS.json`: the figures above.
+
+**Usage:** unchanged. 0 pipeline model calls, 0 tokens, $0.
+
+**Gates:**
+- **PASS:** M8-1 through M8-5, regression, ablation and determinism.
+- **FAIL (carried forward):**
+  - M5-5: dev F1 0.780.
+  - M7-5: sequence accuracy.
+  - Strict validation: 114 errors in 77 rows.
+  - Submission readiness.
+
+Stopping for review; M9/M10 have not been started.

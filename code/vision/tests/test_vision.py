@@ -32,7 +32,8 @@ FIXTURES = ROOT / 'code/vision/fixtures'
 HERE = Path(__file__).resolve().parent
 M7_BASELINE_SHA = 'aeb5c13565bfeda694f8aa15bd80326b9a32f1cb791745b44da84c9acfd80e80'
 M8_REV1_SHA = '6cb5652fd3fc4af1be3b2f4ee5ff14b717767f5ca4da22d5eecb287f4c32bf02'   # reviewed 0a05b50
-M8_SHA = 'ab8a580183e0a3ce8b79ca76acc792012b4f1e9bc36ef474ed794a6d03b8cd0e'
+M8_REV2_SHA = 'ab8a580183e0a3ce8b79ca76acc792012b4f1e9bc36ef474ed794a6d03b8cd0e'   # reviewed 8a609c1
+M8_SHA = 'a45cdcf0f2ca24b51c193ba9e39b208744fbc6d4914c2201e19e1f99a3ac44df'
 
 
 @pytest.fixture(scope='module')
@@ -151,7 +152,10 @@ def test_m8_2_search_golden_and_near_miss_decoy(visual, graph):
     assert decoy.raw_fields['email'] == 'g.silva76.jr@gmail.com' and decoy.raw_fields['customer_reference'] is None
     resolution = case(graph, 'case_35')
     assert resolution.user_id == 'user_13'
-    found = EvidenceIndex(visual.observations).find(resolution)
+    index = EvidenceIndex(visual.observations)
+    # Rev 2 final: the quarantined row links nothing; it is kept for diagnostics only.
+    assert index.find(resolution) == []
+    found = index.excluded_visual(resolution)
     assert {h.observation.resource_id for h in found} == {'search_428'}
     # Email and user reference on one record: M4 verifies both belong to the subject.
     assert attribution_for(found[0], resolution) == 'direct_verified'
@@ -414,11 +418,14 @@ def test_m8_strict_validator_still_fails_honestly(runs):
     assert not strict.valid
     assert {e.split(':')[0] for e in strict.errors} == {c['case_id'] for c in unproven}
     # Rev 2: case_35 and case_52 lost their screenshot findings (rows 75 -> 77, errors 109 -> 111).
-    assert len(unproven) == 77 and len(strict.errors) == 111
+    # Rev 2 final: case_33/35/52 also lose the uncited future checks that came only from
+    # quarantined screenshots and return to their M7 rows (errors 111 -> 114).
+    assert len(unproven) == 77 and len(strict.errors) == 114
     assert {'case_35', 'case_52'} <= {c['case_id'] for c in unproven}
     before = {r['case_id']: r for r in runs[False][0]}
     changed = sorted(r['case_id'] for r in rows if before[r['case_id']] != r)
-    assert changed == ['case_33', 'case_34', 'case_35', 'case_39', 'case_45', 'case_52', 'case_53']
+    # Rev 2 final: quarantined screenshots no longer add future checks to case_33/35/52.
+    assert changed == ['case_34', 'case_39', 'case_45', 'case_53']
     assert all(before[r['case_id']]['deletion_status'] == r['deletion_status'] for r in rows)
 
 
@@ -598,3 +605,87 @@ def test_object_and_deleted_reference_screens_invent_no_ids(visual):
     assert not [o for o in visual.observations if o.evidence_id in ('evidence_42', 'evidence_46')]
     doc = fixture_doc('deleted_account_reference_20260310.json')
     assert all(r['resource_id'] is None for r in doc['records'])
+
+
+# ---- Rev 2 final: inadmissible screenshots never link a resource -------------
+
+def _obs(evidence_id, locator, resource, email, captured, source_type='image', record_time=None, event_time=None):
+    from ingest.evidence import Observation, identifiers
+    fields = {'email': email}
+    return Observation(evidence_id, f'evidence/{evidence_id}', locator, captured, 'export_service', resource,
+                       None, None, identifiers(fields), dict(fields, resource_id=resource), source_type, None,
+                       record_time, event_time, 'export_service')
+
+
+@pytest.fixture(scope='module')
+def subject(graph):
+    resolution = case(graph, 'case_52')            # audit_at 2026-06-19T14:00:00Z
+    email = next(v.normalized for v in resolution.history if v.field == 'email')
+    return resolution, email
+
+
+def _linked(observations, resolution, anomalies=frozenset()):
+    index = EvidenceIndex(observations, anomalies)
+    return ({h.observation.resource_id for h in index.find(resolution)},
+            {h.observation.resource_id for h in index.excluded_visual(resolution)})
+
+
+def test_quarantined_image_as_sole_link_introduces_no_resource(subject):
+    resolution, email = subject
+    quarantined = _obs('evidence_x1', 'image:r1', 'export_9001', email, '2026-06-18T12:00:00Z',
+                       record_time='2026-06-18T06:00:00Z', event_time='2026-06-20T14:18:00Z')
+    assert _linked([quarantined], resolution) == (set(), {'export_9001'})
+    # The same holds when only the anomaly list (not event_time) marks it.
+    marked = replace(quarantined, event_time=None)
+    assert _linked([marked], resolution, {('evidence_x1', 'image:r1')}) == (set(), {'export_9001'})
+
+
+def test_corroborated_resource_stays_discoverable(subject):
+    resolution, email = subject
+    quarantined = _obs('evidence_x1', 'image:r1', 'export_9001', email, '2026-06-18T12:00:00Z',
+                       event_time='2026-06-20T14:18:00Z')
+    record = _obs('evidence_x2', 'row:1', 'export_9001', email, '2026-06-18T09:00:00Z', source_type='json')
+    found, excluded = _linked([quarantined, record], resolution)
+    assert found == {'export_9001'} and excluded == {'export_9001'}
+    hits = EvidenceIndex([quarantined, record]).find(resolution)
+    assert [h.observation.evidence_id for h in hits] == ['evidence_x2']   # only the admissible copy
+
+
+def test_visual_event_after_audit_creates_no_link(subject):
+    resolution, email = subject
+    after_audit = _obs('evidence_x3', 'image:r1', 'export_9002', email, '2026-06-20T08:00:00Z')
+    recorded_later = _obs('evidence_x4', 'image:r1', 'export_9003', email, '2026-06-19T13:00:00Z',
+                          record_time='2026-06-19T15:00:00Z')       # after its capture and after audit_at
+    found, _ = _linked([after_audit, recorded_later], resolution)
+    assert found == set()
+
+
+def test_valid_image_before_capture_and_audit_links(subject):
+    resolution, email = subject
+    valid = _obs('evidence_x5', 'image:r1', 'export_9004', email, '2026-06-18T12:00:00Z',
+                 record_time='2026-06-18T06:42:00Z')
+    assert _linked([valid], resolution) == ({'export_9004'}, set())
+    assert from_hit(EvidenceIndex([valid]).find(resolution)[0], resolution).state == 'PRESENT'
+
+
+def test_foreign_customer_image_links_nothing(subject):
+    resolution, _ = subject
+    foreign = _obs('evidence_x6', 'image:r1', 'export_9005', 'someone.else@example.invalid', '2026-06-18T12:00:00Z')
+    assert _linked([foreign], resolution) == (set(), set())
+
+
+def test_case_35_and_52_end_to_end_use_no_quarantined_screenshot(runs):
+    rows, diagnostics, _ = runs[True]
+    base = {r['case_id']: r for r in runs[False][0]}
+    by_case = {r['case_id']: r for r in rows}
+    for case_id, resource, evidence_id in (('case_35', 'search_428', 'evidence_09'),
+                                           ('case_52', 'export_1260', 'evidence_23'),
+                                           ('case_33', 'export_1260', 'evidence_23')):
+        assert by_case[case_id] == base[case_id]                     # back to the M7 row
+        assert resource not in json.dumps(by_case[case_id]['steps_json'])
+        excluded = diagnostics[case_id]['excluded_visual']           # provenance is kept
+        assert {(e['evidence_id'], e['resource_id'], e['reason']) for e in excluded} == \
+            {(evidence_id, resource, 'quarantined')}
+    # The accepted findings are untouched.
+    for case_id, evidence_id in (('case_34', 'evidence_04'), ('case_39', 'evidence_14'), ('case_53', 'evidence_28')):
+        assert any(s['phase'] == 'FINDING' and s['evidence_id'] == evidence_id for s in by_case[case_id]['steps_json'])

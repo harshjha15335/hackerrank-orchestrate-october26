@@ -103,6 +103,13 @@ class Pipeline:
                            record_edges=record_edges,
                            process_precedence=len(precedence(assessments, resources, edges)),
                            m4_unknown_latest=sum(not a['supported'] for a in state['latest']))
+        excluded = self.evidence.excluded_visual(resolution)
+        if excluded:   # provenance only: these screenshot rows linked nothing
+            diagnostics['excluded_visual'] = [
+                {'evidence_id': h.observation.evidence_id, 'locator': h.observation.locator,
+                 'resource_id': h.observation.resource_id,
+                 'reason': 'quarantined' if (h.observation.evidence_id, h.observation.locator) in self.anomalies
+                 else 'captured or timed after audit_at or after its capture'} for h in excluded]
         return row, diagnostics, {'resolution': resolution.status, 'user_id': resolution.user_id}
 
 
