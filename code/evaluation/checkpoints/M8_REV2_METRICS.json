@@ -1,0 +1,1646 @@
+{
+ "extraction": {
+  "cold": {
+   "cache_hits": 0,
+   "invalid": 0,
+   "model_calls": 0,
+   "provider_calls": 11,
+   "retries": 0
+  },
+  "discrepancies": [
+   {
+    "established_by": "screen",
+    "file_id": "evidence_09",
+    "locator": "image:results[1]+raw_document",
+    "reason": "result_set_rendered_after_manifest_capture",
+    "resolved": "2026-09-01T06:00:14Z",
+    "result_set": "results",
+    "visible_time": "01 Sep 2026 06:00:14 UTC"
+   },
+   {
+    "established_by": "screen",
+    "file_id": "evidence_09",
+    "locator": "image:results[2]",
+    "reason": "result_set_rendered_after_manifest_capture",
+    "resolved": "2026-09-01T06:00:14Z",
+    "result_set": "results",
+    "visible_time": "01 Sep 2026 06:00:14 UTC"
+   },
+   {
+    "file_id": "evidence_19",
+    "locator": "image:user_profile",
+    "reason": "record_time_after_manifest_capture",
+    "resolved": "2026-07-13T14:22:00Z",
+    "visible_time": "13 Jul 2026 14:22 UTC"
+   },
+   {
+    "established_by": "image:user_profile",
+    "file_id": "evidence_19",
+    "locator": "image:user_profile",
+    "reason": "result_set_rendered_after_manifest_capture",
+    "resolved": "2026-07-13T14:22:00Z",
+    "result_set": "user_profile",
+    "visible_time": "13 Jul 2026 14:22 UTC"
+   },
+   {
+    "file_id": "evidence_23",
+    "locator": "image:all_exports[1]",
+    "reason": "record_time_after_manifest_capture",
+    "resolved": "2026-06-20T14:18:00Z",
+    "visible_time": "20 Jun 14:18 UTC"
+   },
+   {
+    "established_by": "image:all_exports[1]",
+    "file_id": "evidence_23",
+    "locator": "image:all_exports[1]",
+    "reason": "result_set_rendered_after_manifest_capture",
+    "resolved": "2026-06-20T14:18:00Z",
+    "result_set": "all_exports",
+    "visible_time": "20 Jun 14:18 UTC"
+   },
+   {
+    "established_by": "image:all_exports[1]",
+    "file_id": "evidence_23",
+    "locator": "image:all_exports[2]+detail",
+    "reason": "result_set_rendered_after_manifest_capture",
+    "resolved": "2026-06-20T14:18:00Z",
+    "result_set": "all_exports",
+    "visible_time": "20 Jun 14:18 UTC"
+   },
+   {
+    "established_by": "image:all_exports[1]",
+    "file_id": "evidence_23",
+    "locator": "image:all_exports[3]",
+    "reason": "result_set_rendered_after_manifest_capture",
+    "resolved": "2026-06-20T14:18:00Z",
+    "result_set": "all_exports",
+    "visible_time": "20 Jun 14:18 UTC"
+   },
+   {
+    "established_by": "image:all_exports[1]",
+    "file_id": "evidence_23",
+    "locator": "image:all_exports[4]",
+    "reason": "result_set_rendered_after_manifest_capture",
+    "resolved": "2026-06-20T14:18:00Z",
+    "result_set": "all_exports",
+    "visible_time": "20 Jun 14:18 UTC"
+   },
+   {
+    "file_id": "evidence_42",
+    "locator": "screen:reference_overview",
+    "reason": "screen_time_after_manifest_capture",
+    "resolved": "2026-03-10T07:18:00Z",
+    "visible_time": "10 Mar 2026 07:18 UTC"
+   }
+  ],
+  "images": 11,
+  "input_tokens": 0,
+  "methods": {
+   "manual_fixture": 11
+  },
+  "model_calls": 0,
+  "observations": 22,
+  "output_tokens": 0,
+  "records": [
+   {
+    "emitted": true,
+    "file_id": "evidence_04",
+    "locator": "image:customer_overview",
+    "reason": "system from resource prefix",
+    "resource_id": "account_5762",
+    "scope": "customer_record",
+    "system_id": "account_service"
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_04",
+    "locator": "image:customer_details.support",
+    "reason": "scope reference_only is not a record of its own",
+    "resource_id": "support_9538",
+    "scope": "reference_only",
+    "system_id": null
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_09",
+    "locator": "image:results[1]+raw_document",
+    "reason": "system from resource prefix",
+    "resource_id": "search_428",
+    "scope": "customer_record",
+    "system_id": "search_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_09",
+    "locator": "image:results[2]",
+    "reason": "system from resource prefix",
+    "resource_id": "search_1874",
+    "scope": "customer_record",
+    "system_id": "search_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_14",
+    "locator": "image:topology[1]+detail",
+    "reason": "system from resource prefix",
+    "resource_id": "data_flow_1121",
+    "scope": "process_record",
+    "system_id": "integration_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_14",
+    "locator": "image:topology[2]",
+    "reason": "system from resource prefix",
+    "resource_id": "data_flow_9846",
+    "scope": "process_record",
+    "system_id": "integration_service"
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_14",
+    "locator": "image:topology[3]",
+    "reason": "scope non_customer is not a record of its own",
+    "resource_id": null,
+    "scope": "non_customer",
+    "system_id": null
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_14",
+    "locator": "image:topology[4]",
+    "reason": "scope non_customer is not a record of its own",
+    "resource_id": null,
+    "scope": "non_customer",
+    "system_id": null
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_19",
+    "locator": "image:user_profile",
+    "reason": "system from resource prefix",
+    "resource_id": "analytics_7438",
+    "scope": "customer_record",
+    "system_id": "analytics_platform"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_23",
+    "locator": "image:all_exports[1]",
+    "reason": "system from resource prefix",
+    "resource_id": "export_1261",
+    "scope": "customer_record",
+    "system_id": "export_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_23",
+    "locator": "image:all_exports[2]+detail",
+    "reason": "system from resource prefix",
+    "resource_id": "export_1260",
+    "scope": "customer_record",
+    "system_id": "export_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_23",
+    "locator": "image:all_exports[3]",
+    "reason": "system from resource prefix",
+    "resource_id": "export_1259",
+    "scope": "customer_record",
+    "system_id": "export_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_23",
+    "locator": "image:all_exports[4]",
+    "reason": "system from resource prefix",
+    "resource_id": "export_1258",
+    "scope": "customer_record",
+    "system_id": "export_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_28",
+    "locator": "image:ticket",
+    "reason": "system from manifest origin",
+    "resource_id": "support_1034",
+    "scope": "customer_record",
+    "system_id": "support_platform"
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_28",
+    "locator": "image:order_panel",
+    "reason": "scope linked_context is not a record of its own",
+    "resource_id": null,
+    "scope": "linked_context",
+    "system_id": null
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_32",
+    "locator": "image:archives[1]",
+    "reason": "system from resource prefix",
+    "resource_id": "backup_9291",
+    "scope": "process_record",
+    "system_id": "backup_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_32",
+    "locator": "image:archives[2]",
+    "reason": "system from resource prefix",
+    "resource_id": "backup_9288",
+    "scope": "process_record",
+    "system_id": "backup_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_32",
+    "locator": "image:archives[3]+detail",
+    "reason": "system from resource prefix",
+    "resource_id": "backup_9287",
+    "scope": "process_record",
+    "system_id": "backup_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_32",
+    "locator": "image:archives[4]",
+    "reason": "system from resource prefix",
+    "resource_id": "backup_9286",
+    "scope": "process_record",
+    "system_id": "backup_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_37",
+    "locator": "image:events[1]+raw_event",
+    "reason": "system from resource prefix",
+    "resource_id": "audit_record_003",
+    "scope": "customer_record",
+    "system_id": "security_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_37",
+    "locator": "image:events[2]",
+    "reason": "system from resource prefix",
+    "resource_id": "audit_record_002",
+    "scope": "customer_record",
+    "system_id": "security_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_37",
+    "locator": "image:events[3]",
+    "reason": "system from resource prefix",
+    "resource_id": "audit_record_001",
+    "scope": "customer_record",
+    "system_id": "security_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_37",
+    "locator": "image:events[4]",
+    "reason": "system from resource prefix",
+    "resource_id": "audit_record_006",
+    "scope": "customer_record",
+    "system_id": "security_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_37",
+    "locator": "image:events[5]",
+    "reason": "system from resource prefix",
+    "resource_id": "audit_record_005",
+    "scope": "customer_record",
+    "system_id": "security_service"
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_37",
+    "locator": "image:events[6]",
+    "reason": "system from resource prefix",
+    "resource_id": "audit_record_004",
+    "scope": "customer_record",
+    "system_id": "security_service"
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_42",
+    "locator": "image:reference_overview",
+    "reason": "no resource ID is visible for this record",
+    "resource_id": null,
+    "scope": "customer_record",
+    "system_id": null
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_46",
+    "locator": "image:objects[1]+detail",
+    "reason": "scope unattributed_object is not a record of its own",
+    "resource_id": null,
+    "scope": "unattributed_object",
+    "system_id": null
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_46",
+    "locator": "image:objects[2]",
+    "reason": "scope unattributed_object is not a record of its own",
+    "resource_id": null,
+    "scope": "unattributed_object",
+    "system_id": null
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_46",
+    "locator": "image:objects[3]",
+    "reason": "scope unattributed_object is not a record of its own",
+    "resource_id": null,
+    "scope": "unattributed_object",
+    "system_id": null
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_46",
+    "locator": "image:objects[4]",
+    "reason": "scope unattributed_object is not a record of its own",
+    "resource_id": null,
+    "scope": "unattributed_object",
+    "system_id": null
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_46",
+    "locator": "image:objects[5]",
+    "reason": "scope unattributed_object is not a record of its own",
+    "resource_id": null,
+    "scope": "unattributed_object",
+    "system_id": null
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_46",
+    "locator": "image:objects[6]",
+    "reason": "scope unattributed_object is not a record of its own",
+    "resource_id": null,
+    "scope": "unattributed_object",
+    "system_id": null
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_46",
+    "locator": "image:objects[7]",
+    "reason": "scope unattributed_object is not a record of its own",
+    "resource_id": null,
+    "scope": "unattributed_object",
+    "system_id": null
+   },
+   {
+    "emitted": false,
+    "file_id": "evidence_46",
+    "locator": "image:objects[8]",
+    "reason": "scope unattributed_object is not a record of its own",
+    "resource_id": null,
+    "scope": "unattributed_object",
+    "system_id": null
+   },
+   {
+    "emitted": true,
+    "file_id": "evidence_60",
+    "locator": "image:profile",
+    "reason": "system from resource prefix",
+    "resource_id": "marketing_001",
+    "scope": "customer_record",
+    "system_id": "marketing_platform"
+   }
+  ],
+  "unresolved_times": [
+   {
+    "file_id": "evidence_28",
+    "reason": "no time zone shown",
+    "text": "24 May 07:46",
+    "where": "screen:order_panel"
+   },
+   {
+    "file_id": "evidence_28",
+    "reason": "no time zone shown",
+    "text": "24 May 08:15",
+    "where": "screen:order_panel"
+   },
+   {
+    "file_id": "evidence_32",
+    "reason": "no time zone shown",
+    "text": "26 Apr 02:00",
+    "where": "image:archives[1]"
+   },
+   {
+    "file_id": "evidence_32",
+    "reason": "no time zone shown",
+    "text": "26 Apr 02:00",
+    "where": "image:archives[2]"
+   },
+   {
+    "file_id": "evidence_32",
+    "reason": "no time zone shown",
+    "text": "26 Apr 02:00",
+    "where": "image:archives[4]"
+   }
+  ],
+  "valid_json": 11,
+  "warm": {
+   "cache_hits": 11,
+   "invalid": 0,
+   "model_calls": 0,
+   "provider_calls": 0,
+   "retries": 0
+  }
+ },
+ "full": {
+  "changed_rows": [
+   {
+    "basis_after": "unresolved uncertainty prevents proving completeness",
+    "case_id": "case_33",
+    "status": [
+     "INCOMPLETE",
+     "INCOMPLETE"
+    ],
+    "steps_after": [
+     [
+      "VERIFICATION",
+      "VERIFY_RECORD_ABSENT",
+      "export_service",
+      "export_1260",
+      ""
+     ]
+    ],
+    "steps_before": 0
+   },
+   {
+    "basis_after": "outstanding remediation",
+    "case_id": "case_34",
+    "status": [
+     "INCOMPLETE",
+     "INCOMPLETE"
+    ],
+    "steps_after": [
+     [
+      "FINDING",
+      "REPORT_REMAINING_RECORD",
+      "account_service",
+      "account_5762",
+      "evidence_04"
+     ],
+     [
+      "REMEDIATION",
+      "DELETE_RECORD",
+      "account_service",
+      "account_5762",
+      ""
+     ],
+     [
+      "VERIFICATION",
+      "VERIFY_RECORD_ABSENT",
+      "account_service",
+      "account_5762",
+      ""
+     ]
+    ],
+    "steps_before": 1
+   },
+   {
+    "basis_after": "unresolved uncertainty prevents proving completeness",
+    "case_id": "case_35",
+    "status": [
+     "INCOMPLETE",
+     "INCOMPLETE"
+    ],
+    "steps_after": [
+     [
+      "VERIFICATION",
+      "VERIFY_RECORD_ABSENT",
+      "search_service",
+      "search_428",
+      ""
+     ]
+    ],
+    "steps_before": 0
+   },
+   {
+    "basis_after": "outstanding remediation",
+    "case_id": "case_39",
+    "status": [
+     "INCOMPLETE",
+     "INCOMPLETE"
+    ],
+    "steps_after": [
+     [
+      "FINDING",
+      "REPORT_ACTIVE_DATA_FLOW",
+      "integration_service",
+      "data_flow_1121",
+      "evidence_14"
+     ],
+     [
+      "REMEDIATION",
+      "DISABLE_DATA_FLOW",
+      "integration_service",
+      "data_flow_1121",
+      ""
+     ],
+     [
+      "VERIFICATION",
+      "VERIFY_DATA_FLOW_DISABLED",
+      "integration_service",
+      "data_flow_1121",
+      ""
+     ]
+    ],
+    "steps_before": 0
+   },
+   {
+    "basis_after": "unresolved uncertainty prevents proving completeness",
+    "case_id": "case_45",
+    "status": [
+     "INCOMPLETE",
+     "INCOMPLETE"
+    ],
+    "steps_after": [
+     [
+      "VERIFICATION",
+      "VERIFY_RECORD_PRESENT",
+      "security_service",
+      "audit_record_003",
+      ""
+     ]
+    ],
+    "steps_before": 0
+   },
+   {
+    "basis_after": "unresolved uncertainty prevents proving completeness",
+    "case_id": "case_52",
+    "status": [
+     "INCOMPLETE",
+     "INCOMPLETE"
+    ],
+    "steps_after": [
+     [
+      "VERIFICATION",
+      "VERIFY_RECORD_ABSENT",
+      "export_service",
+      "export_1260",
+      ""
+     ]
+    ],
+    "steps_before": 0
+   },
+   {
+    "basis_after": "outstanding remediation",
+    "case_id": "case_53",
+    "status": [
+     "INCOMPLETE",
+     "INCOMPLETE"
+    ],
+    "steps_after": [
+     [
+      "FINDING",
+      "REPORT_EXPOSED_PII",
+      "support_platform",
+      "support_1034",
+      "evidence_28"
+     ],
+     [
+      "REMEDIATION",
+      "REDACT_RECORD",
+      "support_platform",
+      "support_1034",
+      ""
+     ],
+     [
+      "VERIFICATION",
+      "VERIFY_RECORD_REDACTED",
+      "support_platform",
+      "support_1034",
+      ""
+     ]
+    ],
+    "steps_before": 0
+   }
+  ],
+  "citations_total": {
+   "with_visual": {
+    "accepted": 809,
+    "checked": 809
+   },
+   "without_visual": {
+    "accepted": 806,
+    "checked": 806
+   }
+  },
+  "image_citations": {
+   "accepted": 3,
+   "checked": 3,
+   "entries": [
+    {
+     "accepted": true,
+     "case_id": "case_34",
+     "evidence_id": "evidence_04",
+     "kind": "m4",
+     "locator": "image:customer_overview",
+     "operation": "REPORT_REMAINING_RECORD",
+     "reason": "m4 PRESENT via direct attribution",
+     "resource_id": "account_5762",
+     "system_id": "account_service"
+    },
+    {
+     "accepted": true,
+     "case_id": "case_39",
+     "evidence_id": "evidence_14",
+     "kind": "m6",
+     "locator": "image:topology[1]+detail",
+     "operation": "REPORT_ACTIVE_DATA_FLOW",
+     "reason": "m6 ACTIVE via direct attribution",
+     "resource_id": "data_flow_1121",
+     "system_id": "integration_service"
+    },
+    {
+     "accepted": true,
+     "case_id": "case_53",
+     "evidence_id": "evidence_28",
+     "kind": "m4",
+     "locator": "image:ticket",
+     "operation": "REPORT_EXPOSED_PII",
+     "reason": "m4 PRESENT via direct attribution",
+     "resource_id": "support_1034",
+     "system_id": "support_platform"
+    }
+   ]
+  },
+  "incomplete_without_findings": {
+   "with_visual": 77,
+   "without_visual": 80
+  },
+  "m4_unknown_latest": {
+   "with_visual": 314,
+   "without_visual": 308
+  },
+  "nonstandard_validator_errors": {
+   "with_visual": 0,
+   "without_visual": 0
+  },
+  "reassessed_no_finding_rows": [
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_103",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_107",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_108",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_111",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_112",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_135",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1,
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_137",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1,
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_155",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_157",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_162",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_204",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_206",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_233",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_235",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_253",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_257",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_260",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_264",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 2,
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_265",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_267",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_292",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_304",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_308",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_309",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_324",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_326",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_33",
+    "changed": true,
+    "shape_before": "no linked resources",
+    "unresolved_after": {
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_331",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "has an evidenced finding",
+    "case_id": "case_34",
+    "changed": true,
+    "shape_before": "future-only checks",
+    "unresolved_after": {}
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_35",
+    "changed": true,
+    "shape_before": "no linked resources",
+    "unresolved_after": {
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_354",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_362",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_369",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_383",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1,
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "has an evidenced finding",
+    "case_id": "case_39",
+    "changed": true,
+    "shape_before": "no linked resources",
+    "unresolved_after": {}
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_390",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "process state unknown": 2,
+     "unknown conditional treatment": 4,
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_392",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1,
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_403",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_408",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_409",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_41",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "process state unknown": 2,
+     "unknown conditional treatment": 3,
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_411",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_412",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_44",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_45",
+    "changed": true,
+    "shape_before": "no linked resources",
+    "unresolved_after": {
+     "unknown conditional treatment": 5
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_456",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_457",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_458",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_462",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_480",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_484",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_50",
+    "changed": false,
+    "shape_before": "no linked resources",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_506",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_51",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_512",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_516",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_52",
+    "changed": true,
+    "shape_before": "no linked resources",
+    "unresolved_after": {
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_520",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "missing policy mapping": 1,
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_521",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_522",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "missing policy mapping": 1,
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "has an evidenced finding",
+    "case_id": "case_53",
+    "changed": true,
+    "shape_before": "no linked resources",
+    "unresolved_after": {}
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_543",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_545",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_547",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_549",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_55",
+    "changed": false,
+    "shape_before": "no linked resources",
+    "unresolved_after": {
+     "process state unknown": 1,
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_57",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_58",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_59",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_60",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "no linked resources",
+    "case_id": "case_61",
+    "changed": false,
+    "shape_before": "no linked resources",
+    "unresolved_after": {}
+   },
+   {
+    "after": "no linked resources",
+    "case_id": "case_63",
+    "changed": false,
+    "shape_before": "no linked resources",
+    "unresolved_after": {}
+   },
+   {
+    "after": "undecided treatments only",
+    "case_id": "case_76",
+    "changed": false,
+    "shape_before": "undecided treatments only",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_77",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_81",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_82",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_83",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1,
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_84",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1,
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_86",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 1,
+     "unknown state": 1
+    }
+   },
+   {
+    "after": "future-only checks",
+    "case_id": "case_88",
+    "changed": false,
+    "shape_before": "future-only checks",
+    "unresolved_after": {
+     "unknown conditional treatment": 2,
+     "unknown state": 1
+    }
+   }
+  ],
+  "sha256": {
+   "with_visual": "ab8a580183e0a3ce8b79ca76acc792012b4f1e9bc36ef474ed794a6d03b8cd0e",
+   "with_visual_rerun": "ab8a580183e0a3ce8b79ca76acc792012b4f1e9bc36ef474ed794a6d03b8cd0e",
+   "without_visual": "aeb5c13565bfeda694f8aa15bd80326b9a32f1cb791745b44da84c9acfd80e80"
+  },
+  "status": {
+   "with_visual": {
+    "COMPLETE": 88,
+    "INCOMPLETE": 420,
+    "NOT_APPLICABLE": 10
+   },
+   "without_visual": {
+    "COMPLETE": 88,
+    "INCOMPLETE": 420,
+    "NOT_APPLICABLE": 10
+   }
+  },
+  "strict_validator": {
+   "with_visual": {
+    "errors": 111,
+    "rows": 77
+   },
+   "without_visual": {
+    "errors": 120,
+    "rows": 80
+   }
+  },
+  "unknown_treatment_items": {
+   "added_in_no_finding_rows": [
+    [
+     "case_45",
+     "security_service",
+     "audit_record_001"
+    ],
+    [
+     "case_45",
+     "security_service",
+     "audit_record_002"
+    ],
+    [
+     "case_45",
+     "security_service",
+     "audit_record_004"
+    ],
+    [
+     "case_45",
+     "security_service",
+     "audit_record_005"
+    ],
+    [
+     "case_45",
+     "security_service",
+     "audit_record_006"
+    ],
+    [
+     "case_50",
+     "analytics_platform",
+     "analytics_7438"
+    ],
+    [
+     "case_55",
+     "backup_service",
+     "backup_9287"
+    ]
+   ],
+   "all_cases": {
+    "with_visual": 269,
+    "without_visual": 262
+   },
+   "baseline_items_decided_by_visual": [],
+   "left_no_finding_rows": [
+    [
+     "case_34",
+     "security_service",
+     "audit_record_3753"
+    ]
+   ],
+   "with_visual": 83,
+   "without_visual": 77
+  },
+  "unresolved_items": {
+   "with_visual": 338,
+   "without_visual": 327
+  }
+ },
+ "sample": {
+  "changed_sample_rows": [],
+  "with_visual": {
+   "all": {
+    "case_exact_match": 0.0625,
+    "evidence_validity_rate": "51/51",
+    "field_accuracy": 0.94,
+    "matched_field_accuracy": {
+     "evidence_id": 0.9924,
+     "operation": 1.0,
+     "phase": 1.0,
+     "resource_id": 1.0,
+     "state": 1.0,
+     "step_no": 0.5878,
+     "system_id": 1.0
+    },
+    "normalised_kendall_tau": 1.0,
+    "sequence_accuracy": 0.0625,
+    "status_accuracy": 0.875,
+    "status_correct": "28/32",
+    "step_f1": 0.8062,
+    "step_precision": 0.9924,
+    "step_recall": 0.6788,
+    "steps": "matched 131, predicted 132, gold 193"
+   },
+   "dev": {
+    "case_exact_match": 0.0909,
+    "evidence_validity_rate": "25/25",
+    "field_accuracy": 0.9469,
+    "matched_field_accuracy": {
+     "evidence_id": 1.0,
+     "operation": 1.0,
+     "phase": 1.0,
+     "resource_id": 1.0,
+     "state": 1.0,
+     "step_no": 0.6282,
+     "system_id": 1.0
+    },
+    "normalised_kendall_tau": 1.0,
+    "sequence_accuracy": 0.0909,
+    "status_accuracy": 0.8636,
+    "status_correct": "19/22",
+    "step_f1": 0.78,
+    "step_precision": 0.9873,
+    "step_recall": 0.6446,
+    "steps": "matched 78, predicted 79, gold 121"
+   },
+   "holdout": {
+    "case_exact_match": 0.0,
+    "evidence_validity_rate": "26/26",
+    "field_accuracy": 0.9299,
+    "matched_field_accuracy": {
+     "evidence_id": 0.9811,
+     "operation": 1.0,
+     "phase": 1.0,
+     "resource_id": 1.0,
+     "state": 1.0,
+     "step_no": 0.5283,
+     "system_id": 1.0
+    },
+    "normalised_kendall_tau": 1.0,
+    "sequence_accuracy": 0.0,
+    "status_accuracy": 0.9,
+    "status_correct": "9/10",
+    "step_f1": 0.848,
+    "step_precision": 1.0,
+    "step_recall": 0.7361,
+    "steps": "matched 53, predicted 53, gold 72"
+   }
+  },
+  "without_visual": {
+   "all": {
+    "case_exact_match": 0.0625,
+    "evidence_validity_rate": "51/51",
+    "field_accuracy": 0.94,
+    "matched_field_accuracy": {
+     "evidence_id": 0.9924,
+     "operation": 1.0,
+     "phase": 1.0,
+     "resource_id": 1.0,
+     "state": 1.0,
+     "step_no": 0.5878,
+     "system_id": 1.0
+    },
+    "normalised_kendall_tau": 1.0,
+    "sequence_accuracy": 0.0625,
+    "status_accuracy": 0.875,
+    "status_correct": "28/32",
+    "step_f1": 0.8062,
+    "step_precision": 0.9924,
+    "step_recall": 0.6788,
+    "steps": "matched 131, predicted 132, gold 193"
+   },
+   "dev": {
+    "case_exact_match": 0.0909,
+    "evidence_validity_rate": "25/25",
+    "field_accuracy": 0.9469,
+    "matched_field_accuracy": {
+     "evidence_id": 1.0,
+     "operation": 1.0,
+     "phase": 1.0,
+     "resource_id": 1.0,
+     "state": 1.0,
+     "step_no": 0.6282,
+     "system_id": 1.0
+    },
+    "normalised_kendall_tau": 1.0,
+    "sequence_accuracy": 0.0909,
+    "status_accuracy": 0.8636,
+    "status_correct": "19/22",
+    "step_f1": 0.78,
+    "step_precision": 0.9873,
+    "step_recall": 0.6446,
+    "steps": "matched 78, predicted 79, gold 121"
+   },
+   "holdout": {
+    "case_exact_match": 0.0,
+    "evidence_validity_rate": "26/26",
+    "field_accuracy": 0.9299,
+    "matched_field_accuracy": {
+     "evidence_id": 0.9811,
+     "operation": 1.0,
+     "phase": 1.0,
+     "resource_id": 1.0,
+     "state": 1.0,
+     "step_no": 0.5283,
+     "system_id": 1.0
+    },
+    "normalised_kendall_tau": 1.0,
+    "sequence_accuracy": 0.0,
+    "status_accuracy": 0.9,
+    "status_correct": "9/10",
+    "step_f1": 0.848,
+    "step_precision": 1.0,
+    "step_recall": 0.7361,
+    "steps": "matched 53, predicted 53, gold 72"
+   }
+  }
+ }
+}

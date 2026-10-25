@@ -18,8 +18,12 @@ NULLISH = (None, '', 'null', 'none')
 READBACK_EVENTS = {'profile_lookup_completed', 'analytics_profile_read_completed',
                    'support_ticket_read_completed', 'audit_record_read_completed',
                    'connector_config_read_completed', 'restore_policy_read_completed'}
-RELIABILITY = {'snapshot': 4, 'readback': 3, 'field_values': 3,
+RELIABILITY = {'snapshot': 4, 'readback': 3, 'field_values': 3, 'visual_field_values': 2,
                'operational_claim': 1, 'unknown': 0}
+# M8: prefixes whose question is whether identifiers remain; a screenshot that
+# shows none cannot prove redaction or anonymization (the UI may omit fields).
+VISUAL_IDENTITY_QUESTION = ('account_', 'support_', 'analytics_')
+VISUAL_META = {'resource_id', 'visual', 'expires_at'}
 
 
 @dataclass(frozen=True)
@@ -207,7 +211,24 @@ def _state_for_observation(o: Observation):
             found = _record_state(o, values, 'field_values')
             if found: return found
         return 'UNKNOWN', 'operational_claim', 'no validated field-level state'
+    if o.source_type == 'image':
+        return _visual_state(o)
     return 'UNKNOWN', 'operational_claim', 'documentary or operational statement'
+
+
+def _visual_state(o: Observation):
+    """M8 screenshot record: positive presence only, never a favourable state."""
+    if not o.resource_id:
+        return 'UNKNOWN', 'unknown', 'screenshot record has no visible resource ID'
+    if o.resource_id.startswith(('data_flow_', 'backup_')):
+        # Process state needs an explicit control; M6 reads visual risk separately.
+        return 'UNKNOWN', 'unknown', 'screenshot shows no explicit enabled/restore_allowed control'
+    fields = {k: v for k, v in o.raw_fields.items() if k not in VISUAL_META}
+    if _has_direct_values(fields):
+        return 'PRESENT', 'visual_field_values', 'screenshot shows the record with direct identifier values'
+    if any(v not in NULLISH for v in fields.values()) and not o.resource_id.startswith(VISUAL_IDENTITY_QUESTION):
+        return 'PRESENT', 'visual_field_values', 'screenshot lists the record with its fields'
+    return 'UNKNOWN', 'unknown', 'a screenshot without identifiers proves neither redaction nor anonymization'
 
 
 def attribution_for(hit: Hit, resolution: Resolution) -> str:
@@ -231,6 +252,11 @@ def from_hit(hit: Hit, resolution: Resolution, anomalies: set[tuple[str, str]] =
         state, classification, explanation = 'UNKNOWN', 'unknown', 'record timestamp exceeds manifest capture; quarantined'
     elif event and (parse_time(event) > cutoff or parse_time(event) > parse_time(o.captured_at)):
         state, classification, explanation = 'UNKNOWN', 'unknown', 'source timestamp is after cutoff or capture; quarantined'
+    expiry = o.raw_fields.get('expires_at') if o.source_type == 'image' else None
+    if state == 'PRESENT' and isinstance(expiry, str) and parse_time(expiry) <= cutoff:
+        # A visible expiry is a schedule, not proof of deletion; the screenshot
+        # cannot show the record after it, so presence is not carried past it.
+        state, classification, explanation = 'UNKNOWN', 'unknown', 'visible expiry precedes audit_at; state after expiry not shown'
     attribution = attribution_for(hit, resolution)
     if attribution == 'mixed_context':
         state, classification, explanation = 'UNKNOWN', 'unknown', 'mixed identity context is not customer attribution'

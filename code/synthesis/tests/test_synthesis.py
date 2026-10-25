@@ -43,7 +43,8 @@ def sample_run():
 
 @pytest.fixture(scope='module')
 def full_run():
-    return run(DATASET, sample=False, cache=CACHE)
+    # The reviewed M7 baseline (no M8 screenshot evidence); M8 pins its own run.
+    return run(DATASET, sample=False, cache=CACHE, visual=False)
 
 
 def resolution(cutoff=CUTOFF):

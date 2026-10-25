@@ -1,0 +1,167 @@
+{
+ "schema_version": "m8-visual-v2",
+ "file_id": "evidence_28",
+ "file_path": "evidence/images/support_ticket_console_20260524.png",
+ "image_sha256": "542b7aec17e6b2f38827896e7eb52c70e4bfaaca22433621be1f80f54884e944",
+ "provenance": {
+  "method": "manual_fixture",
+  "model_call": false,
+  "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
+  "transcribed_on": "2026-10-24",
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
+ },
+ "screen": {
+  "application": "Helpline Console",
+  "title": "CS-5034 · Where is my delivery?",
+  "subtitle": "support_1034 · Kofi Agyeman · Normal priority",
+  "times": []
+ },
+ "records": [
+  {
+   "record_key": "ticket",
+   "panel": "header+cards+conversation",
+   "scope": "customer_record",
+   "resource_id": "support_1034",
+   "fields": [
+    {
+     "label": "(header)",
+     "name": "ticket_id",
+     "value": "CS-5034"
+    },
+    {
+     "label": "(header)",
+     "name": "ticket_subject",
+     "value": "Where is my delivery?"
+    },
+    {
+     "label": "(header)",
+     "name": "priority",
+     "value": "Normal"
+    },
+    {
+     "label": "SLA",
+     "name": "sla",
+     "value": "01:42"
+    },
+    {
+     "label": "Customer",
+     "name": "requester_name",
+     "value": "Kofi Agyeman"
+    },
+    {
+     "label": "Email",
+     "name": "requester_email",
+     "value": "kagyeman8947@fastmail.com"
+    },
+    {
+     "label": "Assigned",
+     "name": "assigned_agent",
+     "value": "Maya Chen"
+    },
+    {
+     "label": "Tags",
+     "name": "tags",
+     "value": "Delivery · Tracking · Order update"
+    },
+    {
+     "label": "Order",
+     "name": "order_reference",
+     "value": "ORD-20265034"
+    },
+    {
+     "label": "Conversation",
+     "name": "message_text",
+     "value": "09:12 Kofi Agyeman: Could you let me know where my order is and when it is expected to arrive? | 09:13 Northstar Bot: We received your message and are checking the order details. | 09:28 Maya Chen: The parcel reached the regional hub and is on track for delivery on 26 May. | 09:35 Kofi Agyeman: Thanks for the update."
+    }
+   ],
+   "times": []
+  },
+  {
+   "record_key": "order_panel",
+   "panel": "detail_panel",
+   "scope": "linked_context",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "(panel title)",
+     "name": "order_reference",
+     "value": "ORD-20265034"
+    },
+    {
+     "label": "Product",
+     "name": "product",
+     "value": "Running shoes"
+    },
+    {
+     "label": "Status",
+     "name": "status",
+     "value": "In transit"
+    },
+    {
+     "label": "Carrier",
+     "name": "carrier",
+     "value": "SwiftShip"
+    },
+    {
+     "label": "Tracking",
+     "name": "tracking",
+     "value": "SWF-884103"
+    },
+    {
+     "label": "Expected",
+     "name": "expected",
+     "value": "26 May 2026"
+    },
+    {
+     "label": "Assigned agent",
+     "name": "assigned_agent",
+     "value": "Maya Chen"
+    }
+   ],
+   "times": [
+    {
+     "label": "Activity",
+     "text": "24 May 07:46",
+     "role": "record"
+    },
+    {
+     "label": "Activity",
+     "text": "24 May 08:15",
+     "role": "record"
+    }
+   ],
+   "note": "Order panel, not the support record. Its timeline times have no year or time zone."
+  }
+ ],
+ "context": [
+  {
+   "label": "Activity",
+   "text": "22 May Order confirmed",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "23 May Dispatched",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "24 May 07:46 Reached regional hub",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "24 May 08:15 In transit",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "26 May Delivery expected",
+   "times": []
+  }
+ ],
+ "not_visible": [
+  "deletion status",
+  "conversation date"
+ ]
+}

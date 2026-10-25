@@ -1,0 +1,147 @@
+{
+ "schema_version": "m8-visual-v2",
+ "file_id": "evidence_04",
+ "file_path": "evidence/images/account_admin_console_20260926.png",
+ "image_sha256": "d5c32ca5b6e1a2b4bbe9f5d41835ef1fd5d4f7061dab9067a4f9f88cea3c1861",
+ "provenance": {
+  "method": "manual_fixture",
+  "model_call": false,
+  "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
+  "transcribed_on": "2026-10-24",
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
+ },
+ "screen": {
+  "application": "Customer Operations",
+  "title": "Haruka Sato",
+  "subtitle": "user_11 · account_5762",
+  "times": []
+ },
+ "records": [
+  {
+   "record_key": "customer_overview",
+   "panel": "header+cards+detail_panel",
+   "scope": "customer_record",
+   "resource_id": "account_5762",
+   "fields": [
+    {
+     "label": "(header)",
+     "name": "user_id",
+     "value": "user_11"
+    },
+    {
+     "label": "(header)",
+     "name": "full_name",
+     "value": "Haruka Sato"
+    },
+    {
+     "label": "Loyalty tier",
+     "name": "loyalty_tier",
+     "value": "Silver"
+    },
+    {
+     "label": "Email",
+     "name": "email",
+     "value": "haruka.s1838@zoho.com"
+    },
+    {
+     "label": "Phone",
+     "name": "phone",
+     "value": "+81 90 7610 2507"
+    },
+    {
+     "label": "Signup channel",
+     "name": "signup_channel",
+     "value": "mobile_app"
+    },
+    {
+     "label": "Market",
+     "name": "market",
+     "value": "JP"
+    },
+    {
+     "label": "Preferred language",
+     "name": "preferred_language",
+     "value": "Japanese"
+    },
+    {
+     "label": "Default address",
+     "name": "default_address",
+     "value": "2-18-4 Kichijoji, Musashino, Tokyo 180-0004"
+    },
+    {
+     "label": "Member since",
+     "name": "member_since",
+     "value": "12 Jan 2024"
+    },
+    {
+     "label": "Support",
+     "name": "support_reference",
+     "value": "CS-8538 · support_9538"
+    }
+   ],
+   "times": [
+    {
+     "label": "Last contact",
+     "text": "24 Sep 2026 09:14 JST",
+     "role": "record"
+    }
+   ]
+  },
+  {
+   "record_key": "customer_details.support",
+   "panel": "detail_panel",
+   "scope": "reference_only",
+   "resource_id": "support_9538",
+   "fields": [
+    {
+     "label": "Support",
+     "name": "ticket_id",
+     "value": "CS-8538"
+    }
+   ],
+   "times": [],
+   "note": "Only a cross-reference on the account page; the ticket's own fields are not shown."
+  }
+ ],
+ "context": [
+  {
+   "label": "Orders",
+   "text": "ORD-20265762 · 12 Sep 2026 · Ceramic coffee set · 1 · JPY 8,900 · Delivered · 18 Sep",
+   "times": []
+  },
+  {
+   "label": "Orders",
+   "text": "ORD-20265518 · 28 Aug 2026 · Travel backpack · 1 · JPY 12,400 · Returned · 03 Sep",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "24 Sep Customer replied to CS-8538",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "22 Sep Support agent responded",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "18 Sep Order ORD-20265762 delivered",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "03 Sep Order ORD-20265518 returned",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "28 Aug support_9538 created",
+   "times": []
+  }
+ ],
+ "not_visible": [
+  "deletion status",
+  "retention period"
+ ]
+}

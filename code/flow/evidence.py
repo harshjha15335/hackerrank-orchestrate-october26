@@ -22,7 +22,12 @@ SAFE = {FLOW: 'DISABLED', RESTORE: 'RESTORE_BLOCKED'}
 # (another service's FOUND/ACTIVE/BLOCKED words) may show risk but never prove safety.
 SAFE_PROOF = frozenset({'snapshot', 'readback', 'field_values', 'telemetry'})
 RELIABILITY = {'snapshot': 4, 'readback': 3, 'field_values': 3, 'telemetry': 2,
-               'inventory': 1, 'claim': 0, 'none': 0}
+               'visual': 1, 'inventory': 1, 'claim': 0, 'none': 0}
+# M8 screenshots of a connector console: a continuous sync mode together with a
+# running status shows risk. A screenshot never proves a safe state.
+VISUAL_FLOW = {'mode_fields': ('sync_mode', 'mode'), 'running_modes': {'continuous', 'continuous sync'},
+               'status_fields': ('status',), 'running_statuses': {'healthy', 'active', 'running'},
+               'throughput_fields': ('events_per_hour',)}
 # Inventory vocabularies. A backup that is merely FOUND/PRESENT says nothing
 # about restore access, so it is not in the restore vocabulary.
 INVENTORY_STATES = {FLOW: {'ACTIVE': 'ACTIVE', 'ENABLED': 'ACTIVE', 'DISABLED': 'DISABLED'},
@@ -129,6 +134,25 @@ def _inventory(o: Observation, kind: str):
     return state, f'inventory lists {category} as {word}'
 
 
+def _visual(o: Observation, kind: str):
+    """A screenshot record of this process from M8 (risk-only)."""
+    if o.source_type != 'image': return None
+    raw = o.raw_fields
+    if kind != FLOW:
+        return 'UNKNOWN', 'screenshot shows no explicit restore control'
+    def words(names):
+        return {str(raw[n]).strip().casefold() for n in names if isinstance(raw.get(n), str)}
+    modes, statuses = words(VISUAL_FLOW['mode_fields']), words(VISUAL_FLOW['status_fields'])
+    # A health badge or a mode label alone is a configuration claim; the screen
+    # must also show the connector currently moving data.
+    rates = [raw[n].replace(',', '').strip() for n in VISUAL_FLOW['throughput_fields'] if isinstance(raw.get(n), str)]
+    moving = bool(rates) and all(r.isdigit() and int(r) > 0 for r in rates)
+    if (modes and modes <= VISUAL_FLOW['running_modes'] and statuses and statuses <= VISUAL_FLOW['running_statuses']
+            and moving):
+        return 'ACTIVE', 'screenshot shows a continuous connector with a running status and non-zero throughput'
+    return 'UNKNOWN', 'screenshot does not show a continuous mode, a running status and non-zero throughput together'
+
+
 def read(o: Observation) -> Reading | None:
     kind = observation_kind(o)
     if kind is None: return None
@@ -140,7 +164,7 @@ def read(o: Observation) -> Reading | None:
     if state in (RISK[kind], SAFE[kind]) and classification in SAFE_PROOF:
         return Reading(o.evidence_id, o.locator, o.source_type, o.captured_at, when, state,
                        classification, explanation)
-    for evidence_class, reader in (('telemetry', _telemetry), ('inventory', _inventory)):
+    for evidence_class, reader in (('telemetry', _telemetry), ('inventory', _inventory), ('visual', _visual)):
         found = reader(o, kind)
         if found:
             return Reading(o.evidence_id, o.locator, o.source_type, o.captured_at, when, found[0],

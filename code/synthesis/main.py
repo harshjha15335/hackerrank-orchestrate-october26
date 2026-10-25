@@ -6,7 +6,8 @@
 
 The root output.csv and dataset/ are protected until the final submission
 stage (M10). Nothing here reads the public sample answers. No network or model calls:
-M3 intent runs in its offline rules mode.
+M3 intent runs in its offline rules mode, and M8 screenshot evidence comes from
+the committed manual fixtures (``--no-visual`` runs the M7 ablation baseline).
 """
 from __future__ import annotations
 
@@ -33,6 +34,7 @@ from state.engine import reconstruct
 from synthesis.citations import CitationGuard
 from synthesis.risk import overlay, referenced_sources, rollup
 from synthesis.synthesizer import synthesize
+from vision.adapter import QUARANTINE_REASONS, load as load_visual
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -40,13 +42,19 @@ ROOT = Path(__file__).resolve().parents[2]
 class Pipeline:
     """M1–M6 contexts built once; ``case`` runs M2→M7 for one request."""
 
-    def __init__(self, dataset: Path, sample=False, cache: Path | None = None):
+    def __init__(self, dataset: Path, sample=False, cache: Path | None = None, visual=True,
+                 vision_cache: Path | None = None):
         self.dataset = Path(dataset)
         self.sample = sample
         self.graph = IdentityGraph(self.dataset)
         observations, coverage, discrepancies = ingest(self.dataset, cache)
+        # M8: screenshot records join the M1 table and pass through every later stage.
+        self.visual = load_visual(self.dataset, vision_cache) if visual else None
+        if self.visual:
+            observations = observations + self.visual.observations
+            discrepancies = discrepancies + self.visual.discrepancies
         self.anomalies = {(d['file_id'], d['locator']) for d in discrepancies
-                          if d['reason'] == 'record_time_after_manifest_capture'}
+                          if d['reason'] in QUARANTINE_REASONS}
         self.evidence = EvidenceIndex(observations, self.anomalies)
         self.scopes = SnapshotIndex(observations, coverage)
         self.ctx = Context(observations, self.dataset / 'deletion_rules.csv', anomalies=self.anomalies)
@@ -95,11 +103,18 @@ class Pipeline:
                            record_edges=record_edges,
                            process_precedence=len(precedence(assessments, resources, edges)),
                            m4_unknown_latest=sum(not a['supported'] for a in state['latest']))
+        excluded = self.evidence.excluded_visual(resolution)
+        if excluded:   # provenance only: these screenshot rows linked nothing
+            diagnostics['excluded_visual'] = [
+                {'evidence_id': h.observation.evidence_id, 'locator': h.observation.locator,
+                 'resource_id': h.observation.resource_id,
+                 'reason': 'quarantined' if (h.observation.evidence_id, h.observation.locator) in self.anomalies
+                 else 'captured or timed after audit_at or after its capture'} for h in excluded]
         return row, diagnostics, {'resolution': resolution.status, 'user_id': resolution.user_id}
 
 
-def run(dataset: Path, sample=False, cache: Path | None = None):
-    pipeline = Pipeline(dataset, sample, cache)
+def run(dataset: Path, sample=False, cache: Path | None = None, visual=True, vision_cache: Path | None = None):
+    pipeline = Pipeline(dataset, sample, cache, visual, vision_cache)
     rows, diagnostics = [], {}
     for request in pipeline.requests():
         row, diag, meta = pipeline.case(request)
@@ -164,10 +179,12 @@ def main(argv=None):
     parser.add_argument('--explain', action='store_true', help='print diagnostics for --case')
     parser.add_argument('--summary', action='store_true', help='print aggregate counts')
     parser.add_argument('--cache', type=Path, default=Path('/tmp/m4-ingest-cache'))
+    parser.add_argument('--no-visual', action='store_true', help='ablation: leave M8 screenshot evidence out')
+    parser.add_argument('--vision-cache', type=Path, help='content-addressed M8 extraction cache')
     args = parser.parse_args(argv)
     if args.output and protected(args.output):
         parser.error('M7 writes only to a temporary evaluation path; root output.csv and dataset/ are protected')
-    rows, diagnostics, pipeline = run(args.dataset, args.sample, args.cache)
+    rows, diagnostics, pipeline = run(args.dataset, args.sample, args.cache, not args.no_visual, args.vision_cache)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(serialize(rows), encoding='utf-8')

@@ -65,7 +65,16 @@ class EvidenceIndex:
         return True
 
     def find(self, resolution: Resolution) -> list[Hit]:
-        if resolution.status != 'resolved': return []
+        return self._find(resolution)[0]
+
+    def excluded_visual(self, resolution: Resolution) -> list[Hit]:
+        """Screenshot rows that match the subject but are not evidence at the
+        cutoff (M8 quarantine, or captured/recorded after it). Kept for
+        diagnostics only; they never link a resource to the subject."""
+        return self._find(resolution)[1]
+
+    def _find(self, resolution: Resolution) -> tuple[list[Hit], list[Hit]]:
+        if resolution.status != 'resolved': return [], []
         keys = {(v.field, v.normalized) for v in resolution.history if v.normalized}
         keys.add(('user_id', resolution.user_id))
         selected = {}
@@ -92,7 +101,7 @@ class EvidenceIndex:
                 entry = selected.setdefault(position, {'matched': set(), 'strength': set()})
                 entry['matched'].update(matched)
                 if position not in anchors: entry['strength'].add('correlated')
-        output = []
+        output, excluded = [], []
         for position in sorted(selected):
             observation = self.observations[position]
             if parse_time(observation.captured_at) > cutoff: continue
@@ -103,5 +112,11 @@ class EvidenceIndex:
                                     if field in ('email', 'user_id')}
             if len(identities_on_record) > 1:
                 strength = 'mixed_context'
-            output.append(Hit(observation, tuple(sorted(entry['matched'])), strength))
-        return output
+            hit = Hit(observation, tuple(sorted(entry['matched'])), strength)
+            # M8: an inadmissible screenshot row cannot establish that the subject
+            # has this resource; another admissible observation must do that.
+            if observation.source_type == 'image' and not self._anchor_admissible(position, cutoff):
+                excluded.append(hit)
+                continue
+            output.append(hit)
+        return output, excluded

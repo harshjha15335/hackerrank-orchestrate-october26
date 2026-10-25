@@ -1,0 +1,373 @@
+{
+ "schema_version": "m8-visual-v2",
+ "file_id": "evidence_46",
+ "file_path": "evidence/images/object_storage_browser_20260213.png",
+ "image_sha256": "96e9a191380c29b9e0ab997007268c4cd6353cb6721ebd1ed4a32599d8d37e04",
+ "provenance": {
+  "method": "manual_fixture",
+  "model_call": false,
+  "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
+  "transcribed_on": "2026-10-24",
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
+ },
+ "screen": {
+  "application": "Nimbus Object Storage",
+  "title": "northstar-customer-data",
+  "subtitle": "eu-west-1 / support-attachments / 2026 / 02",
+  "times": [
+   {
+    "label": "Captured",
+    "text": "13 Feb 2026 08:00 UTC",
+    "role": "generated",
+    "result_set": "objects",
+    "basis": "\"Captured\" stamp in the object list header"
+   }
+  ]
+ },
+ "records": [
+  {
+   "record_key": "objects[1]+detail",
+   "panel": "table_row+detail_panel",
+   "scope": "unattributed_object",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "Name",
+     "name": "object_name",
+     "value": "delivery_confirmation_19.pdf"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "684 KB"
+    },
+    {
+     "label": "Storage class",
+     "name": "storage_class",
+     "value": "Standard"
+    },
+    {
+     "label": "Version",
+     "name": "version",
+     "value": "v3"
+    },
+    {
+     "label": "Content type",
+     "name": "content_type",
+     "value": "application/pdf"
+    },
+    {
+     "label": "Encryption",
+     "name": "encryption",
+     "value": "AES-256"
+    },
+    {
+     "label": "Checksum",
+     "name": "checksum",
+     "value": "e71b6d..."
+    },
+    {
+     "label": "Uploader",
+     "name": "uploader_service",
+     "value": "support-service"
+    }
+   ],
+   "times": [
+    {
+     "label": "Modified (UTC)",
+     "text": "12 Feb 18:42",
+     "role": "record",
+     "tz_label": "Modified (UTC)"
+    },
+    {
+     "label": "Modified",
+     "text": "12 Feb 2026 18:42 UTC",
+     "role": "record"
+    }
+   ],
+   "note": "Object names only; no resource ID or customer identifier is visible.",
+   "result_set": "objects"
+  },
+  {
+   "record_key": "objects[2]",
+   "panel": "table_row",
+   "scope": "unattributed_object",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "Name",
+     "name": "object_name",
+     "value": "delivery_confirmation_20.pdf"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "712 KB"
+    },
+    {
+     "label": "Storage class",
+     "name": "storage_class",
+     "value": "Standard"
+    },
+    {
+     "label": "Version",
+     "name": "version",
+     "value": "v1"
+    }
+   ],
+   "times": [
+    {
+     "label": "Modified (UTC)",
+     "text": "11 Feb 14:17",
+     "role": "record",
+     "tz_label": "Modified (UTC)"
+    }
+   ],
+   "result_set": "objects"
+  },
+  {
+   "record_key": "objects[3]",
+   "panel": "table_row",
+   "scope": "unattributed_object",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "Name",
+     "name": "object_name",
+     "value": "return_label_4821.pdf"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "203 KB"
+    },
+    {
+     "label": "Storage class",
+     "name": "storage_class",
+     "value": "Standard"
+    },
+    {
+     "label": "Version",
+     "name": "version",
+     "value": "v1"
+    }
+   ],
+   "times": [
+    {
+     "label": "Modified (UTC)",
+     "text": "10 Feb 09:33",
+     "role": "record",
+     "tz_label": "Modified (UTC)"
+    }
+   ],
+   "result_set": "objects"
+  },
+  {
+   "record_key": "objects[4]",
+   "panel": "table_row",
+   "scope": "unattributed_object",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "Name",
+     "name": "object_name",
+     "value": "return_label_4876.pdf"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "198 KB"
+    },
+    {
+     "label": "Storage class",
+     "name": "storage_class",
+     "value": "Standard"
+    },
+    {
+     "label": "Version",
+     "name": "version",
+     "value": "v2"
+    }
+   ],
+   "times": [
+    {
+     "label": "Modified (UTC)",
+     "text": "11 Feb 16:05",
+     "role": "record",
+     "tz_label": "Modified (UTC)"
+    }
+   ],
+   "result_set": "objects"
+  },
+  {
+   "record_key": "objects[5]",
+   "panel": "table_row",
+   "scope": "unattributed_object",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "Name",
+     "name": "object_name",
+     "value": "invoice_NS-10493.pdf"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "318 KB"
+    },
+    {
+     "label": "Storage class",
+     "name": "storage_class",
+     "value": "Standard"
+    },
+    {
+     "label": "Version",
+     "name": "version",
+     "value": "v1"
+    }
+   ],
+   "times": [
+    {
+     "label": "Modified (UTC)",
+     "text": "10 Feb 11:21",
+     "role": "record",
+     "tz_label": "Modified (UTC)"
+    }
+   ],
+   "result_set": "objects"
+  },
+  {
+   "record_key": "objects[6]",
+   "panel": "table_row",
+   "scope": "unattributed_object",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "Name",
+     "name": "object_name",
+     "value": "parcel_damage_7713.jpg"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "2.4 MB"
+    },
+    {
+     "label": "Storage class",
+     "name": "storage_class",
+     "value": "Standard"
+    },
+    {
+     "label": "Version",
+     "name": "version",
+     "value": "v1"
+    }
+   ],
+   "times": [
+    {
+     "label": "Modified (UTC)",
+     "text": "12 Feb 10:08",
+     "role": "record",
+     "tz_label": "Modified (UTC)"
+    }
+   ],
+   "result_set": "objects"
+  },
+  {
+   "record_key": "objects[7]",
+   "panel": "table_row",
+   "scope": "unattributed_object",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "Name",
+     "name": "object_name",
+     "value": "customer_export_2026-02-10.zip"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "128 MB"
+    },
+    {
+     "label": "Storage class",
+     "name": "storage_class",
+     "value": "Standard"
+    },
+    {
+     "label": "Version",
+     "name": "version",
+     "value": "v1"
+    }
+   ],
+   "times": [
+    {
+     "label": "Modified (UTC)",
+     "text": "10 Feb 23:14",
+     "role": "record",
+     "tz_label": "Modified (UTC)"
+    }
+   ],
+   "result_set": "objects"
+  },
+  {
+   "record_key": "objects[8]",
+   "panel": "table_row",
+   "scope": "unattributed_object",
+   "resource_id": null,
+   "fields": [
+    {
+     "label": "Name",
+     "name": "object_name",
+     "value": "customer_export_2026-02-12.zip"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "131 MB"
+    },
+    {
+     "label": "Storage class",
+     "name": "storage_class",
+     "value": "Standard"
+    },
+    {
+     "label": "Version",
+     "name": "version",
+     "value": "v1"
+    }
+   ],
+   "times": [
+    {
+     "label": "Modified (UTC)",
+     "text": "12 Feb 21:56",
+     "role": "record",
+     "tz_label": "Modified (UTC)"
+    }
+   ],
+   "result_set": "objects"
+  }
+ ],
+ "context": [
+  {
+   "label": "Activity",
+   "text": "v3 12 Feb 18:42 · metadata update",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "v2 12 Feb 18:39 · upload complete",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "v1 12 Feb 18:38 · object created",
+   "times": []
+  }
+ ],
+ "not_visible": [
+  "resource ID",
+  "customer identifier",
+  "attachment owner"
+ ]
+}

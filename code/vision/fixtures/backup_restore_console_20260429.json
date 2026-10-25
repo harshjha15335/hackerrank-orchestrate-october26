@@ -1,0 +1,226 @@
+{
+ "schema_version": "m8-visual-v2",
+ "file_id": "evidence_32",
+ "file_path": "evidence/images/backup_restore_console_20260429.png",
+ "image_sha256": "2c246aa5843bec609b9ddfdf1154cd81e0fd61996f83954735e9856e48c18bf3",
+ "provenance": {
+  "method": "manual_fixture",
+  "model_call": false,
+  "transcriber": "Claude Code agent session; PNG viewed directly in the session, no vision API request",
+  "transcribed_on": "2026-10-24",
+  "origin_note": "No earlier M8 extraction was found on the fork; transcribed fresh on feature/m8-visual-evidence. Rev 2 (2026-10-24): independently re-inspected from zoomed crops, then compared; result sets and generated times added, missing visible items added."
+ },
+ "screen": {
+  "application": "Vault Recovery Manager",
+  "title": "Customer-platform archives",
+  "subtitle": "Northstar Production · weekly snapshots",
+  "times": []
+ },
+ "records": [
+  {
+   "record_key": "archives[1]",
+   "panel": "table_row",
+   "scope": "process_record",
+   "resource_id": "backup_9291",
+   "fields": [
+    {
+     "label": "Account",
+     "name": "account_email",
+     "value": "bluepeakco@outlook.com"
+    },
+    {
+     "label": "Region",
+     "name": "region_name",
+     "value": "ap-southeast-1"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "102.3 GB"
+    },
+    {
+     "label": "Encryption",
+     "name": "encryption",
+     "value": "AES-256"
+    },
+    {
+     "label": "Tier",
+     "name": "tier",
+     "value": "Archive"
+    }
+   ],
+   "times": [
+    {
+     "label": "Created",
+     "text": "26 Apr 02:00",
+     "role": "record"
+    }
+   ],
+   "result_set": "archives"
+  },
+  {
+   "record_key": "archives[2]",
+   "panel": "table_row",
+   "scope": "process_record",
+   "resource_id": "backup_9288",
+   "fields": [
+    {
+     "label": "Account",
+     "name": "account_email",
+     "value": "miller.logistics@company.com"
+    },
+    {
+     "label": "Region",
+     "name": "region_name",
+     "value": "us-west-2"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "67.1 GB"
+    },
+    {
+     "label": "Encryption",
+     "name": "encryption",
+     "value": "AES-256"
+    },
+    {
+     "label": "Tier",
+     "name": "tier",
+     "value": "Archive"
+    }
+   ],
+   "times": [
+    {
+     "label": "Created",
+     "text": "26 Apr 02:00",
+     "role": "record"
+    }
+   ],
+   "result_set": "archives"
+  },
+  {
+   "record_key": "archives[3]+detail",
+   "panel": "table_row+detail_panel",
+   "scope": "process_record",
+   "resource_id": "backup_9287",
+   "fields": [
+    {
+     "label": "Account",
+     "name": "account_email",
+     "value": "areed1433@gmail.com"
+    },
+    {
+     "label": "Path",
+     "name": "archive_path",
+     "value": "s3://northstar-backups/customer-platform/weekly/segment-42-20260426.tar.zst"
+    },
+    {
+     "label": "Region",
+     "name": "region_name",
+     "value": "eu-west-1"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "84.7 GB"
+    },
+    {
+     "label": "Encryption",
+     "name": "encryption",
+     "value": "AES-256"
+    },
+    {
+     "label": "Tier",
+     "name": "tier",
+     "value": "Archive"
+    },
+    {
+     "label": "Checksum",
+     "name": "checksum",
+     "value": "Verified"
+    },
+    {
+     "label": "Last drill",
+     "name": "last_drill",
+     "value": "29 Mar 2026"
+    },
+    {
+     "label": "Retention end",
+     "name": "retention_end",
+     "value": "26 Jul 2026"
+    }
+   ],
+   "times": [
+    {
+     "label": "Created",
+     "text": "26 Apr 2026 02:00 UTC",
+     "role": "record"
+    }
+   ],
+   "result_set": "archives"
+  },
+  {
+   "record_key": "archives[4]",
+   "panel": "table_row",
+   "scope": "process_record",
+   "resource_id": "backup_9286",
+   "fields": [
+    {
+     "label": "Account",
+     "name": "account_email",
+     "value": "summit-retail@company.com"
+    },
+    {
+     "label": "Region",
+     "name": "region_name",
+     "value": "us-east-1"
+    },
+    {
+     "label": "Size",
+     "name": "size",
+     "value": "91.4 GB"
+    },
+    {
+     "label": "Encryption",
+     "name": "encryption",
+     "value": "AES-256"
+    },
+    {
+     "label": "Tier",
+     "name": "tier",
+     "value": "Archive"
+    }
+   ],
+   "times": [
+    {
+     "label": "Created",
+     "text": "26 Apr 02:00",
+     "role": "record"
+    }
+   ],
+   "result_set": "archives"
+  }
+ ],
+ "context": [
+  {
+   "label": "Activity",
+   "text": "25 Apr backup_9286 restored · Completed",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "24 Apr backup_9281 restored · Completed",
+   "times": []
+  },
+  {
+   "label": "Activity",
+   "text": "22 Apr checksum verification · Completed",
+   "times": []
+  }
+ ],
+ "not_visible": [
+  "restore_allowed or any per-archive restore control",
+  "deletion block"
+ ]
+}
