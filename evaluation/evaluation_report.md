@@ -1,11 +1,28 @@
 # Evaluation report: Ghost Data Still Exists
 
-Build: branch `feature/final-contract-performance-repair` (Rule 12 owner decision applied). The pipeline is deterministic and makes no model calls (see `usage_report.md`).
+Build: branch `experiment/relaxed-joins` (Rule 12 owner decision plus the two owner-requested relaxed rules, see section 0). The pipeline is deterministic and makes no model calls (see `usage_report.md`).
 All numbers below were measured on this build by `code/evaluation/pre_m9_metrics.py`; the raw output is
 `code/evaluation/checkpoints/FINAL_METRICS.json`. The scorer (`code/evaluation/scorer.py`) is the only code that reads the public
 sample answers. They are never an inference input.
 
-**Submission readiness: FAIL.** The repository's strict contract validator rejects 33 of the 518 output rows (42 errors). See section 5.
+**Submission readiness: FAIL.** The repository's strict contract validator rejects 20 of the 518 output rows (27 errors). See section 5.
+
+## 0. Build and the owner decisions it contains
+
+This report describes the uploaded build: `output.csv` SHA-256 `2f08a2f88c2985e31df2d1f0313bf834e97bc4194e3011a0aebaebd34a0e0258`. It contains three owner decisions; each one has a configuration switch.
+
+1. **Rule 12** (`retention_without_period`). An observed security audit record with no supplied retention period is retained, because no rule authorizes deleting a SECURITY_AUDIT_LOG.
+2. **Claim-linked account** (`RELAXED['claim_account_link']` in `code/synthesis/main.py`, logic in `code/state/relaxed.py`). The account_service DELETE_RECORD workflow row nearest `reported_at` (within 2 hours) is taken as the subject's account. Each row is assigned to at most one request. The link is skipped when the subject already has a directly linked account, or when any record attributes the account to someone else. Absence is cited from the latest complete account snapshot taken after that row and before `audit_at`.
+3. **Rule 05** (`support_without_content`). A support message whose conversation content is not observable takes the non-destructive REDACT branch.
+
+| Build | Strict errors / rows | Dev F1 | Dev exact | Dev status | Holdout F1 (report-only) |
+|---|---|---|---|---|---|
+| 3a2f78a (no decisions) | 114 / 77 | 0.780 | 2/22 | 19/22 | 0.848 |
+| + Rule 12 | 42 / 33 | 0.8155 | 4/22 | 19/22 | 0.866 |
+| + claim-linked account | 42 / 33 | 0.8436 | 7/22 | 21/22 | 0.875 |
+| + Rule 05 REDACT (uploaded) | **27 / 20** | **0.8598** | **7/22** | **21/22** | 0.875 |
+
+The full test suite was last run green on the Rule 12 build. It was not re-run after the two relaxed rules, and tests written for the earlier rules would need updating.
 
 ## 1. Splits
 
@@ -19,31 +36,31 @@ sample answers. They are never an inference input.
 
 | Split | Status accuracy | Step precision | Step recall | Step F1 | Field accuracy | Sequence accuracy (exact steps) | Case exact match | Kendall tau (matched) | Cited evidence valid | Steps |
 |---|---|---|---|---|---|---|---|---|---|---|
-| dev | 19/22 (0.8636) | 0.9882 | 0.6942 | **0.8155** | 0.9439 | 0.1818 | 0.1818 | 1.0 | 25/25 | matched 84, predicted 85, gold 121 |
-| holdout | 10/10 (1.0000) | 1.0000 | 0.7639 | **0.8661** | 0.9299 | 0.0000 | 0.0000 | 1.0 | 28/28 | matched 55, predicted 55, gold 72 |
-| all | 29/32 (0.9062) | 0.9929 | 0.7202 | **0.8348** | 0.9383 | 0.1250 | 0.1250 | 1.0 | 53/53 | matched 139, predicted 140, gold 193 |
+| dev | 21/22 (0.9545) | 0.9892 | 0.7603 | **0.8598** | 0.9519 | 0.3182 | 0.3182 | 1.0 | 28/28 | matched 92, predicted 93, gold 121 |
+| holdout | 10/10 (1.0000) | 1.0000 | 0.7778 | **0.8750** | 0.9337 | 0.0000 | 0.0000 | 1.0 | 28/28 | matched 56, predicted 56, gold 72 |
+| all | 31/32 (0.9688) | 0.9933 | 0.7668 | **0.8655** | 0.9450 | 0.2188 | 0.2188 | 1.0 | 56/56 | matched 148, predicted 149, gold 193 |
 
 Matched-step field accuracy:
 - dev: evidence_id 1.0000, operation 1.0000, phase 1.0000, resource_id 1.0000, state 1.0000, step_no 0.6071, system_id 1.0000
 - holdout: evidence_id 1.0000, operation 1.0000, phase 1.0000, resource_id 1.0000, state 1.0000, step_no 0.5091, system_id 1.0000
 
-Status mismatches (all 32): case_01 (gold COMPLETE, predicted INCOMPLETE), case_02 (gold COMPLETE, predicted INCOMPLETE), case_04 (gold COMPLETE, predicted INCOMPLETE). In each case the gold answer is COMPLETE and the pipeline reports INCOMPLETE because a required state or treatment could not be proven from evidence at `audit_at`. The pipeline fails closed.
+Status mismatches (all 32): case_04 (gold COMPLETE, predicted INCOMPLETE). In each case the gold answer is COMPLETE and the pipeline reports INCOMPLETE because a required state or treatment could not be proven from evidence at `audit_at`. The pipeline fails closed.
 
-Screenshot ablation (`--no-visual`) gives identical sample scores. On the 518 set, the output SHA-256 changes from `252b026188daea2fe4b72a5bcbaaefe4dbd98c991bc40b53ecbedd4727352e3c` to `44b02147326cc0ba393033f0fd26439f83e20941375fe7a4783af598f4c6cab8`.
+Screenshot ablation (`--no-visual`) gives identical sample scores. On the 518 set, the output SHA-256 changes from `2f08a2f88c2985e31df2d1f0313bf834e97bc4194e3011a0aebaebd34a0e0258` to `a40c0e039e75bfb473a8ed6847b7a5d50cfb14a812077601f58d9f86e8ba4a0f`.
 
 ### Where recall is lost (dev and holdout misses, by cause)
 
 | Cause | Missed gold steps |
 |---|---|
 | dev: linked: missing policy mapping | 3 |
-| dev: linked: unknown conditional treatment | 12 |
+| dev: linked: unknown conditional treatment | 9 |
 | dev: linked: unknown state | 2 |
 | dev: unlinked: mentioned only in evidence captured after audit_at | 2 |
-| dev: unlinked: mentioned only in workflow activity rows (claims) | 8 |
+| dev: unlinked: mentioned only in workflow activity rows (claims) | 3 |
 | dev: unlinked: no participant evidence mentions the resource | 3 |
 | dev: unlinked: only identifier-free records (positional or naming joins are not ownership) | 7 |
 | holdout: unlinked: mentioned only in evidence captured after audit_at | 4 |
-| holdout: unlinked: mentioned only in workflow activity rows (claims) | 5 |
+| holdout: unlinked: mentioned only in workflow activity rows (claims) | 4 |
 | holdout: unlinked: only identifier-free records (positional or naming joins are not ownership) | 8 |
 
 "unknown conditional treatment" is mostly Rule 12 (security audit records with no supplied retention period) and Rule 05 (support messages whose conversation content is not in the evidence). The pipeline leaves these UNRESOLVED instead of guessing. "Identifier-free records" are joins the pipeline deliberately refuses to make: positional, naming or timing joins are not proof of ownership.
@@ -53,13 +70,13 @@ Screenshot ablation (`--no-visual`) gives identical sample scores. On the 518 se
 | Check | Result |
 |---|---|
 | Rows | 518, one per request, sorted, seven-field steps, consecutive `step_no` |
-| Status | {"COMPLETE": 132, "INCOMPLETE": 376, "NOT_APPLICABLE": 10} |
-| Determinism | run 1 `252b026188daea2fe4b72a5bcbaaefe4dbd98c991bc40b53ecbedd4727352e3c` = run 2 `252b026188daea2fe4b72a5bcbaaefe4dbd98c991bc40b53ecbedd4727352e3c` (identical: True) |
+| Status | {"COMPLETE": 143, "INCOMPLETE": 365, "NOT_APPLICABLE": 10} |
+| Determinism | run 1 `2f08a2f88c2985e31df2d1f0313bf834e97bc4194e3011a0aebaebd34a0e0258` = run 2 `2f08a2f88c2985e31df2d1f0313bf834e97bc4194e3011a0aebaebd34a0e0258` (identical: True) |
 | Root `output.csv` from `python3 code/main.py` | same SHA-256 as run 1 |
-| Citations | 885 checked, 885 accepted, 0 rejected |
-| Strict validator | **FAIL: 42 errors in 33 rows** (was 114 / 77) |
-| INCOMPLETE rows with no steps | 9 |
-| INCOMPLETE rows with steps but no FINDING | 24 |
+| Citations | 962 checked, 962 accepted, 0 rejected |
+| Strict validator | **FAIL: 27 errors in 20 rows** (was 114 / 77) |
+| INCOMPLETE rows with no steps | 7 |
+| INCOMPLETE rows with steps but no FINDING | 13 |
 
 ## 4. Safety probes (518 run)
 
@@ -74,7 +91,7 @@ Screenshot ablation (`--no-visual`) gives identical sample scores. On the 518 se
 
 No P0 cross-customer contamination or false-COMPLIANT anonymization was found on the 518 run or by the adversarial tests below. This does not guarantee there are none: it covers only the probes and cases listed here.
 
-## 5. Strict validation failures (all 33 rows)
+## 5. Strict validation failures (all 20 rows)
 
 The strict validator requires every INCOMPLETE row to have FINDING, REMEDIATION and VERIFICATION phases, with each finding paired with a remediation. These rows are INCOMPLETE because the pipeline cannot prove compliance, and it has no participant-visible evidence for a finding, so it emits no finding rather than invent one. The validator was not changed.
 
@@ -86,7 +103,7 @@ Class 5 means the policy obligation is undecidable from the supplied data. Class
 |---|---|
 | class 4: no admissibly linked subject-owned resource or process | 6 |
 | class 4: process safe state shown only by inventory or not at all | 5 |
-| class 4: rule_05: conversation content not observed (shared-context condition undecidable) | 19 |
+| class 4: rule_05: conversation content not observed (shared-context condition undecidable) | 6 |
 | class 4: rule_14: no explicit restore control observed | 4 |
 | class 4: treatment decided; no admissible reading of the current state | 10 |
 | class 5: rule_12: no supplied retention period covering audit_at | 10 |
@@ -96,33 +113,20 @@ Class 5 means the policy obligation is undecidable from the supplied data. Class
 |---|---|---|---|---|---|---|
 | case_135 | 5 | INCOMPLETE | 1 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_12: no supplied retention period covering audit_at; treatment decided; no admissible reading of the current state |
 | case_137 | 5 | INCOMPLETE | 1 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_12: no supplied retention period covering audit_at; treatment decided; no admissible reading of the current state |
-| case_233 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
-| case_235 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
 | case_264 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable); rule_14: no explicit restore control observed |
-| case_292 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
-| case_324 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
-| case_326 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
 | case_33 | 4 | INCOMPLETE | 0 | 2 | INCOMPLETE requires nonempty steps; INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | no admissibly linked subject-owned resource or process |
-| case_331 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
 | case_35 | 4 | INCOMPLETE | 0 | 2 | INCOMPLETE requires nonempty steps; INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | no admissibly linked subject-owned resource or process |
 | case_383 | 5 | INCOMPLETE | 1 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_12: no supplied retention period covering audit_at; treatment decided; no admissible reading of the current state |
 | case_390 | 5 | INCOMPLETE | 1 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | process safe state shown only by inventory or not at all; rule_05: conversation content not observed (shared-context condition undecidable); rule_12: no supplied retention period covering audit_at; rule_13: no supplied active legal hold with a basis; rule_14: no explicit restore control observed; treatment decided; no admissible reading of the current state |
 | case_392 | 5 | INCOMPLETE | 1 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_12: no supplied retention period covering audit_at; treatment decided; no admissible reading of the current state |
 | case_41 | 5 | INCOMPLETE | 1 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | process safe state shown only by inventory or not at all; rule_05: conversation content not observed (shared-context condition undecidable); rule_12: no supplied retention period covering audit_at; rule_14: no explicit restore control observed; treatment decided; no admissible reading of the current state |
-| case_44 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
-| case_484 | 4 | INCOMPLETE | 0 | 2 | INCOMPLETE requires nonempty steps; INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
 | case_50 | 4 | INCOMPLETE | 0 | 2 | INCOMPLETE requires nonempty steps; INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | no admissibly linked subject-owned resource or process |
-| case_51 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
 | case_52 | 4 | INCOMPLETE | 0 | 2 | INCOMPLETE requires nonempty steps; INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | no admissibly linked subject-owned resource or process |
 | case_520 | 4 | INCOMPLETE | 2 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
 | case_522 | 4 | INCOMPLETE | 2 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
 | case_55 | 4 | INCOMPLETE | 0 | 2 | INCOMPLETE requires nonempty steps; INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | process safe state shown only by inventory or not at all; rule_14: no explicit restore control observed |
 | case_61 | 4 | INCOMPLETE | 0 | 2 | INCOMPLETE requires nonempty steps; INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | no admissibly linked subject-owned resource or process |
 | case_63 | 4 | INCOMPLETE | 0 | 2 | INCOMPLETE requires nonempty steps; INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | no admissibly linked subject-owned resource or process |
-| case_76 | 4 | INCOMPLETE | 0 | 2 | INCOMPLETE requires nonempty steps; INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
-| case_77 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
-| case_81 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
-| case_82 | 4 | INCOMPLETE | 4 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_05: conversation content not observed (shared-context condition undecidable) |
 | case_83 | 5 | INCOMPLETE | 1 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_12: no supplied retention period covering audit_at; treatment decided; no admissible reading of the current state |
 | case_84 | 5 | INCOMPLETE | 1 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_12: no supplied retention period covering audit_at; treatment decided; no admissible reading of the current state |
 | case_86 | 5 | INCOMPLETE | 1 | 1 | INCOMPLETE requires FINDING, REMEDIATION and VERIFICATION phases | rule_12: no supplied retention period covering audit_at; treatment decided; no admissible reading of the current state |
@@ -164,8 +168,8 @@ The two P0 fixes do not change the 518 output, so the evaluation data never exer
 
 ## 8. Limitations
 
-- Strict validation fails on 33 rows (section 5). Closing them would need Rule 05 conversation content, restore controls or state evidence that the dataset does not supply. Steps were not fabricated to pass the validator.
-- Dev step F1 is 0.816 and exact sequence accuracy is 0.1818 (4/22). Recall is the weak side; precision is 0.988. 22/22 is not reachable without joins the safety rules forbid (see `code/evaluation/checkpoints/FINAL_RECALL_ANALYSIS.md`).
+- Strict validation fails on 20 rows (section 5). Closing them would need Rule 05 conversation content, restore controls or state evidence that the dataset does not supply. Steps were not fabricated to pass the validator.
+- Dev step F1 is 0.860 and exact sequence accuracy is 0.3182 (7/22). Recall is the weak side; precision is 0.988. 22/22 is not reachable without joins the safety rules forbid (see `code/evaluation/checkpoints/FINAL_RECALL_ANALYSIS.md`).
 - The holdout is not blind.
 - Screenshot facts come from committed manual fixtures, not runtime vision.
 - The pipeline's behaviour against the hidden grader is unknown. Nothing here claims hidden-grader compliance.

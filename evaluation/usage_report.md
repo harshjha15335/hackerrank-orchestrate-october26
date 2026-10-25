@@ -2,7 +2,7 @@
 
 The run that produced `output.csv` was `python3 code/main.py`, on 518 requests from `dataset/deletion_requests.csv`.
 
-The output SHA-256 is `252b026188daea2fe4b72a5bcbaaefe4dbd98c991bc40b53ecbedd4727352e3c`, and the file is reproduced byte-for-byte by a second run.
+The output SHA-256 is `2f08a2f88c2985e31df2d1f0313bf834e97bc4194e3011a0aebaebd34a0e0258`, and the file is reproduced byte-for-byte by a second run.
 
 ## Model usage
 
