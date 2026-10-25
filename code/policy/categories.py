@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import dataclass
 from pathlib import Path
 
 from state.engine import field_values
 
 CONFIG = Path(__file__).with_name('category_map.json')
-RANKS = ('explicit_label', 'collection', 'record_fields', 'document_text', 'readback_event', 'scan_event',
-         'resource_prefix')
+RANKS = ('explicit_label', 'collection', 'record_fields', 'readback_event', 'scan_event', 'resource_prefix')
 
 
 def load_map(path: Path = CONFIG) -> dict:
@@ -39,11 +37,6 @@ def _signals(o, system_id, resource_id, known, cmap):
             out.append(('record_fields', signal['category']))
     if raw.get('event') in cmap['event_signals']:
         out.append(('readback_event', cmap['event_signals'][raw['event']]))
-    if o.source_type == 'pdf' and o.locator == f'document:{resource_id}' and o.source_origin == system_id:
-        text = raw.get('text') or ''
-        for signal in cmap.get('document_signals', ()):
-            if system_id in signal['systems'] and all(re.search(p, text) for p in signal['patterns']):
-                out.append(('document_text', signal['category']))
     scan = cmap.get('scan_event_signals', {}).get(raw.get('event'))
     # Only the owning service's own scan of this resource names its content kind.
     if (scan and o.source_type == 'log' and system_id in scan['systems'] and raw.get('service') == system_id

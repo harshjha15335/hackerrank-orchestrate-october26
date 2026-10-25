@@ -46,9 +46,11 @@ removed or merely not displayed (UNKNOWN), and an evidenced anonymization:
 an ANONYMIZE_RECORD operation on the same system and resource that a later
 source read with removed identifiers corroborates, with no indirect identifier
 and no later copy naming the subject (FALSE). A support_platform
-`message_pii_scan` classifies its resource as SUPPORT_MESSAGE and a support
-document that describes attachment properties as SUPPORT_ATTACHMENT
-(`category_map.json`); `[REDACTED]` message text is not observed content.
+`message_pii_scan` classifies its resource as SUPPORT_MESSAGE
+(`category_map.json`); `[REDACTED]` message text is not observed content. A
+support document that merely references a support record (for example an
+attached file's properties) does not classify that record: the attached file
+is a separate resource with no identifier in the evidence.
 
 This stage does not plan data flows (M6), order or cite final steps, or decide
 case status (M7). `code/evaluation/m5_metrics.py` builds a provisional,

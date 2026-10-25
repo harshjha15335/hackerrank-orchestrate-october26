@@ -60,46 +60,6 @@ def test_scan_alone_leaves_shared_context_unknown():
     assert d.condition_outcome == UNKNOWN and d.compliance == UNRESOLVED and d.obligations == ()
 
 
-# --- support documents that describe themselves as attachments ---------------
-
-ATTACHMENT_TEXT = ('DELIVERY ADDRESS CORRECTION REQUEST\nSupport reference CS-1 / support_77\n'
-                   f' Detail  {SUBJECT_EMAIL}\nContinued - Attachment properties and upload history\n'
-                   ' Record  file correction.pdf\n Detail  uploader customer\n')
-
-
-def document(text=ATTACHMENT_TEXT, origin='support_platform', resource='support_77'):
-    return Observation('doc_evidence', 'evidence/documents/x.pdf', f'document:{resource}', T, None, resource,
-                       None, None, (), {'resource_id': resource, 'text': text}, 'pdf', None, None, None, origin)
-
-
-def test_owning_system_document_describing_an_attachment_classifies_it():
-    result = classify([document()], 'support_platform', 'support_77', CATS, CMAP)
-    assert (result.category, result.status, result.basis) == ('SUPPORT_ATTACHMENT', 'MAPPED', 'document_text')
-
-
-def test_document_signal_needs_every_pattern_and_the_owning_origin():
-    no_uploader = ATTACHMENT_TEXT.replace(' Detail  uploader customer\n', '')
-    assert classify([document(no_uploader)], 'support_platform', 'support_77', CATS, CMAP).status == 'UNMAPPED'
-    assert classify([document(origin='central_observability_export')], 'support_platform', 'support_77',
-                    CATS, CMAP).status == 'UNMAPPED'
-    assert classify([document(resource='support_78')], 'support_platform', 'support_77', CATS,
-                    CMAP).status == 'UNMAPPED'
-
-
-def test_subject_only_attachment_document_is_owned_by_the_subject():
-    from policy.conditions import TRUE
-    d = decide({}, 'support_platform', 'support_77', 'UNKNOWN', extra=(document(),))
-    assert (d.category, d.rule_id, d.condition_outcome) == ('SUPPORT_ATTACHMENT', 'rule_06', TRUE)
-    assert d.effective_action == 'DELETE' and d.compliance == UNRESOLVED   # state still unproven by M4
-
-
-def test_attachment_document_naming_someone_else_is_not_subject_only():
-    from policy.tests.test_policy import OTHER_EMAIL
-    shared = ATTACHMENT_TEXT + f' Detail  {OTHER_EMAIL}\n'
-    d = decide({}, 'support_platform', 'support_77', 'UNKNOWN', extra=(document(shared),))
-    assert d.condition_outcome != 'TRUE' and d.compliance == UNRESOLVED
-
-
 def test_redacted_message_text_is_not_content_without_shared_context():
     # Pre-M9 Phase 5: '[REDACTED]' hides whatever context the message had, so it
     # cannot make Rule 05 FALSE (which would decide a DELETE); it stays UNKNOWN.

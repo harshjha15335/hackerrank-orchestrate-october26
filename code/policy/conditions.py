@@ -191,12 +191,6 @@ def shared_support_context(d: Dossier, config: dict) -> ConditionResult:
 def attachment_subject_only(d: Dossier, config: dict) -> ConditionResult:
     owners, foreign, cited = set(), set(), None
     for r in d.records:
-        if r.locator == f'document:{d.resource_id}':
-            # M1 joins a document to a resource only when it names one subject;
-            # the attachment's own identifiers are its owner/uploader evidence.
-            for claim in identity_claims(r.fields.get('text') or ''):
-                cited = cited or r
-                (owners if d.subject.holds(claim) else foreign).add(claim)
         for name, value in r.fields.items():
             if name in ('resource_id', 'text', 'parsed_record'): continue
             if not isinstance(value, str): continue
