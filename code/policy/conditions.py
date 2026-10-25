@@ -192,6 +192,11 @@ def shared_support_context(d: Dossier, config: dict) -> ConditionResult:
                 return ConditionResult(TRUE, f'{name} carries order/agent/support context', _cite(r))
     if saw_content:
         return ConditionResult(FALSE, 'conversation content observed without shared context', _cite(saw_content))
+    # RELAXED (owner-requested experiment): with no observable conversation content,
+    # take the non-destructive branch (REDACT keeps the record, removes the PII).
+    if config.get('support_without_content') == 'redact' and d.current is not None:
+        return ConditionResult(TRUE, 'RELAXED: conversation content not observed; non-destructive REDACT branch',
+                               _cite(d.current))
     return ConditionResult(UNKNOWN, 'no conversation content or context fields observed')
 
 

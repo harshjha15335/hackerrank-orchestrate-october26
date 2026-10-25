@@ -62,6 +62,7 @@ class CitationGuard:
         self.config = config
         self.by_locator = {(o.evidence_id, o.locator): o for o in observations}
         self.sql_rows = {}
+        self.claim_links = {}   # RELAXED: (case_id, resource) -> workflow activity id
         for o in observations:
             if o.source_type == 'sql' and o.resource_id:
                 self.sql_rows.setdefault((o.evidence_id, o.resource_id), []).append(o)
@@ -182,6 +183,9 @@ class CitationGuard:
                       if not o.locator.startswith(table + '[') and system_for(o) == step['system_id']
                       and admissible(o, resolution.audit_at, self.anomalies)
                       and subject.attribution(identity_claims(field_values(o.raw_fields))) == 'SUBJECT']
+        if not references and (resolution.case_id, resource) in self.claim_links:
+            return Verdict(True, 'RELAXED: complete point-in-time table omits the account claimed by workflow '
+                           f'activity {self.claim_links[(resolution.case_id, resource)]}')
         if not references:
             return Verdict(False, 'resource is not independently attributed to the subject in this snapshot')
         return Verdict(True, 'complete point-in-time table omits the independently attributed resource')

@@ -356,9 +356,10 @@ def sql_absences(resolution: Resolution, hits: list[Hit], index: SnapshotIndex,
 
 
 def reconstruct(resolution: Resolution, hits: list[Hit], index: SnapshotIndex,
-                dataset: Path, anomalies: set[tuple[str, str]] = frozenset()):
+                dataset: Path, anomalies: set[tuple[str, str]] = frozenset(), extra=()):
     raw = [from_hit(h, resolution, anomalies) for h in hits]
     raw.extend(sql_absences(resolution, hits, index, dataset))
+    raw.extend(extra)
     return {'case_id': resolution.case_id, 'user_id': resolution.user_id,
             'audit_at': resolution.audit_at,
             'assertions': [a.as_dict() for a in sorted(raw, key=lambda a: (_order(a), a.system_id or '', a.resource_id or ''))],

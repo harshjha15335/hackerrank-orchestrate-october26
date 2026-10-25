@@ -155,5 +155,7 @@
     "_nesting": "Indirect, direct and stable-reference fields are found at any depth of nested objects and arrays (and embedded record_json); a field matches by exact name or by a '_<name>' suffix (e.g. source_session_id). Only text/integer values count; booleans, floats and unnamed numbers are never identities."
   },
   "_retention_without_period_comment": "Rule 12 when no retention period is supplied. 'unknown' keeps the condition UNKNOWN (no treatment decided). 'retain_observed_without_period' preserves an observed, subject-attributed security audit record because deletion_rules.csv has no rule that authorizes deleting SECURITY_AUDIT_LOG. Expired periods are never retained.",
-  "retention_without_period": "retain_observed_without_period"
+  "retention_without_period": "retain_observed_without_period",
+  "support_without_content": "redact",
+  "_support_without_content_comment": "RELAXED experiment: Rule 05 with no observable conversation content takes the REDACT branch ('unknown' keeps it UNKNOWN)."
 }

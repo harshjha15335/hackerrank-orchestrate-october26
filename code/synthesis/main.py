@@ -27,7 +27,9 @@ from identity.retrieval import EvidenceIndex
 from identity.snapshots import SnapshotIndex
 from ingest.evidence import ingest, parse_time
 from intent.classifier import IntentClassifier
-from policy.conditions import subject_from
+from policy.conditions import identity_claims, subject_from
+from state.engine import field_values, system_for
+from state.relaxed import claim_absences, claim_owners
 from policy.engine import Context, decide_case
 from state.engine import reconstruct
 
@@ -37,6 +39,8 @@ from synthesis.synthesizer import synthesize
 from vision.adapter import QUARANTINE_REASONS, load as load_visual
 
 ROOT = Path(__file__).resolve().parents[2]
+# Owner-requested relaxed joins (experiment branch). See state/relaxed.py.
+RELAXED = {'claim_account_link': True}
 
 
 class Pipeline:
@@ -68,8 +72,18 @@ class Pipeline:
         tables = defaultdict(set)
         for c in coverage:
             tables[c['file_id']].update((c.get('tables') or {}).keys())
+        self.claim_owner = None
         self.guard = CitationGuard(observations, times, self.anomalies, self.fctx, tables, self.ctx.config,
                                    self.scopes, self.dataset)
+
+    def _foreign_owned(self, resolution):
+        subject = subject_from(resolution)
+        def owned(resource):
+            for o in self.ctx.by_resource.get(resource, ()):
+                verdict = subject.attribution(identity_claims(field_values(o.raw_fields)))
+                if verdict == 'FOREIGN': return True
+            return False
+        return owned
 
     def requests(self):
         return sorted(self.graph.requests(self.sample), key=lambda r: r['case_id'])
@@ -81,7 +95,20 @@ class Pipeline:
         if resolution.status != 'resolved':
             return synthesize(view, self.guard, resolution, None) + ({'resolution': resolution.status},)
         subject = subject_from(resolution)
-        state = reconstruct(resolution, self.evidence.find(resolution), self.scopes, self.dataset, self.anomalies)
+        extra = []
+        hits = self.evidence.find(resolution)
+        if RELAXED['claim_account_link']:
+            if self.claim_owner is None:
+                self.claim_owner = claim_owners(self.requests(), self.fctx.activity)
+            # One account per subject: a directly linked account record wins.
+            has_account = any(system_for(h.observation) == 'account_service' and h.observation.resource_id
+                              and str(h.observation.resource_id).startswith('account_') for h in hits)
+            extra, claim = claim_absences(request, resolution, self.fctx.activity, self.scopes, self.dataset,
+                                          self._foreign_owned(resolution), self.claim_owner, has_account)
+            for a in extra:
+                self.guard.claim_links[(resolution.case_id, a.resource_id)] = claim.evidence_id
+        state = reconstruct(resolution, hits, self.scopes, self.dataset, self.anomalies,
+                            extra)
         policy = decide_case(self.ctx, state, resolution)
         assessments = assess_case(self.fctx, resolution)
         timing, strength = {}, {}
