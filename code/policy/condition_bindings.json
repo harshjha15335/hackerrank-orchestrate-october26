@@ -147,7 +147,11 @@
       "order_reference",
       "postal_code",
       "shipping_address",
-      "date_of_birth"
-    ]
+      "date_of_birth",
+      "linkage_key",
+      "link_key",
+      "join_key"
+    ],
+    "_nesting": "Indirect, direct and stable-reference fields are found at any depth of nested objects and arrays (and embedded record_json); a field matches by exact name or by a '_<name>' suffix (e.g. source_session_id). Only text/integer values count; booleans, floats and unnamed numbers are never identities."
   }
 }

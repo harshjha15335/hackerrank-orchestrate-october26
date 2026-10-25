@@ -17,7 +17,8 @@ from state.engine import field_values, system_for
 
 from .categories import classify, load_map
 from .conditions import (FALSE, TRUE, UNKNOWN, Dossier, Record, anonymization_state, evaluate, exposed_fields,
-                         explicit_identifier_nulls, identity_claims, load_config, subject_from)
+                         explicit_identifier_nulls, identity_claims, indirect_identifiers, load_config,
+                         subject_from)
 from .rules import PolicyTable, load_rules
 
 COMPLIANT, VIOLATION, UNRESOLVED, DEFERRED = 'COMPLIANT', 'VIOLATION', 'UNRESOLVED', 'DEFERRED_M6'
@@ -89,16 +90,13 @@ class Context:
         self.documents = defaultdict(list)
         self.operations = defaultdict(list)    # resource -> activity rows (claims)
         self.indirect_values = defaultdict(list)
-        indirect = self.config.get('anonymization', {}).get('indirect_identifier_fields', ())
         for o in observations:
             if o.source_type == 'activity' and o.resource_id:
                 self.operations[o.resource_id].append(o)
             if o.source_type in ('activity', 'audit'): continue
-            values = field_values(o.raw_fields)
-            for name in indirect:
-                value = values.get(name)
-                if isinstance(value, (str, int)) and str(value).strip():
-                    self.indirect_values[str(value).strip()].append(o)
+            if 'anonymization' in self.config:
+                for _, value in indirect_identifiers(field_values(o.raw_fields), self.config):
+                    self.indirect_values[value].append(o)
             if o.resource_id: self.by_resource[o.resource_id].append(o)
             if o.source_type == 'pdf' and o.locator.startswith('line:'):
                 self.documents[o.evidence_id].append(o)
@@ -188,14 +186,12 @@ def _dossier(ctx, latest, assertions, resolution, subject, category):
 def _link_keys(ctx, current, subject, cutoff):
     """Indirect identifier values of ``current`` that another admissible record
     names together with this subject's own identifiers (re-identification keys)."""
-    values = field_values(current.raw_fields)
-    for name in ctx.config.get('anonymization', {}).get('indirect_identifier_fields', ()):
-        value = values.get(name)
-        if not isinstance(value, (str, int)) or not str(value).strip(): continue
-        for o in ctx.indirect_values.get(str(value).strip(), ()):
+    if 'anonymization' not in ctx.config: return
+    for _, value in indirect_identifiers(field_values(current.raw_fields), ctx.config):
+        for o in ctx.indirect_values.get(value, ()):
             if (o.evidence_id, o.locator) == (current.evidence_id, current.locator): continue
             if _admissible_time(ctx, o, cutoff) and _attribution(o, subject) == 'SUBJECT':
-                yield str(value).strip()
+                yield value
                 break
 
 

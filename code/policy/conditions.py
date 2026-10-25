@@ -207,23 +207,64 @@ def attachment_subject_only(d: Dossier, config: dict) -> ConditionResult:
     return ConditionResult(UNKNOWN, 'attachment ownership not observed')
 
 
+def _leaves(value, name=None, path=''):
+    """(path, leaf field name, scalar) for every scalar in nested dicts/lists.
+
+    A list item keeps the field name of its list, and an embedded JSON record
+    string (``record_json``) is read as the record it carries.
+    """
+    if isinstance(value, str) and name == 'record_json':
+        try:
+            value = json.loads(value)
+        except ValueError:
+            pass
+    if isinstance(value, dict):
+        for key, item in sorted(value.items(), key=lambda kv: str(kv[0])):
+            yield from _leaves(item, str(key), f'{path}.{key}' if path else str(key))
+    elif isinstance(value, (list, tuple)):
+        for i, item in enumerate(value):
+            yield from _leaves(item, name, f'{path}[{i}]')
+    else:
+        yield path, name, value
+
+
+def _named(leaf, names) -> bool:
+    return leaf is not None and (leaf in names or any(leaf.endswith('_' + n) for n in names))
+
+
 def _removed(fields: dict, config: dict) -> tuple[int, int]:
-    """(explicitly removed, still populated) direct identifier / stable reference columns."""
+    """(explicitly removed, still populated) direct identifier / stable reference
+    fields, at any nesting depth."""
     names = set(config['identifier_fields']) | set(config['stable_reference_fields'])
     markers = set(config['redaction_markers'])
     removed = populated = 0
-    for name, value in fields.items():
-        if name not in names: continue
+    for _, leaf, value in _leaves(fields):
+        if leaf not in names: continue
         if not _nonnull(value) or str(value).strip() in markers: removed += 1
         else: populated += 1
     return removed, populated
 
 
-def _indirect(fields: dict, config: dict) -> list[tuple[str, str]]:
-    """Populated indirect identifiers (quasi-identifiers / linkage keys) on a record."""
-    names = config['anonymization']['indirect_identifier_fields']
-    return [(n, str(fields[n]).strip()) for n in names if n in fields and _nonnull(fields[n])
-            and str(fields[n]).strip() not in config['redaction_markers']]
+def indirect_identifiers(fields: dict, config: dict) -> list[tuple[str, str]]:
+    """Populated indirect identifiers (quasi-identifiers / linkage keys) at any
+    nesting depth, as (path, value).
+
+    Only fields named as (or suffixed by) a configured indirect identifier
+    count, and only text or integer values: booleans, floats and unnamed
+    numbers (metrics, counts, amounts) are never treated as identities.
+    """
+    names = set(config['anonymization']['indirect_identifier_fields'])
+    markers = set(config['redaction_markers'])
+    found = []
+    for path, leaf, value in _leaves(fields):
+        if not _named(leaf, names) or isinstance(value, bool) or not isinstance(value, (str, int)):
+            continue
+        if _nonnull(value) and str(value).strip() and str(value).strip() not in markers:
+            found.append((path, str(value).strip()))
+    return found
+
+
+_indirect = indirect_identifiers
 
 
 def anonymization_state(d: Dossier, config: dict) -> tuple[str, str, tuple[str, ...]]:
