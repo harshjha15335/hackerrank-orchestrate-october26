@@ -33,7 +33,12 @@ HERE = Path(__file__).resolve().parent
 M7_BASELINE_SHA = 'aeb5c13565bfeda694f8aa15bd80326b9a32f1cb791745b44da84c9acfd80e80'
 M8_REV1_SHA = '6cb5652fd3fc4af1be3b2f4ee5ff14b717767f5ca4da22d5eecb287f4c32bf02'   # reviewed 0a05b50
 M8_REV2_SHA = 'ab8a580183e0a3ce8b79ca76acc792012b4f1e9bc36ef474ed794a6d03b8cd0e'   # reviewed 8a609c1
-M8_SHA = 'a45cdcf0f2ca24b51c193ba9e39b208744fbc6d4914c2201e19e1f99a3ac44df'
+M8_SHA = 'a45cdcf0f2ca24b51c193ba9e39b208744fbc6d4914c2201e19e1f99a3ac44df'   # merged cccb59e
+# Pre-M9 remediation: Rule 05 no longer reads '[REDACTED]' message text as content
+# without shared context, so the support_9996 case loses an unsupported DELETE-derived future
+# check (support_9996). That is the only 518-row change, with or without screenshots.
+PRE_M9_ABLATION_SHA = 'b001e0901fdafeb54a9a48a480cfe65f8d62a77c1e409bbfa8287c37da69effc'
+PRE_M9_SHA = '9d4e1aae861d26215d7aa19f9b28947fc0ef12d0744c247bf59801f9da406e0e'
 
 
 @pytest.fixture(scope='module')
@@ -395,12 +400,13 @@ def runs():
 
 
 def test_ablation_baseline_is_byte_identical_to_m7(runs):
-    assert hashlib.sha256(serialize(runs[False][0]).encode()).hexdigest() == M7_BASELINE_SHA
+    # Pre-M9: M7 baseline (M7_BASELINE_SHA) plus the support_9996 Rule 05 correction only.
+    assert hashlib.sha256(serialize(runs[False][0]).encode()).hexdigest() == PRE_M9_ABLATION_SHA
 
 
 def test_m8_full_run_is_pinned_and_citations_valid(runs):
     rows, diagnostics, pipeline = runs[True]
-    assert hashlib.sha256(serialize(rows).encode()).hexdigest() == M8_SHA
+    assert hashlib.sha256(serialize(rows).encode()).hexdigest() == PRE_M9_SHA   # M8_SHA + the support_9996 row
     assert pipeline.guard.log and all(e['accepted'] for e in pipeline.guard.log)
     images = {e['evidence_id'] for e in pipeline.guard.log} & {f'evidence_{n}' for n in
                                                             ('04', '09', '14', '19', '23', '28', '32', '37', '42', '46', '60')}

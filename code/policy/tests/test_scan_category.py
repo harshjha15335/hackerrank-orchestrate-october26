@@ -58,3 +58,14 @@ def test_scan_alone_leaves_shared_context_unknown():
     d = decide({}, 'support_platform', 'support_77', 'UNKNOWN', extra=(scan(),))
     assert d.category == 'SUPPORT_MESSAGE' and d.rule_id == 'rule_05'
     assert d.condition_outcome == UNKNOWN and d.compliance == UNRESOLVED and d.obligations == ()
+
+
+def test_redacted_message_text_is_not_content_without_shared_context():
+    # Pre-M9 Phase 5: '[REDACTED]' hides whatever context the message had, so it
+    # cannot make Rule 05 FALSE (which would decide a DELETE); it stays UNKNOWN.
+    d = decide({'message_text': '[REDACTED]', 'subject_reference': 'user_9001'}, 'support_platform',
+               'support_77', 'UNKNOWN', category='SUPPORT_MESSAGE')
+    assert d.condition_outcome == UNKNOWN and d.effective_action is None
+    plain = decide({'message_text': 'Please close my profile.', 'requester_email': SUBJECT_EMAIL},
+                   'support_platform', 'support_77', 'PRESENT', category='SUPPORT_MESSAGE')
+    assert plain.condition_outcome == 'FALSE' and plain.effective_action == 'DELETE'

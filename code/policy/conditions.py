@@ -178,7 +178,8 @@ def shared_support_context(d: Dossier, config: dict) -> ConditionResult:
                 return ConditionResult(TRUE, f'shared context field {name}', _cite(r))
         for name in config['content_fields']:
             text = r.fields.get(name)
-            if not _nonnull(text): continue
+            # Redacted content is not observed content: it can show no context either way.
+            if not _nonnull(text) or str(text).strip() in config['redaction_markers']: continue
             saw_content = saw_content or r
             if any(p.search(str(text)) for p in patterns):
                 return ConditionResult(TRUE, f'{name} carries order/agent/support context', _cite(r))
