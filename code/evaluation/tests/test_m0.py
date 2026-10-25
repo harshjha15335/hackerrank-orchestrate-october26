@@ -277,20 +277,27 @@ def test_cli_determinism_and_exit_codes(tmp_path):
     assert subprocess.run(cmd, capture_output=True).returncode == 0
 
 
-def test_full_stub_determinism_and_protected_paths(tmp_path):
+def test_entry_point_runs_the_pipeline_deterministically_and_protects_dataset(tmp_path):
+    # M10: code/main.py runs the audited pipeline (not the M0 placeholder). Rows
+    # are checked for format; strict contract validity is reported, not assumed.
     hashes = []
     root_output = ROOT / 'output.csv'
     original = root_output.read_bytes() if root_output.exists() else None
     for name in ('first.csv', 'second.csv'):
         path = tmp_path / name
-        subprocess.run([sys.executable, str(ROOT / 'code/main.py'), '--output', str(path)], check=True)
-        result = validate_file(path, ROOT / 'dataset', 'full')
-        assert result.valid, result.errors
-        assert result.row_count == 518
+        subprocess.run([sys.executable, str(ROOT / 'code/main.py'), '--output', str(path)], check=True,
+                       capture_output=True)
+        rows = list(csv.DictReader(path.open(encoding='utf-8', newline='')))
+        assert len(rows) == 518 and [r['case_id'] for r in rows] == sorted(r['case_id'] for r in rows)
+        assert {r['deletion_status'] for r in rows} <= {'COMPLETE', 'INCOMPLETE', 'NOT_APPLICABLE'}
+        assert any(r['deletion_status'] != 'NOT_APPLICABLE' for r in rows)
         hashes.append(hashlib.sha256(path.read_bytes()).hexdigest())
     assert hashes[0] == hashes[1]
-    for path in [root_output, ROOT / 'dataset/sample_output.csv', tmp_path / 'first.csv']:
-        assert subprocess.run([sys.executable, str(ROOT / 'code/main.py'), '--output', str(path)], capture_output=True).returncode != 0
+    for path in [ROOT / 'dataset/sample_output.csv', ROOT / 'dataset/output.csv']:
+        before = path.read_bytes()
+        assert subprocess.run([sys.executable, str(ROOT / 'code/main.py'), '--output', str(path)],
+                              capture_output=True).returncode != 0
+        assert path.read_bytes() == before
     assert (root_output.read_bytes() if root_output.exists() else None) == original
     assert not (ROOT / 'code/__init__.py').exists()
 
