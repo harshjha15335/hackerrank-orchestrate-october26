@@ -8,7 +8,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from identity.graph import Resolution
-from identity.retrieval import Hit
+from identity.retrieval import Hit, direct_identifiers
 from ingest.evidence import Observation
 from state.engine import from_hit, latest, parse_source_bool, sql_absences
 from state.main import build, run_all, run_case
@@ -246,6 +246,10 @@ def test_participant_completed_connector_and_restore_log_structures(real):
         flag = 'enabled' if event.startswith('connector') else 'restore_allowed'
         value = parse_source_bool(o.raw_fields.get(flag))
         if value is None: continue
+        # This checks flag parsing only: the line's customer identifiers belong to
+        # a real dataset user, not the synthetic subject, so they are dropped here
+        # (attribution itself is covered by identity/tests/test_cross_customer.py).
+        o = replace(o, raw_fields={k: v for k, v in o.raw_fields.items() if not direct_identifiers({k: v})})
         a = from_hit(Hit(o, (), 'direct'), resolution(o.captured_at))
         expected = (('ACTIVE' if value else 'DISABLED') if flag == 'enabled' else
                     ('RESTORE_ENABLED' if value else 'RESTORE_BLOCKED'))

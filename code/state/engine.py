@@ -6,7 +6,7 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Iterable
 
-from identity.graph import Resolution
+from identity.graph import Resolution, norm
 from identity.retrieval import Hit, direct_identifiers
 from identity.snapshots import SnapshotIndex
 from ingest.evidence import TABLE_SYSTEM, Observation, parse_time
@@ -232,14 +232,25 @@ def _visual_state(o: Observation):
 
 
 def attribution_for(hit: Hit, resolution: Resolution) -> str:
-    if hit.owner_conflict and hit.strength == 'mixed_context': return 'mixed_context'
-    if hit.strength != 'mixed_context': return hit.strength
+    """Attribution strength of one hit; 'mixed_context' never supports a state.
+
+    Every customer identifier on the record (email, user_id, phone, email hash,
+    at any depth) must be one of this subject's identifiers. A matching email
+    never outweighs another customer's phone or user ID, and an identifier the
+    identity graph ties to anyone else, or to nobody, is an owner conflict.
+    """
     identities = direct_identifiers(hit.observation.raw_fields)
     allowed = {(v.field, v.normalized) for v in resolution.history}
     allowed.add(('user_id', resolution.user_id))
+    for name, value in (resolution.current_at_cutoff or {}).items():
+        if name in ('email', 'phone', 'email_hash') and value:
+            allowed.add((name, norm(name, value)))
+    if hit.owner_conflict or not identities <= allowed:
+        return 'mixed_context'
     # A row containing both user ID and email is safe when each direct key
     # independently belongs to this resolved subject at the audit cutoff.
-    return 'direct_verified' if identities and identities <= allowed else 'mixed_context'
+    if hit.strength != 'mixed_context': return hit.strength
+    return 'direct_verified' if identities else 'mixed_context'
 
 
 def from_hit(hit: Hit, resolution: Resolution, anomalies: set[tuple[str, str]] = frozenset()) -> StateAssertion:

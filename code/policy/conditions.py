@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ingest.evidence import EMAIL, PHONE, USER, ExtractionError, parse_time
+from identity.retrieval import is_actor_field
 from state.engine import parse_source_bool
 
 TRUE, FALSE, UNKNOWN = 'TRUE', 'FALSE', 'UNKNOWN'
@@ -62,8 +63,14 @@ class Subject:
 
 
 def identity_claims(value, key='') -> set[tuple[str, str]]:
-    """Explicit customer identifiers named by a record: emails, phones, hashes, user refs."""
+    """Explicit customer identifiers named by a record: emails, phones, hashes, user refs.
+
+    Staff/actor fields (support agent, assignee, operator) are not customer
+    identity, so they neither attribute a record to the subject nor to anyone else.
+    """
     found = set()
+    if is_actor_field(key):
+        return found
     if isinstance(value, dict):
         for k, v in value.items(): found |= identity_claims(v, k)
     elif isinstance(value, list):

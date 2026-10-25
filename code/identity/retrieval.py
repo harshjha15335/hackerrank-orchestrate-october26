@@ -12,19 +12,39 @@ DIRECT = {'user_id', 'subject_reference', 'customer_reference', 'email', 'email_
           'phone', 'owner_email', 'owner_phone', 'requester_email', 'requester_phone',
           'customer_email', 'lookup_key', 'correlation_key', 'old_value', 'new_value'}
 HASH = re.compile(r'[0-9a-fA-F]{64}\Z')
+# Fields that name staff or system actors (support agents, assignees,
+# operators), never the customer the record is about. Their identifiers are
+# neither a customer match nor a customer conflict.
+NON_CUSTOMER = re.compile(r'(?:^|_)(?:agent|assignee|assigned_to|staff|operator|employee|reviewer|handled_by|'
+                          r'created_by|updated_by|processed_by)(?:_|$)')
+
+
+def _blank(value: str) -> bool:
+    # Log and SQL renderings of a missing or removed value are not identifiers.
+    text = value.strip().casefold()
+    return text in ('', 'null', 'none', 'nan', 'n/a') or (text.startswith('[') and text.endswith(']'))
+
+
+def is_actor_field(key) -> bool:
+    return bool(key) and bool(NON_CUSTOMER.search(str(key).casefold()))
 
 
 def direct_identifiers(value, key=''):
+    """Customer identifiers (email, user_id, phone, email hash) named by a record,
+    at any depth; staff/actor fields and their sub-objects are not customer identity."""
     found = set()
+    if is_actor_field(key):
+        return found
     if isinstance(value, dict):
         for k, v in value.items(): found.update(direct_identifiers(v, k))
     elif isinstance(value, list):
         for v in value: found.update(direct_identifiers(v, key))
-    elif isinstance(value, str) and (key in DIRECT or key.endswith(('_email', '_phone', '_hash'))):
+    elif isinstance(value, str) and (key in DIRECT or key.endswith('_hash') or
+                                     any(t in key.casefold() for t in ('email', 'phone', 'mobile'))):
         for email in EMAIL.findall(value): found.add(('email', norm('email', email)))
         for user in USER.findall(value): found.add(('user_id', user))
         for phone in PHONE.findall(value): found.add(('phone', norm('phone', phone)))
-        if 'hash' in key and value: found.add(('email_hash', value))
+        if 'hash' in key and not _blank(value): found.add(('email_hash', value.strip()))
         if key == 'correlation_key' and HASH.fullmatch(value): found.add(('email_hash', value))
     return found
 
