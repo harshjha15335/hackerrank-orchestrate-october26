@@ -38,6 +38,18 @@ join. Evidence captured, recorded or emitted after `audit_at` (or after its own
 capture), or quarantined by M1, never decides a condition. Backups keep the RETAIN
 verdict and carry a separate restore obligation.
 
+Rule 07/08 (pre-M9 F-02): explicitly null identifier columns are not proof of
+irreversible anonymization. `conditions.anonymization_state` separates direct
+identifiers exposed, indirect identifiers that co-occur with the subject's
+identifiers elsewhere (both TRUE), indirect identifiers present, identifiers
+removed or merely not displayed (UNKNOWN), and an evidenced anonymization:
+an ANONYMIZE_RECORD operation on the same system and resource that a later
+source read with removed identifiers corroborates, with no indirect identifier
+and no later copy naming the subject (FALSE). A support_platform
+`message_pii_scan` classifies its resource as SUPPORT_MESSAGE and a support
+document that describes attachment properties as SUPPORT_ATTACHMENT
+(`category_map.json`); `[REDACTED]` message text is not observed content.
+
 This stage does not plan data flows (M6), order or cite final steps, or decide
 case status (M7). `code/evaluation/m5_metrics.py` builds a provisional,
 evaluation-only steps array to measure the development split.

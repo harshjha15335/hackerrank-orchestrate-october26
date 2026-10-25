@@ -13,8 +13,15 @@ with their file/activity/audit ID, source path, locator, system, resource,
 capture timestamp and match strength. It does not decide resource state or
 deletion status. `direct` comes from explicit identifier fields; `context`
 comes from source text; `correlated` requires a shared explicit trace ID
-without conflicting customer identifiers; `mixed_context` marks a record
-with more than one direct email/user identity. All are candidates for later
+in the same file whose admissible lines name one resolved subject: with the
+identity graph, every identifier in the trace (email, user ID, phone, hash)
+must be the subject's at the cutoff and held by nobody else, ever (pre-M9
+F-03: a subject's email and user ID together are one identity); without the
+graph, two customer identifiers keep the trace ambiguous. `mixed_context`
+marks a record with more than one direct email/user identity (M4 verifies it;
+`owner_conflict` marks one the graph does not tie exclusively to the subject).
+Screenshot rows that are not evidence at the cutoff, including screenshots
+captured after it, are returned by `excluded_visual` for diagnostics only. All are candidates for later
 verification, not proof of the resource's current state. Future captures are
 excluded with an inclusive, timezone-aware case cutoff.
 
