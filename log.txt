@@ -1899,3 +1899,25 @@ branch=feature/pre-m9-audit-fixes
 repo_root=/home/claude/hackerrank-orchestrate-october26
 worktree=main
 parent_agent=none
+
+## [2026-10-25T11:07:17Z] Final safety fixes, evaluation reports and submission packaging
+
+User Prompt (verbatim, secrets redacted):
+(relayed by the project coordinator from Harsh) "Codex Re-test — Two Critical Fixes Remain / HOLD — Not submission-ready ... # HACKERRANK ORCHESTRATE — URGENT FINAL SAFETY FIXES AND SUBMISSION PREPARATION ... PHASE A — Revert unsupported attachment classification ... PHASE B — Fix nested session-ID anonymization bypass ... PHASE C — Fix cross-customer M4 attribution ... PHASE D — Full verification ... PHASE E — Evaluation and usage reports ... PHASE F — Submission packaging ... Do not claim hidden-grader compliance or successful submission. Stop for owner inspection. Do not upload the submission automatically." (full prompt in the project thread)
+
+Agent Response Summary:
+Reverted the support attachment-document rule (dev F1 back to 0.780). Made indirect/direct/stable-reference identifier detection recursive and type-aware so nested session/device/linkage keys block evidenced anonymization (re-linked = violation), and made every foreign, unknown or shared customer identifier (including a phone next to the subject's email) block M4 attribution at every strength, with staff/agent fields excluded from customer identity. Neither fix changes the 518 output (SHA 9d4e1aae..., deterministic). Replaced the M0 stub in code/main.py with the real pipeline, wrote root output.csv, evaluation/evaluation_report.md, evaluation/usage_report.md (0 calls, 0 tokens, $0), a readiness report (FAIL: strict 114 errors / 77 rows) and code.zip; nothing was submitted.
+
+Actions:
+* git revert of 3e094f3; edited code/policy/{conditions,engine}.py, condition_bindings.json, code/identity/retrieval.py, code/state/engine.py, code/main.py, READMEs
+* Added tests: policy/tests/test_nested_identifiers.py, policy/tests/test_cross_customer_policy.py, identity/tests/test_cross_customer.py; updated test_m0 (entry point) and one structural state test
+* Ran pytest, pre_m9_metrics.py (two 518 runs, ablation, strict, citations, safety, sample scores) -> code/evaluation/checkpoints/FINAL_METRICS.json
+* Built /mnt/project-files/submission/code.zip; clean run from the extracted zip reproduced output.csv byte-for-byte
+
+Context:
+tool=Claude Code
+model=claude-opus-5-5
+branch=feature/pre-m9-audit-fixes
+repo_root=/home/claude/hackerrank-orchestrate-october26
+worktree=main
+parent_agent=none

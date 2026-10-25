@@ -9,7 +9,7 @@ python3 code/evaluation/main.py validate dataset/sample_output.csv --mode sample
 python3 code/evaluation/main.py validate /path/to/submission.csv --mode full
 python3 code/evaluation/main.py score /path/to/sample_predictions.csv
 python3 -m pytest -q -p no:cacheprovider code/evaluation/tests
-python3 code/main.py --output /tmp/new-m0-stub.csv
+python3 code/main.py --output /tmp/predictions.csv   # full pipeline (default: root output.csv)
 ```
 
 Validation and scoring emit deterministic JSON to stdout. Exit 0 means valid
@@ -18,10 +18,9 @@ scoring input error, or a sample mismatch. Argument errors use exit 2. `score`
 also reports parseable semantically invalid predictions so ordering, citation,
 and completeness errors remain measurable; validation errors remain visible.
 Unparseable CSV/JSON or incorrectly typed step shapes cannot be scored.
-No command writes predictions except the explicitly labelled format-only stub.
-The stub requires a new destination, rejects root `output.csv` and all paths
-under `dataset/`, and always emits `NOT_APPLICABLE,[]`. It is not an audit agent
-and its format validity says nothing about prediction correctness.
+The evaluation commands never write predictions. `code/main.py` (M10) runs the
+full audited pipeline and writes root `output.csv` by default; it refuses
+paths under `dataset/`. It replaced the M0 format-only stub.
 
 The validator enforces the **seven** fields in the official contract. It loads
 case IDs/cutoffs from the chosen request file, never from answers. Evidence IDs
